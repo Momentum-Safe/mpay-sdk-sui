@@ -15,13 +15,13 @@ export interface MPayStreamClient {
 export interface IncomingStreamQuery {
   status?: StreamStatus | StreamStatus[];
   sender?: string | string[];
-  coinType: string | string[];
+  coinType?: string | string[];
 }
 
 export interface OutgoingStreamQuery {
   status?: StreamStatus | StreamStatus[];
   recipient?: string | string[];
-  coinType: string | string[];
+  coinType?: string | string[];
 }
 
 export interface CreateStreamInfo {

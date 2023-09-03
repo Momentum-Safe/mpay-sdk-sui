@@ -9,7 +9,7 @@ import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 import { RawStreamData } from './contract';
 
 import { StreamEvent } from '@/types/events';
-import { PaginationOptions } from '@/types/pagination';
+import { Paginated, PaginationOptions } from '@/types/pagination';
 
 export enum StreamStatus {
   streaming = 'streaming',
@@ -28,7 +28,7 @@ export interface Stream {
   status(): Promise<StreamStatus>;
   info(): Promise<StreamInfo>;
   getRawData(): Promise<RawStreamData>;
-  historyEvents(options?: PaginationOptions): Promise<StreamEvent[]>;
+  historyEvents(options?: PaginationOptions): Promise<Paginated<StreamEvent>>;
 
   // Sender
   cancelStream(): Promise<SuiTransactionBlockResponse>;
@@ -44,7 +44,7 @@ export interface StreamGroup {
   sender: string;
 
   info(): Promise<StreamGroupInfo>;
-  historyEvents(options?: PaginationOptions): Promise<StreamEvent[]>;
+  historyEvents(options?: PaginationOptions): Promise<Paginated<StreamEvent[]>>;
 }
 
 export type StreamInfo = StreamInfoCommon & {
