@@ -16,6 +16,8 @@ export interface StreamRef {
 export interface Backend {
   getIncomingStreams(recipient: string, options?: BackendStreamOptions): Promise<StreamRef[]>;
   getOutgoingStreams(sender: string, options?: BackendStreamOptions): Promise<StreamRef[]>;
+
+  // TBD: Determined by whether all events can be queried from blockchain.
   getStreamHistory(query: {
     streamID?: string;
     streamIDs?: string[];

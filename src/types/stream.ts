@@ -31,7 +31,7 @@ export interface Stream {
   historyEvents(options?: PaginationOptions): Promise<Paginated<StreamEvent>>;
 
   // Sender
-  cancelStream(): Promise<SuiTransactionBlockResponse>;
+  cancel(): Promise<SuiTransactionBlockResponse>;
 
   // Recipient
   claim(): Promise<SuiTransactionBlockResponse>;
@@ -81,5 +81,6 @@ export interface StreamProgress {
   total: bigint;
   streamed: bigint;
   claimed: bigint;
+  claimable: bigint;
   canceled: bigint;
 }
