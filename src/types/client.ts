@@ -1,7 +1,7 @@
 import { Stream, StreamGroup, StreamStatus } from '@/types/stream';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 
-export interface MPayStreamClient {
+export interface MPayClient {
   connectSingleWallet(wallet: ISingleWallet): Promise<void>;
   connectMSafeAccount(wallet: IMSafeAccount): Promise<void>;
 
