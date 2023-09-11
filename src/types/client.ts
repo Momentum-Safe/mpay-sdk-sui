@@ -1,15 +1,15 @@
-import { Stream, StreamGroup, StreamStatus } from '@/types/stream';
+import { IStream, IStreamGroup, StreamStatus } from '@/types/IStream';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 
-export interface MPayClient {
-  connectSingleWallet(wallet: ISingleWallet): Promise<void>;
-  connectMSafeAccount(wallet: IMSafeAccount): Promise<void>;
+export interface IMPayClient {
+  connectSingleWallet(wallet: ISingleWallet): void;
+  connectMSafeAccount(msafe: IMSafeAccount): void;
 
-  getStream(streamID: string): Promise<Stream>;
-  getIncomingStreams(query?: IncomingStreamQuery): Promise<Stream[]>;
-  getOutgoingStreams(query?: OutgoingStreamQuery): Promise<(Stream | StreamGroup)[]>;
+  getStream(streamID: string): Promise<IStream>;
+  getIncomingStreams(query?: IncomingStreamQuery): Promise<IStream[]>;
+  getOutgoingStreams(query?: OutgoingStreamQuery): Promise<(IStream | IStreamGroup)[]>;
 
-  createStream(info: CreateStreamInfo): Promise<Stream | StreamGroup>;
+  createStream(info: CreateStreamInfo): Promise<IStream | IStreamGroup>;
 }
 
 export interface IncomingStreamQuery {

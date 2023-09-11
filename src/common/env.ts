@@ -17,6 +17,12 @@ export interface EnvConfig {
   contract: ContractConfig;
 }
 
+export interface EnvConfigOptions {
+  rpc?: SuiConfig;
+  backend?: BackendConfig;
+  contract?: ContractConfig;
+}
+
 export interface BackendConfig {
   url: string;
 }
@@ -60,10 +66,19 @@ const ENV_CONFIG: Map<Env, EnvConfig> = new Map([
   ],
 ]);
 
-export function getConfig(env: Env): EnvConfig {
+export function getConfig(env: Env, options?: EnvConfigOptions): EnvConfig {
   const ec = ENV_CONFIG.get(env);
   if (!ec) {
     throw new SanityError(`Env not supported: ${env}`);
+  }
+  if (options && options.rpc) {
+    ec.rpc = options.rpc;
+  }
+  if (options && options.backend) {
+    ec.backend = options.backend;
+  }
+  if (options && options.contract) {
+    ec.contract = options.contract;
   }
   return ec;
 }

@@ -3,8 +3,6 @@ import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { Globals } from '@/common/globals';
 import { MoveObject } from '@/contracts/common';
 import { CLOCK_ID } from '@/contracts/const';
-import { WalletNotConnectedError } from '@/error/WalletNotConnectedError';
-import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 
 export class ContractCall {
   constructor(
@@ -13,17 +11,7 @@ export class ContractCall {
   ) {}
 
   async execute() {
-    if (this.globals.walletType === 'single') {
-      const wallet = this.globals.wallet as ISingleWallet;
-      return wallet.signAndSubmitTransaction(this.txb);
-    }
-
-    if (this.globals.walletType === 'msafe') {
-      const wallet = this.globals.wallet as IMSafeAccount;
-      return wallet.propose(this.txb);
-    }
-
-    throw new WalletNotConnectedError();
+    await this.globals.wallet.execute(this.txb);
   }
 
   async inspect() {

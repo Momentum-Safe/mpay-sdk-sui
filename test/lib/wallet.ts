@@ -10,19 +10,35 @@ export class LocalWallet implements ISingleWallet {
 
   private readonly client: SuiClient;
 
-  async address() {
-    return this.kp.toSuiAddress();
-  }
-
   constructor(client: SuiClient, privateKey?: string) {
     this.client = client;
-    this.kp = privateKey ? Ed25519Keypair.fromSecretKey(Buffer.from(privateKey, 'hex')) : new Ed25519Keypair();
+    this.kp = privateKey ? makeKeyPairFromPrivateKey(privateKey) : new Ed25519Keypair();
+  }
+
+  async address() {
+    return this.kp.toSuiAddress();
   }
 
   async signAndSubmitTransaction(txb: TransactionBlock) {
     return this.client.signAndExecuteTransactionBlock({
       transactionBlock: txb,
       signer: this.kp,
+      options: {
+        showEffects: true,
+        showEvents: true,
+        showObjectChanges: true,
+      },
     });
   }
+
+  async inspect(txb: TransactionBlock) {
+    return this.client.devInspectTransactionBlock({
+      sender: await this.address(),
+      transactionBlock: txb,
+    });
+  }
+}
+
+export function makeKeyPairFromPrivateKey(privateKey: string) {
+  return Ed25519Keypair.fromSecretKey(Buffer.from(privateKey, 'hex'));
 }

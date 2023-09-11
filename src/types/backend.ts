@@ -13,8 +13,8 @@ export interface StreamRef {
   createDate: Date;
 }
 
-/// Backend interface for supporting Stream registry query and history events.
-export interface Backend {
+/// IBackend interface for supporting Stream registry query and history events.
+export interface IBackend {
   getIncomingStreams(recipient: string, options?: BackendIncomingStreamFilterOptions): Promise<StreamRef[]>;
   getOutgoingStreams(sender: string, options?: BackedOutgoingStreamFilterOptions): Promise<StreamRef[]>;
 

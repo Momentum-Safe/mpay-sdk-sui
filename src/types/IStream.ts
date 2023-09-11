@@ -6,10 +6,10 @@
 //   settled: canceled && claimable === 0
 import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 
-import { RawStreamData } from './contract';
-
 import { StreamEvent } from '@/types/events';
 import { Paginated, PaginationOptions } from '@/types/pagination';
+
+import { RawStreamData } from './contract';
 
 export enum StreamStatus {
   streaming = 'streaming',
@@ -19,7 +19,7 @@ export enum StreamStatus {
   settled = 'settled',
 }
 
-export interface Stream {
+export interface IStream {
   streamID: string;
   groupID: string;
   sender: string;
@@ -38,9 +38,9 @@ export interface Stream {
   setAutoClaim(enabled: boolean): Promise<SuiTransactionBlockResponse>;
 }
 
-export interface StreamGroup {
+export interface IStreamGroup {
   groupID: string;
-  streams: Stream[];
+  streams: IStream[];
   sender: string;
 
   info(): Promise<StreamGroupInfo>;
@@ -57,7 +57,7 @@ export type StreamGroupInfo = StreamInfoCommon & {
   groupID: string;
   progress: StreamProgress;
   streamIDs: string[];
-  streams: Stream[];
+  streams: IStream[];
 };
 
 export interface StreamInfoCommon {

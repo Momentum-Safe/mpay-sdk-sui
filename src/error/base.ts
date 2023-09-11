@@ -1,6 +1,8 @@
 export enum MPayErrorCode {
   sanity,
   walletNotConnected,
+  NotEnoughBalance,
+  InvalidInput,
 }
 
 export type JsonObject =
@@ -22,9 +24,9 @@ export class MPayError extends Error {
   constructor(mpayErrorCode: number, msg: string, options: { cause?: unknown; context?: JsonObject } = {}) {
     const { cause, context } = options;
     if (cause) {
-      super(`[Maven] ${msg}: ${cause}`, { cause });
+      super(`[MPay] ${msg}: ${cause}`, { cause });
     } else {
-      super(`[Maven] ${msg}`);
+      super(`[MPay] ${msg}`);
     }
     this.mpayErrorCode = mpayErrorCode;
     this.context = context;

@@ -1,14 +1,12 @@
 import { SuiClient } from '@mysten/sui.js/client';
 import { requestSuiFromFaucetV0 } from '@mysten/sui.js/faucet';
 
-import { EnvConfig } from '@/common/env';
+import { Env, EnvConfig, EnvConfigOptions, getConfig } from '@/common/env';
 import { SanityError } from '@/error/SanityError';
 import { WalletNotConnectedError } from '@/error/WalletNotConnectedError';
-import { IMSafeAccount, ISingleWallet, IWallet } from '@/types/wallet';
+import { IWallet, WalletType } from '@/types/wallet';
 
 export class Globals {
-  public walletType: 'single' | 'msafe' | 'disconnected';
-
   public signer: IWallet | undefined;
 
   public readonly suiClient: SuiClient;
@@ -18,21 +16,25 @@ export class Globals {
   constructor(envConfig: EnvConfig) {
     this.envConfig = envConfig;
     this.suiClient = new SuiClient({ url: envConfig.rpc.url });
-    this.walletType = 'disconnected';
   }
 
-  connectWallet(wallet: ISingleWallet) {
-    this.walletType = 'single';
+  static new(env: Env, options?: EnvConfigOptions) {
+    const ec = getConfig(env, options);
+    return new Globals(ec);
+  }
+
+  get walletType(): WalletType | 'disconnected' {
+    if (!this.wallet) {
+      return 'disconnected';
+    }
+    return this.wallet.type;
+  }
+
+  connectWallet(wallet: IWallet) {
     this.signer = wallet;
   }
 
-  connectMSafe(msafe: IMSafeAccount) {
-    this.walletType = 'msafe';
-    this.signer = msafe;
-  }
-
   disconnect() {
-    this.walletType = 'disconnected';
     this.signer = undefined;
   }
 
