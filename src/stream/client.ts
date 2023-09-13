@@ -1,6 +1,8 @@
 import { Env, EnvConfigOptions } from '@/common/env';
 import { Globals } from '@/common/globals';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
+import { MSafeAccountAdapter } from '@/wallet/MSafeAccountAdapter';
+import { SingleWalletAdapter } from '@/wallet/SingleWalletAdapter';
 
 // export class MPayClient implements IMPayClient {
 export class MPayClient {
@@ -11,11 +13,13 @@ export class MPayClient {
   }
 
   connectSingleWallet(wallet: ISingleWallet) {
-    this.globals.connectWallet(wallet);
+    const adapter = new SingleWalletAdapter(wallet, this.globals.suiClient);
+    this.globals.connectWallet(adapter);
   }
 
   connectMSafeAccount(msafe: IMSafeAccount) {
-    this.globals.connectMSafe(msafe);
+    const adapter = new MSafeAccountAdapter(msafe);
+    this.globals.connectWallet(adapter);
   }
 
   // getStream(streamID: string) {

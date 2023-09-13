@@ -2,8 +2,8 @@ import { TransactionBlock, Transactions } from '@mysten/sui.js/transactions';
 
 import { ContractConfig } from '@/common/env';
 import { Globals } from '@/common/globals';
-import { MoveObject, ObjectID, ObjectVector, Ref, ResultRef } from '@/contracts/common';
-import { CLOCK_ID } from '@/contracts/const';
+import { MoveObject, ObjectID, ObjectVector, Ref, ResultRef } from '@/transaction/contracts/common';
+import { CLOCK_ID } from '@/transaction/contracts/const';
 
 export class BaseContract {
   constructor(
@@ -12,7 +12,7 @@ export class BaseContract {
     public readonly globals: Globals,
   ) {}
 
-  addContractCall(txb: TransactionBlock, input: { method: string; arguments: any[]; typeArgs: string[] }) {
+  addContractCall(txb: TransactionBlock, input: { method: string; arguments: any[]; typeArgs?: string[] }) {
     const target =
       `${this.config.contractId}::${this.moduleName}::${input.method}` as `${string}::${string}::${string}`;
     txb.add(
@@ -39,7 +39,7 @@ export class BaseContract {
   private addTransactionBlock(txb: TransactionBlock, target: string, callArgs: any[] = [], typeArgs: string[] = []) {
     txb.add(
       Transactions.MoveCall({
-        target,
+        target: target as `${string}::${string}::${string}`,
         arguments: callArgs.map((arg) => {
           if (arg instanceof ObjectVector) {
             return arg.moveArgs(txb);

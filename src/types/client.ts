@@ -26,8 +26,9 @@ export interface OutgoingStreamQuery {
 
 export interface CreateStreamInfo {
   name: string;
+  groupId: string;
   coinType: string;
-  recipients?: RecipientWithAmount[];
+  recipients: RecipientWithAmount[]; // TODO: Amount must be multiple of 10000
   interval: bigint; // Interval in milliseconds
   steps: bigint;
   startTime: Date;
@@ -38,4 +39,20 @@ export interface CreateStreamInfo {
 export interface RecipientWithAmount {
   address: string;
   amount: bigint;
+}
+
+export interface CreateStreamInfoInternal {
+  metadata: string;
+  coinType: string;
+  recipients: RecipientInfoInternal[];
+  epochInterval: bigint;
+  numberEpoch: bigint;
+  startTime: bigint;
+  cancelable: boolean;
+}
+
+export interface RecipientInfoInternal {
+  address: string;
+  cliffAmount: bigint;
+  amountPerEpoch: bigint;
 }

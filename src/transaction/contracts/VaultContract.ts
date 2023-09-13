@@ -2,7 +2,7 @@ import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 import { ContractConfig } from '@/common/env';
 import { Globals } from '@/common/globals';
-import { BaseContract } from '@/contracts/BaseContract';
+import { BaseContract } from '@/transaction/contracts/BaseContract';
 
 export class VaultContract extends BaseContract {
   static ModuleName = 'vault';

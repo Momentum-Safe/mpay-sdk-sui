@@ -6,6 +6,8 @@ export enum WalletType {
   msafe = 'msafe',
 }
 
+export const GAS_OBJECT_SPEC = 'txn.gas';
+
 /**
  * IWallet is the adapted interface of wallet. Supports both single wallet and msafe.
  */
@@ -14,7 +16,7 @@ export interface IWallet {
 
   address(): Promise<string>;
 
-  requestCoin(reqs: CoinRequest): Promise<CoinRequestResponse>;
+  requestCoin(req: CoinRequest): Promise<CoinRequestResponse>;
 
   // Depending on the wallet type, return transaction digest or sui rpc response
   execute(txb: TransactionBlock): Promise<string | SuiTransactionBlockResponse>;
@@ -56,5 +58,5 @@ export interface CoinRequest {
 
 export interface CoinRequestResponse {
   primaryCoin: string;
-  mergedCoins: string[];
+  mergedCoins?: string[];
 }

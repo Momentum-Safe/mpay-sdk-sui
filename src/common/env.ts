@@ -1,5 +1,6 @@
 import { SanityError } from '@/error/SanityError';
 
+import * as devContractConfig from '../../config/dev.json';
 import * as localContractConfig from '../../config/local.json';
 
 export enum Env {
@@ -51,6 +52,7 @@ export const STG_BE_API = 'https://rolsbkota7.execute-api.us-west-1.amazonaws.co
 export const PROD_BE_API = 'https://xrae3mrjv5.execute-api.us-west-1.amazonaws.com/prod';
 
 export const CONTRACT_LOCAL: ContractConfig = localContractConfig;
+export const CONTRACT_DEV: ContractConfig = devContractConfig;
 
 const ENV_CONFIG: Map<Env, EnvConfig> = new Map([
   [
@@ -61,7 +63,7 @@ const ENV_CONFIG: Map<Env, EnvConfig> = new Map([
         url: `${UNIT_RPC_ENDPOINT}/fullnode`,
         faucet: 'http://ec2-13-52-78-128.us-west-1.compute.amazonaws.com:9123',
       },
-      contract: CONTRACT_LOCAL,
+      contract: CONTRACT_DEV,
     },
   ],
 ]);

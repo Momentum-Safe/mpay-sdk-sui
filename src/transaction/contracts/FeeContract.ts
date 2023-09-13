@@ -2,8 +2,8 @@ import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 import { ContractConfig } from '@/common/env';
 import { Globals } from '@/common/globals';
-import { BaseContract } from '@/contracts/BaseContract';
-import { MoveNumber, MoveObject } from '@/contracts/common';
+import { BaseContract } from '@/transaction/contracts/BaseContract';
+import { MoveNumber, MoveObject } from '@/transaction/contracts/common';
 
 export class FeeContract extends BaseContract {
   static ModuleName = 'fee_module';

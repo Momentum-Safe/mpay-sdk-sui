@@ -1,8 +1,8 @@
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 import { Globals } from '@/common/globals';
-import { MoveObject } from '@/contracts/common';
-import { CLOCK_ID } from '@/contracts/const';
+import { MoveObject } from '@/transaction/contracts/common';
+import { CLOCK_ID } from '@/transaction/contracts/const';
 
 export class ContractCall {
   constructor(

@@ -25,7 +25,6 @@ export class LocalWallet implements ISingleWallet {
       signer: this.kp,
       options: {
         showEffects: true,
-        showEvents: true,
         showObjectChanges: true,
       },
     });

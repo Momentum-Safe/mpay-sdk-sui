@@ -2,8 +2,8 @@ import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 import { ContractConfig } from '@/common/env';
 import { Globals } from '@/common/globals';
-import { BaseContract } from '@/contracts/BaseContract';
-import { MoveNumber, ObjectID, Ref } from '@/contracts/common';
+import { BaseContract } from '@/transaction/contracts/BaseContract';
+import { MoveNumber, ObjectID, Ref } from '@/transaction/contracts/common';
 
 export class StreamContract extends BaseContract {
   static ModuleName = 'stream';
@@ -14,6 +14,8 @@ export class StreamContract extends BaseContract {
     cancel_stream: 'cancel_stream',
     claim_stream: 'claim_stream',
     claim_stream_by_proxy: 'claim_stream_by_proxy',
+    stream_current_epoch: 'stream_current_epoch',
+    now_milli_seconds: 'now_milli_seconds',
   } as const;
 
   constructor(
@@ -30,10 +32,10 @@ export class StreamContract extends BaseContract {
       flatFeeCoin: Ref<ObjectID>;
       metadata: string;
       recipient: string;
-      time_start: Ref<MoveNumber>;
+      timeStart: Ref<MoveNumber>;
       cliff: Ref<MoveNumber>;
       epochInterval: Ref<MoveNumber>;
-      totalEpoch: Ref<MoveNumber>;
+      numEpoch: Ref<MoveNumber>;
       amountPerEpoch: Ref<MoveNumber>;
       cancelable: boolean;
       coinType: string;
@@ -53,15 +55,15 @@ export class StreamContract extends BaseContract {
         flatFeeObject,
         input.metadata,
         input.recipient,
-        input.time_start,
+        input.timeStart,
         input.cliff,
         input.epochInterval,
-        input.totalEpoch,
+        input.numEpoch,
         input.amountPerEpoch,
         input.cancelable,
         clockObject,
       ],
-      typeArgs: [],
+      typeArgs: [input.coinType],
     });
   }
 

@@ -1,8 +1,9 @@
 export enum MPayErrorCode {
   sanity,
   walletNotConnected,
-  NotEnoughBalance,
   InvalidInput,
+  InvalidRpcResult,
+  NotEnoughBalance,
 }
 
 export type JsonObject =
