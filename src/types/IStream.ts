@@ -43,9 +43,10 @@ export interface IStream {
 export interface IStreamGroup {
   groupId: string;
   streams: IStream[];
-  sender: string;
+  creator: string;
+  info: StreamGroupInfo;
+  progress: StreamGroupProgress;
 
-  info(): Promise<StreamGroupInfo>;
   historyEvents(options?: PaginationOptions): Promise<Paginated<StreamEvent[]>>;
 }
 
@@ -57,9 +58,8 @@ export type StreamInfo = StreamInfoCommon & {
 
 export type StreamGroupInfo = StreamInfoCommon & {
   groupId: string;
-  progress: StreamProgress;
   streamIds: string[];
-  streams: IStream[];
+  progress: StreamGroupProgress;
 };
 
 export interface StreamInfoCommon {
@@ -71,8 +71,8 @@ export interface StreamInfoCommon {
   end: DateTime;
   cancelable: boolean;
   cliffAmount: bigint;
-  duration: Duration; // In seconds
-  interval: Duration; // Interval in seconds
+  duration: Duration;
+  interval: Duration;
   steps: bigint;
   nextReleaseDate: DateTime | null;
   nextReleaseAmount: bigint | null;
@@ -97,6 +97,14 @@ export interface StreamProgress {
   claimed: bigint;
   claimable: bigint;
   canceled: boolean;
+}
+
+export interface StreamGroupProgress {
+  total: bigint;
+  streamed: bigint;
+  claimed: bigint;
+  claimable: bigint;
+  canceled: bigint;
 }
 
 export interface StreamMetadata {

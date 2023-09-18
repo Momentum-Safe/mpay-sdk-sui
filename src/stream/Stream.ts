@@ -32,6 +32,11 @@ export class Stream implements IStream {
     return new Stream(globals, streamId, rawData);
   }
 
+  static fromObjectData(globals: Globals, streamId: string, data: SuiObjectResponse) {
+    const rawData = Stream.parseRawStreamData(streamId, data);
+    return new Stream(globals, streamId, rawData);
+  }
+
   get info(): StreamInfo {
     return {
       name: this.name,
@@ -252,6 +257,43 @@ export class Stream implements IStream {
     return StreamStatus.STREAMING;
   }
 
+  get streamedAmount() {
+    if (this.currentEpoch === -1n) {
+      return 0n;
+    }
+    if (this.isCanceled) {
+      return this.rawData.status.epochCanceled * this.amountPerEpoch + this.cliff;
+    }
+    return this.currentEpoch * this.amountPerEpoch + this.cliff;
+  }
+
+  get claimedAmount() {
+    if (this.rawData.status.epochClaimed === MAX_U64) {
+      return 0n;
+    }
+    return this.rawData.status.epochClaimed * this.amountPerEpoch + this.cliff;
+  }
+
+  get currentEpoch() {
+    const timeNowMs = DateTime.now().toMillis();
+    const timeStartMs = this.timeStart.toMillis();
+    if (timeNowMs < timeStartMs) {
+      return -1n;
+    }
+    const epoch = Math.floor((timeNowMs - timeStartMs) / Number(this.rawData.config.epochInterval));
+    return BigInt(epoch) > Number(this.rawData.config.totalEpoch) ? this.rawData.config.totalEpoch : BigInt(epoch);
+  }
+
+  get totalAmount() {
+    const rawConfig = this.rawData.config;
+    return rawConfig.amountPerEpoch * rawConfig.totalEpoch + rawConfig.cliff;
+  }
+
+  get isCanceled() {
+    const rawStatus = this.rawData.status.status;
+    return rawStatus === RawStreamStatusEnum.CANCELED || rawStatus === RawStreamStatusEnum.CANCELED_COMPLETED;
+  }
+
   private static async fetchStreamData(globals: Globals, streamId: string) {
     const res = await globals.suiClient.getObject({
       id: streamId,
@@ -307,40 +349,6 @@ export class Stream implements IStream {
         epochClaimed: BigInt(status.epoch_claimed),
       },
     };
-  }
-
-  private get streamedAmount() {
-    if (this.currentEpoch === -1n) {
-      return 0n;
-    }
-    return this.currentEpoch * this.amountPerEpoch + this.cliff;
-  }
-
-  private get claimedAmount() {
-    if (this.rawData.status.epochClaimed === MAX_U64) {
-      return 0n;
-    }
-    return this.rawData.status.epochClaimed * this.amountPerEpoch + this.cliff;
-  }
-
-  private get currentEpoch() {
-    const timeNowMs = DateTime.now().toMillis();
-    const timeStartMs = this.timeStart.toMillis();
-    if (timeNowMs < timeStartMs) {
-      return -1n;
-    }
-    const epoch = Math.floor((timeNowMs - timeStartMs) / Number(this.rawData.config.epochInterval));
-    return BigInt(epoch) > Number(this.rawData.config.totalEpoch) ? this.rawData.config.totalEpoch : BigInt(epoch);
-  }
-
-  private get totalAmount() {
-    const rawConfig = this.rawData.config;
-    return rawConfig.amountPerEpoch * rawConfig.totalEpoch + rawConfig.cliff;
-  }
-
-  private get isCanceled() {
-    const rawStatus = this.rawData.status.status;
-    return rawStatus === RawStreamStatusEnum.CANCELED || rawStatus === RawStreamStatusEnum.CANCELED_COMPLETED;
   }
 
   private async executeAndRefresh(txb: TransactionBlock) {

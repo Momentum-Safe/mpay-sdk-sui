@@ -1,12 +1,9 @@
-import { SuiTransactionBlockResponse, SuiObjectChangeCreated } from '@mysten/sui.js/client';
+import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 
-import { Stream } from '@/stream/stream';
-import { FeeContract } from '@/transaction/contracts/FeeContract';
-import { StreamContract } from '@/transaction/contracts/StreamContract';
-import { CreateStreamHelper } from '@/transaction/CreateStreamHelper';
+import { Stream } from '@/stream/Stream';
 
 import { getTestSuite, TestSuite } from '../../lib/setup';
-import { defaultStreamParam } from '../../lib/stream';
+import { createStreamHelper } from '../../lib/stream';
 import { sleep } from '../../lib/utils';
 
 describe('stream', () => {
@@ -16,35 +13,17 @@ describe('stream', () => {
     ts = await getTestSuite();
   });
 
-  async function createStream() {
-    const builder = new CreateStreamHelper(
-      ts.globals,
-      new FeeContract(ts.globals.envConfig.contract, ts.globals),
-      new StreamContract(ts.globals.envConfig.contract, ts.globals),
-    );
-    const createParams = defaultStreamParam(ts.address);
-    const txb = await builder.buildCreateStreamTransactionBlock(createParams);
-    const res = await ts.globals.wallet.execute(txb);
-    const streamIds = (res as SuiTransactionBlockResponse)
-      .objectChanges!.filter(
-        (change) =>
-          change.type === 'created' && change.objectType.startsWith(`${ts.config.contract.contractId}::stream::Stream`),
-      )
-      .map((change) => (change as SuiObjectChangeCreated).objectId);
-    return streamIds[0];
-  }
-
   it('newFromId', async () => {
-    const stId = await createStream();
-    const st = await Stream.new(ts.globals, stId);
+    const stIds = await createStreamHelper(ts, ts.address);
+    const st = await Stream.new(ts.globals, stIds[0]);
 
     expect(st.info.name).toBe('test name');
     expect(st.info.groupId).toBeDefined();
   });
 
   it('claim', async () => {
-    const stId = await createStream();
-    const st = await Stream.new(ts.globals, stId);
+    const stIds = await createStreamHelper(ts, ts.address);
+    const st = await Stream.new(ts.globals, stIds[0]);
 
     if (st.claimable === 0n) {
       await sleep(1000);
@@ -58,8 +37,8 @@ describe('stream', () => {
   });
 
   it('cancel', async () => {
-    const stId = await createStream();
-    const st = await Stream.new(ts.globals, stId);
+    const stIds = await createStreamHelper(ts, ts.address);
+    const st = await Stream.new(ts.globals, stIds[0]);
 
     expect(st.cancelable).toBeTruthy();
     expect(st.progress.status).toBe('STREAMING');
@@ -72,8 +51,8 @@ describe('stream', () => {
   });
 
   it('set auto claim and claim by proxy', async () => {
-    const stId = await createStream();
-    const st = await Stream.new(ts.globals, stId);
+    const stIds = await createStreamHelper(ts, ts.address);
+    const st = await Stream.new(ts.globals, stIds[0]);
 
     expect(st.cancelable).toBeTruthy();
     expect(st.streamStatus).toBe('STREAMING');

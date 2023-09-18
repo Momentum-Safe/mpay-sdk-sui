@@ -8,6 +8,7 @@ export enum MPayErrorCode {
   RpcError,
   NotCreator,
   NotRecipient,
+  InvalidStreamGroup,
 }
 
 export type JsonObject =

@@ -18,7 +18,7 @@ export class MPayBuilder {
     this.streamContract = new StreamContract(config, globals);
   }
 
-  createStreams(info: CreateStreamInfoInternal) {
+  async createStreams(info: CreateStreamInfoInternal) {
     const helper = new CreateStreamHelper(this.globals, this.feeContract, this.streamContract);
     return helper.buildCreateStreamTransactionBlock(info);
   }
@@ -54,5 +54,6 @@ export class MPayBuilder {
       streamId,
       coinType,
     });
+    return txb;
   }
 }

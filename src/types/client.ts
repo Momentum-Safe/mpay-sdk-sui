@@ -5,11 +5,11 @@ export interface IMPayClient {
   connectSingleWallet(wallet: ISingleWallet): void;
   connectMSafeAccount(msafe: IMSafeAccount): void;
 
-  getStream(streamID: string): Promise<IStream>;
+  getStream(streamId: string): Promise<IStream>;
   getIncomingStreams(query?: IncomingStreamQuery): Promise<IStream[]>;
   getOutgoingStreams(query?: OutgoingStreamQuery): Promise<(IStream | IStreamGroup)[]>;
 
-  createStream(info: CreateStreamInfo): Promise<IStream | IStreamGroup>;
+  createStream(info: CreateStreamInfo): Promise<string[] | undefined>;
 }
 
 export interface IncomingStreamQuery {
@@ -28,17 +28,18 @@ export interface CreateStreamInfo {
   name: string;
   groupId: string;
   coinType: string;
-  recipients: RecipientWithAmount[]; // TODO: Amount must be multiple of 10000
+  recipients: RecipientWithAmount[];
   interval: bigint; // Interval in milliseconds
   steps: bigint;
-  startTime: Date;
+  startTimeMs: bigint;
   cliffAmount: bigint;
   cancelable: boolean;
 }
 
 export interface RecipientWithAmount {
   address: string;
-  amount: bigint;
+  amountPerStep: bigint;
+  cliffAmount: bigint;
 }
 
 export interface CreateStreamInfoInternal {
