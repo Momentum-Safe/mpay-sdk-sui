@@ -1,5 +1,8 @@
+import { TransactionBlock } from '@mysten/sui.js/transactions';
+
 import { Env, EnvConfigOptions } from '@/common/env';
 import { Globals } from '@/common/globals';
+import { MPayBuilder } from '@/transaction/MPayBuilder';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 import { MSafeAccountAdapter } from '@/wallet/MSafeAccountAdapter';
 import { SingleWalletAdapter } from '@/wallet/SingleWalletAdapter';
@@ -22,7 +25,19 @@ export class MPayClient {
     this.globals.connectWallet(adapter);
   }
 
-  // getStream(streamID: string) {
-  //
-  // }
+  builder() {
+    return new MPayBuilder(this.globals);
+  }
+
+  async executeTransactionBlock(txb: TransactionBlock) {
+    return this.wallet.execute(txb);
+  }
+
+  async inspectTransactionBlock(txb: TransactionBlock) {
+    return this.wallet.inspect(txb);
+  }
+
+  get wallet() {
+    return this.globals.wallet;
+  }
 }

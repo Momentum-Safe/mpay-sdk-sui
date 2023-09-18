@@ -20,6 +20,7 @@ yarn deploy-skip-test
 ## To generate transactions
 
 1. Clone this repo
+2. Copy `published/dev.json` from `mpay-core-sui` to this repo `config/dev.json`
 2. `yarn install`
 3. `yarn integration`
 

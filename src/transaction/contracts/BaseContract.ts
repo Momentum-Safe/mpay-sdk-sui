@@ -2,7 +2,7 @@ import { TransactionBlock, Transactions } from '@mysten/sui.js/transactions';
 
 import { ContractConfig } from '@/common/env';
 import { Globals } from '@/common/globals';
-import { MoveObject, ObjectID, ObjectVector, Ref, ResultRef } from '@/transaction/contracts/common';
+import { MoveObject, ObjectId, ObjectVector, Ref, ResultRef } from '@/transaction/contracts/common';
 import { CLOCK_ID } from '@/transaction/contracts/const';
 
 export class BaseContract {
@@ -57,7 +57,7 @@ export class BaseContract {
     );
   }
 
-  makeObject(object: Ref<ObjectID>) {
+  makeObject(object: Ref<ObjectId>) {
     return typeof object === 'string' ? new MoveObject(object) : object;
   }
 

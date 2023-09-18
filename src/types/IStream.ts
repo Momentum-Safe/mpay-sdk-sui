@@ -5,41 +5,43 @@
 //   canceled: canceled && claimable !== 0
 //   settled: canceled && claimable === 0
 import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import { DateTime, Duration } from 'luxon';
 
 import { StreamEvent } from '@/types/events';
 import { Paginated, PaginationOptions } from '@/types/pagination';
 
-import { RawStreamData } from './contract';
-
 export enum StreamStatus {
-  streaming = 'streaming',
-  streamed = 'streamed',
-  completed = 'completed',
-  canceled = 'canceled',
-  settled = 'settled',
+  STREAMING = 'STREAMING',
+  STREAMED = 'STREAMED',
+  COMPLETED = 'COMPLETED',
+  CANCELED = 'CANCELED',
+  SETTLED = 'SETTLED',
 }
 
 export interface IStream {
-  streamID: string;
-  groupID: string;
-  sender: string;
+  streamId: string;
+  groupId: string;
+  creator: string;
   recipient: string;
+  progress: StreamProgress;
+  info: StreamInfo;
 
-  status(): Promise<StreamStatus>;
-  info(): Promise<StreamInfo>;
-  getRawData(): Promise<RawStreamData>;
+  refresh(): Promise<void>;
   historyEvents(options?: PaginationOptions): Promise<Paginated<StreamEvent>>;
 
   // Sender
-  cancel(): Promise<SuiTransactionBlockResponse>;
+  cancel(): Promise<string | SuiTransactionBlockResponse>;
 
   // Recipient
-  claim(): Promise<SuiTransactionBlockResponse>;
-  setAutoClaim(enabled: boolean): Promise<SuiTransactionBlockResponse>;
+  claim(): Promise<string | SuiTransactionBlockResponse>;
+  setAutoClaim(enabled: boolean): Promise<string | SuiTransactionBlockResponse>;
+
+  // Third party
+  claimByProxy(): Promise<string | SuiTransactionBlockResponse>;
 }
 
 export interface IStreamGroup {
-  groupID: string;
+  groupId: string;
   streams: IStream[];
   sender: string;
 
@@ -48,32 +50,44 @@ export interface IStreamGroup {
 }
 
 export type StreamInfo = StreamInfoCommon & {
-  groupID: string;
-  streamID: string;
+  groupId: string;
+  streamId: string;
   progress: StreamProgress;
 };
 
 export type StreamGroupInfo = StreamInfoCommon & {
-  groupID: string;
+  groupId: string;
   progress: StreamProgress;
-  streamIDs: string[];
+  streamIds: string[];
   streams: IStream[];
 };
 
 export interface StreamInfoCommon {
   name: string;
-  sender: string;
+  creator: string;
   coinType: string;
   totalAmount: bigint;
-  start: Date;
-  end: Date;
+  start: DateTime;
+  end: DateTime;
   cancelable: boolean;
   cliffAmount: bigint;
-  duration: number; // In seconds
-  interval: number; // Interval in seconds
-  steps: number;
-  nextReleaseDate: Date;
-  nextReleaseAmount: bigint;
+  duration: Duration; // In seconds
+  interval: Duration; // Interval in seconds
+  steps: bigint;
+  nextReleaseDate: DateTime | null;
+  nextReleaseAmount: bigint | null;
+}
+
+// Common information for stream groups. Stream group requires the common info to be
+// the same for all streams of a group.
+export interface StreamGroupCommonInfo {
+  name: string;
+  groupId: string;
+  creator: string;
+  start: DateTime;
+  interval: Duration;
+  steps: bigint;
+  cancelable: boolean;
 }
 
 export interface StreamProgress {
@@ -82,5 +96,10 @@ export interface StreamProgress {
   streamed: bigint;
   claimed: bigint;
   claimable: bigint;
-  canceled: bigint;
+  canceled: boolean;
+}
+
+export interface StreamMetadata {
+  groupId: string;
+  name: string;
 }

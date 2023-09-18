@@ -2,7 +2,7 @@ import { TransactionArgument, TransactionBlock } from '@mysten/sui.js/transactio
 
 export type MoveNumber = bigint | string | number;
 export type Ref<T> = T | ResultRef;
-export type ObjectID = string;
+export type ObjectId = string;
 
 export class MoveObject {
   constructor(public readonly object: string) {}

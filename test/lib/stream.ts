@@ -1,21 +1,32 @@
-import { CreateStreamInfo } from '@/types/client';
+import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 
-export const now = () => Date.now();
+import { encodeMetadata } from '@/stream/metadata';
+import { CreateStreamInfoInternal } from '@/types/client';
+import { generateGroupId } from '@/utils/random';
 
-export function defaultStreamParam(recipient: string): CreateStreamInfo {
+export function defaultStreamParam(recipient: string): CreateStreamInfoInternal {
+  const metadata = encodeMetadata({
+    name: 'test name',
+    groupId: generateGroupId(),
+  });
   return {
-    name: 'Stream Test',
-    coinType: '0x2::sui::SUI',
+    metadata,
+    coinType: SUI_TYPE_ARG,
     recipients: [
       {
         address: recipient,
-        amount: 5000000n,
+        cliffAmount: 10000n,
+        amountPerEpoch: 5000n,
+      },
+      {
+        address: recipient,
+        cliffAmount: 5000n,
+        amountPerEpoch: 1000n,
       },
     ],
-    interval: 10000n,
-    steps: 2n,
-    startTime: new Date(now() + 5000),
-    cliffAmount: 3000000n,
-    cancelable: false,
+    epochInterval: 1000n,
+    numberEpoch: 100n,
+    startTime: BigInt(new Date().getTime()),
+    cancelable: true,
   };
 }
