@@ -1,15 +1,15 @@
-import { Stream, StreamGroup, StreamStatus } from '@/types/stream';
+import { IStream, IStreamGroup, StreamStatus } from '@/types/IStream';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 
-export interface MPayStreamClient {
-  connectSingleWallet(wallet: ISingleWallet): Promise<void>;
-  connectMSafeAccount(wallet: IMSafeAccount): Promise<void>;
+export interface IMPayClient {
+  connectSingleWallet(wallet: ISingleWallet): void;
+  connectMSafeAccount(msafe: IMSafeAccount): void;
 
-  getStream(streamID: string): Promise<Stream>;
-  getIncomingStreams(query?: IncomingStreamQuery): Promise<Stream[]>;
-  getOutgoingStreams(query?: OutgoingStreamQuery): Promise<(Stream | StreamGroup)[]>;
+  getStream(streamID: string): Promise<IStream>;
+  getIncomingStreams(query?: IncomingStreamQuery): Promise<IStream[]>;
+  getOutgoingStreams(query?: OutgoingStreamQuery): Promise<(IStream | IStreamGroup)[]>;
 
-  createStream(info: CreateStreamInfo): Promise<Stream | StreamGroup>;
+  createStream(info: CreateStreamInfo): Promise<IStream | IStreamGroup>;
 }
 
 export interface IncomingStreamQuery {
@@ -26,8 +26,9 @@ export interface OutgoingStreamQuery {
 
 export interface CreateStreamInfo {
   name: string;
+  groupId: string;
   coinType: string;
-  recipients?: RecipientWithAmount[];
+  recipients: RecipientWithAmount[]; // TODO: Amount must be multiple of 10000
   interval: bigint; // Interval in milliseconds
   steps: bigint;
   startTime: Date;
@@ -38,4 +39,20 @@ export interface CreateStreamInfo {
 export interface RecipientWithAmount {
   address: string;
   amount: bigint;
+}
+
+export interface CreateStreamInfoInternal {
+  metadata: string;
+  coinType: string;
+  recipients: RecipientInfoInternal[];
+  epochInterval: bigint;
+  numberEpoch: bigint;
+  startTime: bigint;
+  cancelable: boolean;
+}
+
+export interface RecipientInfoInternal {
+  address: string;
+  cliffAmount: bigint;
+  amountPerEpoch: bigint;
 }
