@@ -5,6 +5,7 @@ import {
   BackedOutgoingStreamFilterOptions,
   BackendIncomingStreamFilterOptions,
   IBackend,
+  StreamFilterStatus,
   StreamRef,
 } from '@/types/backend';
 import { StreamEvent } from '@/types/events';
@@ -48,6 +49,21 @@ export class Backend implements IBackend {
     pagination?: PaginationOptions;
   }): Promise<Paginated<StreamEvent>> {
     const res = await axios.post(`${this.apiURL}/stream-events`, query);
+    return Backend.parseResponseData(res);
+  }
+
+  async getAllCoinTypes(address: string): Promise<string> {
+    const res = await axios.post(`${this.apiURL}/stream-info`, { address });
+    return Backend.parseResponseData(res);
+  }
+
+  async getAllRecipients(sender: string, options?: StreamFilterStatus): Promise<string[]> {
+    const res = await axios.post(`${this.apiURL}/stream-info`, { sender, status: options });
+    return Backend.parseResponseData(res);
+  }
+
+  async getAllSenders(recipient: string, options?: StreamFilterStatus): Promise<string[]> {
+    const res = await axios.post(`${this.apiURL}/stream-info`, { recipient, status: options });
     return Backend.parseResponseData(res);
   }
 }

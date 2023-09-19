@@ -1,6 +1,6 @@
 // StreamEvent is all stream related events.
 export type StreamEvent = {
-  streamID: string;
+  streamId: string;
   sender: string;
   txDigest: string;
   data: CreateStreamEventData | CancelStreamEventData | ClaimEventData | AutoClaimEventData | SetAutoClaimEventData;
