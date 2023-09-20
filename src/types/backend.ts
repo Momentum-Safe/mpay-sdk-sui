@@ -28,6 +28,13 @@ export interface IBackend {
   }): Promise<Paginated<StreamEvent>>;
 }
 
+//   streaming: !canceled && streamed != 100
+//   streamed: !canceled && streamed === 100 && claimable !== 0
+//   canceled: canceled && claimable !== 0
+
+//   completed: !canceled && streamed === 100 && claimable === 0
+//   settled: canceled && claimable === 0
+
 // StreamFilterStatus only applies for active / inactive status.
 // SDK will do the filtering for streams.
 // active - 'streamed', 'canceled', 'streaming' - RawStatus.status === OPEN | CANCELED
