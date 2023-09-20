@@ -17,6 +17,9 @@ export interface StreamRef {
 export interface IBackend {
   getIncomingStreams(recipient: string, options?: BackendIncomingStreamFilterOptions): Promise<StreamRef[]>;
   getOutgoingStreams(sender: string, options?: BackedOutgoingStreamFilterOptions): Promise<StreamRef[]>;
+  getAllCoinTypes(address: string): Promise<string>;
+  getAllRecipients(sender: string, options?: StreamFilterStatus): Promise<string[]>;
+  getAllSenders(recipient: string, options?: StreamFilterStatus): Promise<string[]>;
 
   getStreamHistory(query: {
     streamID?: string;
@@ -27,8 +30,8 @@ export interface IBackend {
 
 // StreamFilterStatus only applies for active / inactive status.
 // SDK will do the filtering for streams.
-// active - 'streamed', 'canceled', 'streaming'
-// inactive - 'settled', 'completed'
+// active - 'streamed', 'canceled', 'streaming' - RawStatus.status === OPEN | CANCELED
+// inactive - 'settled', 'completed' === COMPLETED | CANCELED_COMPLETED
 export type StreamFilterStatus = 'active' | 'inactive' | 'all';
 
 /// BackendIncomingStreamFilterOptions Options for querying Incoming StreamRefs from backend.

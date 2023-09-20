@@ -4,6 +4,11 @@ export enum MPayErrorCode {
   InvalidInput,
   InvalidRpcResult,
   NotEnoughBalance,
+  StreamNotFound,
+  RpcError,
+  NotCreator,
+  NotRecipient,
+  InvalidStreamGroup,
 }
 
 export type JsonObject =

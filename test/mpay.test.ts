@@ -2,39 +2,25 @@ import { SuiObjectChangeCreated, SuiTransactionBlockResponse } from '@mysten/sui
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 
+import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
-import { CreateStreamBuilder } from '@/transaction/CreateStreamBuilder';
-import { generateGroupId } from '@/utils/random';
+import { CreateStreamHelper } from '@/transaction/CreateStreamHelper';
 
 import { getTestSuite } from './lib/setup';
+import { defaultStreamParam } from './lib/stream';
 import { sleep } from './lib/utils';
 
 describe('integration', () => {
   it('single stream creation', async () => {
     const ts = await getTestSuite();
-    const builder = new CreateStreamBuilder(ts.globals, ts.config.contract);
+    const builder = new CreateStreamHelper(
+      ts.globals,
+      new FeeContract(ts.config.contract, ts.globals),
+      new StreamContract(ts.config.contract, ts.globals),
+    );
 
-    const metadata = `{'groupId': '${generateGroupId()}', 'name': 'test'}`;
-    const txb = await builder.buildCreateStreamTransactionBlock({
-      metadata,
-      coinType: SUI_TYPE_ARG,
-      recipients: [
-        {
-          address: ts.address,
-          cliffAmount: 10000n,
-          amountPerEpoch: 5000n,
-        },
-        {
-          address: ts.address,
-          cliffAmount: 5000n,
-          amountPerEpoch: 1000n,
-        },
-      ],
-      epochInterval: 1000n,
-      numberEpoch: 100n,
-      startTime: BigInt(new Date().getTime()),
-      cancelable: true,
-    });
+    const streamParams = defaultStreamParam(ts.address);
+    const txb = await builder.buildCreateStreamTransactionBlock(streamParams);
     const createResult = (await ts.globals.wallet.execute(txb)) as SuiTransactionBlockResponse;
     const streamIds = createResult
       .objectChanges!.filter(
@@ -50,7 +36,7 @@ describe('integration', () => {
     const streamContract = new StreamContract(ts.config.contract, ts.globals);
     const setAutoClaimTxb = new TransactionBlock();
     streamContract.setAutoClaim(setAutoClaimTxb, {
-      streamID: streamId,
+      streamId,
       enabled: true,
       coinType: SUI_TYPE_ARG,
     });
@@ -61,7 +47,7 @@ describe('integration', () => {
 
     const claimTxb = new TransactionBlock();
     streamContract.claimStream(claimTxb, {
-      streamID: streamId,
+      streamId,
       coinType: SUI_TYPE_ARG,
     });
     const claimResult = (await ts.wallet.execute(claimTxb)) as SuiTransactionBlockResponse;
@@ -70,13 +56,13 @@ describe('integration', () => {
 
     await sleep(1500);
     const autoClaimTxb = new TransactionBlock();
-    streamContract.claimStreamByProxy(autoClaimTxb, { streamID: streamId, coinType: SUI_TYPE_ARG });
+    streamContract.claimStreamByProxy(autoClaimTxb, { streamId, coinType: SUI_TYPE_ARG });
     const autoClaimResult = (await ts.wallet.execute(autoClaimTxb)) as SuiTransactionBlockResponse;
 
     console.log('Auto claim: ', autoClaimResult.digest);
 
     const cancelTxb = new TransactionBlock();
-    streamContract.cancelStream(cancelTxb, { streamID: streamId, coinType: SUI_TYPE_ARG });
+    streamContract.cancelStream(cancelTxb, { streamId, coinType: SUI_TYPE_ARG });
     const cancelResult = (await ts.wallet.execute(cancelTxb)) as SuiTransactionBlockResponse;
     console.log('cancel stream', cancelResult.digest);
   });

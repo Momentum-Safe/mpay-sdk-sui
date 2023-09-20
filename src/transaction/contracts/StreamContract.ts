@@ -3,7 +3,7 @@ import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { ContractConfig } from '@/common/env';
 import { Globals } from '@/common/globals';
 import { BaseContract } from '@/transaction/contracts/BaseContract';
-import { MoveNumber, ObjectID, Ref } from '@/transaction/contracts/common';
+import { MoveNumber, ObjectId, Ref } from '@/transaction/contracts/common';
 
 export class StreamContract extends BaseContract {
   static ModuleName = 'stream';
@@ -28,8 +28,8 @@ export class StreamContract extends BaseContract {
   createStream(
     txb: TransactionBlock,
     input: {
-      paymentCoin: Ref<ObjectID>;
-      flatFeeCoin: Ref<ObjectID>;
+      paymentCoin: Ref<ObjectId>;
+      flatFeeCoin: Ref<ObjectId>;
       metadata: string;
       recipient: string;
       timeStart: Ref<MoveNumber>;
@@ -70,12 +70,12 @@ export class StreamContract extends BaseContract {
   setAutoClaim(
     txb: TransactionBlock,
     input: {
-      streamID: Ref<ObjectID>;
+      streamId: Ref<ObjectId>;
       enabled: boolean;
       coinType: string;
     },
   ) {
-    const streamObject = this.makeObject(input.streamID);
+    const streamObject = this.makeObject(input.streamId);
     return this.addContractCall(txb, {
       method: StreamContract.MethodName.set_auto_claim,
       arguments: [streamObject, input.enabled],
@@ -86,11 +86,11 @@ export class StreamContract extends BaseContract {
   cancelStream(
     txb: TransactionBlock,
     input: {
-      streamID: Ref<ObjectID>;
+      streamId: Ref<ObjectId>;
       coinType: string;
     },
   ) {
-    const streamObject = this.makeObject(input.streamID);
+    const streamObject = this.makeObject(input.streamId);
     const clockObject = this.clockObject();
     return this.addContractCall(txb, {
       method: StreamContract.MethodName.cancel_stream,
@@ -102,11 +102,11 @@ export class StreamContract extends BaseContract {
   claimStream(
     txb: TransactionBlock,
     input: {
-      streamID: Ref<ObjectID>;
+      streamId: Ref<ObjectId>;
       coinType: string;
     },
   ) {
-    const streamObject = this.makeObject(input.streamID);
+    const streamObject = this.makeObject(input.streamId);
     const clockObject = this.clockObject();
     return this.addContractCall(txb, {
       method: StreamContract.MethodName.claim_stream,
@@ -118,11 +118,11 @@ export class StreamContract extends BaseContract {
   claimStreamByProxy(
     txb: TransactionBlock,
     input: {
-      streamID: Ref<ObjectID>;
+      streamId: Ref<ObjectId>;
       coinType: string;
     },
   ) {
-    const streamObject = this.makeObject(input.streamID);
+    const streamObject = this.makeObject(input.streamId);
     const vaultObject = this.vaultObject();
     const feeObject = this.feeObject();
     const clockObject = this.clockObject();

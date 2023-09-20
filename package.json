@@ -9,6 +9,7 @@
   "private": true,
   "devDependencies": {
     "@types/jest": "^29.5.4",
+    "@types/luxon": "^3.3.2",
     "@types/node": "^20.6.0",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
@@ -30,6 +31,7 @@
     "@mysten/sui.js": "^0.41.1",
     "child_process": "^1.0.2",
     "fs": "^0.0.1-security",
+    "luxon": "^3.4.3",
     "tsconfig-paths": "^4.2.0"
   },
   "scripts": {

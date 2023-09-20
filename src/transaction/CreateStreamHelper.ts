@@ -1,7 +1,6 @@
 import { TransactionArgument, TransactionBlock } from '@mysten/sui.js/transactions';
 import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 
-import { ContractConfig } from '@/common/env';
 import { Globals } from '@/common/globals';
 import { isSameCoinType } from '@/sui/utils';
 import { FEE_DENOMINATOR, FEE_NUMERATOR, FLAT_FEE_SUI } from '@/transaction/const';
@@ -18,18 +17,12 @@ export interface PaymentWithFee {
   flatFeeAmount: bigint;
 }
 
-export class CreateStreamBuilder {
-  private readonly feeContract: FeeContract;
-
-  private readonly streamContract: StreamContract;
-
+export class CreateStreamHelper {
   constructor(
     public readonly globals: Globals,
-    public readonly config: ContractConfig,
-  ) {
-    this.feeContract = new FeeContract(config, globals);
-    this.streamContract = new StreamContract(config, globals);
-  }
+    private readonly feeContract: FeeContract,
+    private readonly streamContract: StreamContract,
+  ) {}
 
   async buildCreateStreamTransactionBlock(info: CreateStreamInfoInternal): Promise<TransactionBlock> {
     const txb = new TransactionBlock();

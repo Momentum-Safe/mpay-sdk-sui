@@ -77,19 +77,10 @@
     "curly": ["error", "all"],
     "no-console": "off",
     "@typescript-eslint/no-use-before-define": "off"
+  },
+  "settings": {
+      "import/resolver": {
+          "typescript": {}
+      }
   }
-//  "settings": {
-//      "import/extensions": [".js", ".jsx", ".ts", ".tsx"],
-//      "import/parsers": {
-//        "@typescript-eslint/parser": [".ts", ".tsx"]
-//      },
-//      "import/resolver": {
-//          "typescript": {
-//            "project": "./tsconfig.json"
-//          },
-//          "node": {
-//            "extensions": [".js", ".jsx", ".ts", ".tsx"]
-//          }
-//      }
-//  }
 }

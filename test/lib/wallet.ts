@@ -26,6 +26,7 @@ export class LocalWallet implements ISingleWallet {
       options: {
         showEffects: true,
         showObjectChanges: true,
+        showEvents: true,
       },
     });
   }
