@@ -75,17 +75,23 @@ describe('integration', () => {
       '0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7',
     );
     expect(outStreams.length > 0).toBe(true);
-    expect(outStreams[0].groupID).toBe('abcde');
+    expect(outStreams[0].coinType).toBe('0000000000000000000000000000000000000000000000000000000000000002::sui::SUI');
 
     const inStreams = await backend.getIncomingStreams(
       '0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7',
     );
     expect(inStreams.length > 0).toBe(true);
-    expect(inStreams[0].groupID).toBe('abcde');
+    expect(inStreams[0].coinType).toBe('0000000000000000000000000000000000000000000000000000000000000002::sui::SUI');
 
-    const events = await backend.getStreamHistory({
-      streamId: '0x04ca7518b1deafc9b8d8950e8b69c0c57b752359358f6862fa80ed7cf2954cee',
-    });
+    const inactiveStreams = await backend.getOutgoingStreams(
+      '0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7',
+      {
+        status: 'inactive',
+      },
+    );
+    expect(inactiveStreams.length > 0).toBe(true);
+
+    const events = await backend.getStreamHistory({});
     expect(events.data.length > 0).toBe(true);
   });
 
