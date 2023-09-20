@@ -93,6 +93,17 @@ describe('integration', () => {
 
     const events = await backend.getStreamHistory({});
     expect(events.data.length > 0).toBe(true);
+
+    const coinTypes = await backend.getAllCoinTypes(
+      '0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7',
+    );
+    expect(coinTypes.length > 0).toBe(true);
+    const recipients = await backend.getAllRecipients(
+      '0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7',
+    );
+    expect(recipients.length > 0).toBe(true);
+    const sender = await backend.getAllSenders('0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7');
+    expect(sender.length > 0).toBe(true);
   });
 
   it('single stream creation on testNet', async () => {
