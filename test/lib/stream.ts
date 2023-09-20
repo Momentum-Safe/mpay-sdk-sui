@@ -6,6 +6,7 @@ import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
 import { CreateStreamHelper } from '@/transaction/CreateStreamHelper';
 import { CreateStreamInfoInternal } from '@/types/client';
+import { generateGroupId } from '@/utils/random';
 
 import { TestSuite } from './setup';
 
@@ -35,7 +36,7 @@ export async function createStreamHelper(ts: TestSuite, recipient: string, modif
 export function defaultStreamParam(recipient: string): CreateStreamInfoInternal {
   const metadata = encodeMetadata({
     name: 'test name',
-    groupId: Date.now().toString(),
+    groupId: generateGroupId(),
   });
   return {
     metadata,

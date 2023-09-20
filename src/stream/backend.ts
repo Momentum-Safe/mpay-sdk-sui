@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 
+import { BackendError } from '@/error/BackendError';
 import {
   BackedOutgoingStreamFilterOptions,
   BackendIncomingStreamFilterOptions,
@@ -14,15 +15,15 @@ export class Backend implements IBackend {
 
   private static parseResponseData(response: AxiosError | AxiosResponse) {
     if (response instanceof AxiosError) {
-      throw new Error(response.response?.statusText);
+      throw new BackendError(response.response?.statusText);
     }
     if (response.status === 200) {
       if (response.data.success) {
         return response.data.data;
       }
-      throw new Error(response.data.code);
+      throw new BackendError(response.data.code);
     }
-    throw new Error(response.status.toString());
+    throw new BackendError(response.status.toString());
   }
 
   async getIncomingStreams(recipient: string, options?: BackendIncomingStreamFilterOptions): Promise<StreamRef[]> {
@@ -30,7 +31,7 @@ export class Backend implements IBackend {
       recipient,
       ...options,
     });
-    return Backend.parseResponseData(res) as any;
+    return Backend.parseResponseData(res) as StreamRef[];
   }
 
   async getOutgoingStreams(sender: string, options?: BackedOutgoingStreamFilterOptions): Promise<StreamRef[]> {

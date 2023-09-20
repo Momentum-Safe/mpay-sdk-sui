@@ -9,6 +9,7 @@ export enum MPayErrorCode {
   NotCreator,
   NotRecipient,
   InvalidStreamGroup,
+  BackendError,
 }
 
 export type JsonObject =
