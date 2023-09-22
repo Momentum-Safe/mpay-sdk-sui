@@ -1,12 +1,12 @@
 {
   "name": "mpay-sdk-sui",
-  "version": "1.0.0",
+  "version": "1.0.1-experiment-45136ec.0",
   "description": "MPay SDK on SUI",
   "main": "src/index.ts",
   "repository": "git@github.com:Momentum-Safe/mpay-sdk-sui.git",
   "author": "MSafe Team <admin@m-safe.io>",
   "license": "MIT",
-  "private": true,
+  "private": false,
   "devDependencies": {
     "@types/jest": "^29.5.4",
     "@types/luxon": "^3.3.2",
