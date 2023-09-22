@@ -17,7 +17,7 @@ export interface StreamRef {
 export interface IBackend {
   getIncomingStreams(recipient: string, options?: BackendIncomingStreamFilterOptions): Promise<StreamRef[]>;
   getOutgoingStreams(sender: string, options?: BackendOutgoingStreamFilterOptions): Promise<StreamRef[]>;
-  getAllCoinTypes(address: string): Promise<string>;
+  getAllCoinTypes(address: string): Promise<string[]>;
   getAllRecipients(sender: string, options?: StreamFilterStatus): Promise<string[]>;
   getAllSenders(recipient: string, options?: StreamFilterStatus): Promise<string[]>;
 

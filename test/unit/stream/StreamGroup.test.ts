@@ -1,6 +1,7 @@
 import { InvalidStreamGroupError } from '@/error/InvalidStreamGroupError';
 import { encodeMetadata } from '@/stream/metadata';
 import { StreamGroup } from '@/stream/StreamGroup';
+import { StreamStatus } from '@/types';
 import { generateGroupId } from '@/utils/random';
 
 import { getTestSuite, TestSuite } from '../../lib/setup';
@@ -45,5 +46,25 @@ describe('StreamGroup', () => {
       epochInterval: 2000n,
     }));
     await expect(StreamGroup.new(ts.globals, [...stIds, ...stIds2])).rejects.toThrow(InvalidStreamGroupError);
+  });
+
+  it('refresh', async () => {
+    const stIds = await createStreamHelper(ts, ts.address, (info) => ({
+      ...info,
+      recipients: [info.recipients[0], info.recipients[0]], // Same recipient info
+    }));
+    const sg = await StreamGroup.new(ts.globals, stIds);
+
+    // Cancel the first stream, and refresh
+    const txb = await sg.streams[0].cancel();
+    const res = await ts.wallet.signAndSubmitTransaction(txb);
+    expect(res.effects?.status.status).toBe('success');
+    expect(sg.streams[0].progress.status).toBe(StreamStatus.STREAMING);
+
+    // After refresh, the status will be changed to canceled, while the other stream remains the same
+    await sg.refresh();
+    expect(sg.streams[0].progress.status).toBe(StreamStatus.CANCELED);
+    expect(sg.streams[1].progress.status).toBe(StreamStatus.STREAMING);
+    expect(sg.progress.canceled).toBeGreaterThan(0n);
   });
 });

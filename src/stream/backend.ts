@@ -58,7 +58,7 @@ export class Backend implements IBackend {
     return Backend.parseResponseData(res);
   }
 
-  async getAllCoinTypes(address: string): Promise<string> {
+  async getAllCoinTypes(address: string): Promise<string[]> {
     const res = await axios.post(`${this.apiURL}/stream-info`, { address });
     return Backend.parseResponseData(res);
   }

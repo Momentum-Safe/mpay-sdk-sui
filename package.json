@@ -44,6 +44,7 @@
     "_build:node": "tsup --format cjs,esm --dts",
     "localnet": "sui-test-validator 2>/dev/null",
     "test": "jest",
-    "integration": "jest mpay.test.ts"
+    "integration": "jest mpay.test.ts",
+    "release-exp": "yarn build && ./scripts/publish.sh"
   }
 }
