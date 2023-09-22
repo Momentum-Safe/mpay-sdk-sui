@@ -5,18 +5,18 @@ import { Paginated, PaginationOptions } from '@/types/pagination';
 /// Full stream info shall be obtained from chain data. StreamRef is a brief for immutable stream
 /// config info.
 export interface StreamRef {
-  groupId: string;
-  streamId: string;
+  groupID: string;
+  streamID: string;
   sender: string;
   recipient: string;
   coinType: string;
-  createDate: Date;
+  createDate: string;
 }
 
 /// IBackend interface for supporting Stream registry query and history events.
 export interface IBackend {
   getIncomingStreams(recipient: string, options?: BackendIncomingStreamFilterOptions): Promise<StreamRef[]>;
-  getOutgoingStreams(sender: string, options?: BackedOutgoingStreamFilterOptions): Promise<StreamRef[]>;
+  getOutgoingStreams(sender: string, options?: BackendOutgoingStreamFilterOptions): Promise<StreamRef[]>;
   getAllCoinTypes(address: string): Promise<string>;
   getAllRecipients(sender: string, options?: StreamFilterStatus): Promise<string[]>;
   getAllSenders(recipient: string, options?: StreamFilterStatus): Promise<string[]>;
@@ -39,7 +39,7 @@ export interface IBackend {
 // SDK will do the filtering for streams.
 // active - 'streamed', 'canceled', 'streaming' - RawStatus.status === OPEN | CANCELED
 // inactive - 'settled', 'completed' === COMPLETED | CANCELED_COMPLETED
-export type StreamFilterStatus = 'active' | 'inactive' | 'all';
+export type StreamFilterStatus = 'none' | 'active' | 'inactive' | 'all';
 
 /// BackendIncomingStreamFilterOptions Options for querying Incoming StreamRefs from backend.
 /// Note that the pagination is currently not supported since the stream number
@@ -55,7 +55,7 @@ export interface BackendIncomingStreamFilterOptions {
 }
 
 /// BackedOutgoingStreamFilterOptions Options for querying Outgoing StreamRefs from backend.
-export interface BackedOutgoingStreamFilterOptions {
+export interface BackendOutgoingStreamFilterOptions {
   status?: StreamFilterStatus;
 
   coinType?: string | string[];

@@ -7,13 +7,13 @@ import { Globals } from '@/common/globals';
 import { encodeMetadata } from '@/stream/metadata';
 import { Stream } from '@/stream/Stream';
 import { MPayBuilder } from '@/transaction/MPayBuilder';
-import { CreateStreamInfo } from '@/types/client';
+import { CreateStreamInfo, IMPayClient, IncomingStreamQuery, OutgoingStreamQuery } from '@/types/client';
+import { IStream, IStreamGroup } from '@/types/IStream';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 import { MSafeAccountAdapter } from '@/wallet/MSafeAccountAdapter';
 import { SingleWalletAdapter } from '@/wallet/SingleWalletAdapter';
 
-// export class MPayClient implements IMPayClient {
-export class MPayClient {
+export class MPayClient implements IMPayClient {
   public readonly globals: Globals;
 
   constructor(env: Env, options?: EnvConfigOptions) {
@@ -75,6 +75,14 @@ export class MPayClient {
 
   async inspectTransactionBlock(txb: TransactionBlock) {
     return this.wallet.inspect(txb);
+  }
+
+  async getIncomingStreams(query?: IncomingStreamQuery): Promise<IStream[]> {
+    return [];
+  }
+
+  async getOutgoingStreams(query?: OutgoingStreamQuery): Promise<(IStream | IStreamGroup)[]> {
+    return [];
   }
 
   get wallet() {

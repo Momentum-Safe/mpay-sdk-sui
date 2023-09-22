@@ -1,6 +1,9 @@
+import { SuiObjectResponse } from '@mysten/sui.js/client';
+
 import { Globals } from '@/common/globals';
 import { InvalidInputError } from '@/error/InvalidInputError';
 import { InvalidStreamGroupError } from '@/error/InvalidStreamGroupError';
+import { SanityError } from '@/error/SanityError';
 import { Stream } from '@/stream/Stream';
 import { getObjectsById } from '@/sui/iterator/object';
 import { StreamEvent } from '@/types/events';
@@ -24,14 +27,17 @@ export class StreamGroup implements IStreamGroup {
 
   static async new(globals: Globals, ids: string[]) {
     const streamObjs = await getObjectsById(globals.suiClient, ids);
-    const streams = streamObjs
-      .map((obj, i) => {
-        if (!obj) {
-          console.warn(`Stream not found: ${ids[i]}`);
-          return undefined;
-        }
-        return Stream.fromObjectData(globals, ids[i], obj);
-      })
+    streamObjs.forEach((obj) => {
+      if (!obj) {
+        throw new SanityError('stream group object data undefined');
+      }
+    });
+    return StreamGroup.newFromObjectResponse(globals, ids, streamObjs as SuiObjectResponse[]);
+  }
+
+  static async newFromObjectResponse(globals: Globals, ids: string[], responses: SuiObjectResponse[]) {
+    const streams = responses
+      .map((obj, i) => Stream.fromObjectData(globals, ids[i], obj))
       .filter((stream) => !!stream) as Stream[];
 
     if (new Set(streams.map((st) => st.groupId)).size !== 1) {
