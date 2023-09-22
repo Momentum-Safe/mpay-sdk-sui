@@ -1,6 +1,6 @@
-import { SuiObjectChangeCreated, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 
+import { MPayHelper } from '@/stream/helper';
 import { encodeMetadata } from '@/stream/metadata';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
@@ -23,14 +23,8 @@ export async function createStreamHelper(ts: TestSuite, recipient: string, modif
     createParams = modifier(createParams);
   }
   const txb = await builder.buildCreateStreamTransactionBlock(createParams);
-  const res = await ts.globals.wallet.execute(txb);
-  const streamIds = (res as SuiTransactionBlockResponse)
-    .objectChanges!.filter(
-      (change) =>
-        change.type === 'created' && change.objectType.startsWith(`${ts.config.contract.contractId}::stream::Stream`),
-    )
-    .map((change) => (change as SuiObjectChangeCreated).objectId);
-  return streamIds;
+  const res = await ts.wallet.signAndSubmitTransaction(txb);
+  return new MPayHelper(ts.globals).getStreamIdsFromCreateStreamResponse(res);
 }
 
 export function defaultStreamParam(recipient: string): CreateStreamInfoInternal {

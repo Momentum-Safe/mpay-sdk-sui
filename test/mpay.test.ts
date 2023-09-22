@@ -22,7 +22,7 @@ describe('integration', () => {
 
     const streamParams = defaultStreamParam(ts.address);
     const txb = await builder.buildCreateStreamTransactionBlock(streamParams);
-    const createResult = (await ts.globals.wallet.execute(txb)) as SuiTransactionBlockResponse;
+    const createResult = (await ts.wallet.signAndSubmitTransaction(txb)) as SuiTransactionBlockResponse;
     const streamIds = createResult
       .objectChanges!.filter(
         (change) =>
@@ -41,7 +41,7 @@ describe('integration', () => {
       enabled: true,
       coinType: SUI_TYPE_ARG,
     });
-    const setAutoClaimRes = (await ts.wallet.execute(setAutoClaimTxb)) as SuiTransactionBlockResponse;
+    const setAutoClaimRes = (await ts.wallet.signAndSubmitTransaction(setAutoClaimTxb)) as SuiTransactionBlockResponse;
     console.log('set auto claim: ', setAutoClaimRes.digest);
 
     await sleep(1500);
@@ -51,20 +51,20 @@ describe('integration', () => {
       streamId,
       coinType: SUI_TYPE_ARG,
     });
-    const claimResult = (await ts.wallet.execute(claimTxb)) as SuiTransactionBlockResponse;
+    const claimResult = (await ts.wallet.signAndSubmitTransaction(claimTxb)) as SuiTransactionBlockResponse;
 
     console.log('Claim stream:', claimResult.digest);
 
     await sleep(1500);
     const autoClaimTxb = new TransactionBlock();
     streamContract.claimStreamByProxy(autoClaimTxb, { streamId, coinType: SUI_TYPE_ARG });
-    const autoClaimResult = (await ts.wallet.execute(autoClaimTxb)) as SuiTransactionBlockResponse;
+    const autoClaimResult = (await ts.wallet.signAndSubmitTransaction(autoClaimTxb)) as SuiTransactionBlockResponse;
 
     console.log('Auto claim: ', autoClaimResult.digest);
 
     const cancelTxb = new TransactionBlock();
     streamContract.cancelStream(cancelTxb, { streamId, coinType: SUI_TYPE_ARG });
-    const cancelResult = (await ts.wallet.execute(cancelTxb)) as SuiTransactionBlockResponse;
+    const cancelResult = (await ts.wallet.signAndSubmitTransaction(cancelTxb)) as SuiTransactionBlockResponse;
     console.log('cancel stream', cancelResult.digest);
   });
 
@@ -115,7 +115,10 @@ describe('integration', () => {
     );
     const streamParams = defaultStreamParam(ts.address);
     const txb = await builder.buildCreateStreamTransactionBlock(streamParams);
-    const createResult = (await ts.globals.wallet.execute(txb)) as SuiTransactionBlockResponse;
+    const createResult = (await ts.wallet.signAndSubmitTransaction(txb)) as SuiTransactionBlockResponse;
+
+    expect(createResult.effects?.status?.status).toBe('success');
+
     const streamIds = createResult
       .objectChanges!.filter(
         (change) =>
@@ -129,12 +132,13 @@ describe('integration', () => {
 
     const streamContract = new StreamContract(ts.config.contract, ts.globals);
     const setAutoClaimTxb = new TransactionBlock();
+
     streamContract.setAutoClaim(setAutoClaimTxb, {
       streamId,
       enabled: true,
       coinType: SUI_TYPE_ARG,
     });
-    const setAutoClaimRes = (await ts.wallet.execute(setAutoClaimTxb)) as SuiTransactionBlockResponse;
+    const setAutoClaimRes = (await ts.wallet.signAndSubmitTransaction(setAutoClaimTxb)) as SuiTransactionBlockResponse;
     console.log('set auto claim: ', setAutoClaimRes.digest);
 
     await sleep(1500);
@@ -144,20 +148,20 @@ describe('integration', () => {
       streamId,
       coinType: SUI_TYPE_ARG,
     });
-    const claimResult = (await ts.wallet.execute(claimTxb)) as SuiTransactionBlockResponse;
+    const claimResult = (await ts.wallet.signAndSubmitTransaction(claimTxb)) as SuiTransactionBlockResponse;
 
     console.log('Claim stream:', claimResult.digest);
 
     await sleep(1500);
     const autoClaimTxb = new TransactionBlock();
     streamContract.claimStreamByProxy(autoClaimTxb, { streamId, coinType: SUI_TYPE_ARG });
-    const autoClaimResult = (await ts.wallet.execute(autoClaimTxb)) as SuiTransactionBlockResponse;
+    const autoClaimResult = (await ts.wallet.signAndSubmitTransaction(autoClaimTxb)) as SuiTransactionBlockResponse;
 
     console.log('Auto claim: ', autoClaimResult.digest);
 
     const cancelTxb = new TransactionBlock();
     streamContract.cancelStream(cancelTxb, { streamId, coinType: SUI_TYPE_ARG });
-    const cancelResult = (await ts.wallet.execute(cancelTxb)) as SuiTransactionBlockResponse;
+    const cancelResult = (await ts.wallet.signAndSubmitTransaction(cancelTxb)) as SuiTransactionBlockResponse;
     console.log('cancel stream', cancelResult.digest);
   });
 });

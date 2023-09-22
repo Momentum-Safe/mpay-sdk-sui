@@ -1,4 +1,7 @@
-import { IStream, IStreamGroup, StreamStatus } from '@/types/IStream';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
+
+import { StreamListIterator } from '@/stream/query';
+import { IStream, StreamStatus } from '@/types/IStream';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 
 export interface IMPayClient {
@@ -6,10 +9,10 @@ export interface IMPayClient {
   connectMSafeAccount(msafe: IMSafeAccount): void;
 
   getStream(streamId: string): Promise<IStream>;
-  getIncomingStreams(query?: IncomingStreamQuery): Promise<IStream[]>;
-  getOutgoingStreams(query?: OutgoingStreamQuery): Promise<(IStream | IStreamGroup)[]>;
+  getIncomingStreams(query?: IncomingStreamQuery): Promise<StreamListIterator>;
+  getOutgoingStreams(query?: OutgoingStreamQuery): Promise<StreamListIterator>;
 
-  createStream(info: CreateStreamInfo): Promise<string[] | undefined>;
+  createStream(info: CreateStreamInfo): Promise<TransactionBlock>;
 }
 
 export interface IncomingStreamQuery {

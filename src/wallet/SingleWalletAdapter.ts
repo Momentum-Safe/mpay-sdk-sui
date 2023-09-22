@@ -1,5 +1,4 @@
 import { SuiClient } from '@mysten/sui.js/client';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 
 import { InvalidInputError } from '@/error/InvalidInputError';
@@ -23,14 +22,6 @@ export class SingleWalletAdapter implements IWallet {
 
   async address() {
     return this.singleWallet.address();
-  }
-
-  async execute(txb: TransactionBlock) {
-    return this.singleWallet.signAndSubmitTransaction(txb);
-  }
-
-  async inspect(txb: TransactionBlock) {
-    return this.singleWallet.inspect(txb);
   }
 
   async requestCoin(req: CoinRequest): Promise<CoinRequestResponse> {

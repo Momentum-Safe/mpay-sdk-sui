@@ -7,6 +7,7 @@ import { Globals } from '@/common/globals';
 import { NotCreatorError } from '@/error/NotCreatorError';
 import { NotRecipientError } from '@/error/NotRecipientError';
 import { RpcError } from '@/error/RpcError';
+import { SanityError } from '@/error/SanityError';
 import { StreamNotFoundError } from '@/error/StreamNotFoundError';
 import { decodeMetadata } from '@/stream/metadata';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
@@ -75,6 +76,13 @@ export class Stream implements IStream {
     this.rawData = await Stream.fetchStreamData(this.globals, this.streamId);
   }
 
+  refreshWithData(data: SuiObjectResponse) {
+    if (data.data?.objectId !== this.streamId) {
+      throw new SanityError('Object Id does not align');
+    }
+    this.rawData = Stream.parseRawStreamData(this.streamId, data);
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async historyEvents(options?: PaginationOptions): Promise<Paginated<StreamEvent>> {
     return {
@@ -94,7 +102,7 @@ export class Stream implements IStream {
       streamId: this.streamId,
       coinType: this.coinType,
     });
-    return this.executeAndRefresh(txb);
+    return txb;
   }
 
   async claim() {
@@ -106,7 +114,7 @@ export class Stream implements IStream {
       streamId: this.streamId,
       coinType: this.coinType,
     });
-    return this.executeAndRefresh(txb);
+    return txb;
   }
 
   async setAutoClaim(enabled: boolean) {
@@ -119,7 +127,7 @@ export class Stream implements IStream {
       coinType: this.coinType,
       enabled,
     });
-    return this.executeAndRefresh(txb);
+    return txb;
   }
 
   async claimByProxy() {
@@ -128,7 +136,7 @@ export class Stream implements IStream {
       streamId: this.streamId,
       coinType: this.coinType,
     });
-    return this.executeAndRefresh(txb);
+    return txb;
   }
 
   get wallet() {
@@ -349,13 +357,5 @@ export class Stream implements IStream {
         epochClaimed: BigInt(status.epoch_claimed),
       },
     };
-  }
-
-  private async executeAndRefresh(txb: TransactionBlock) {
-    const execRes = await this.wallet.execute(txb);
-    if (this.globals.wallet.type === 'single') {
-      await this.refresh();
-    }
-    return execRes;
   }
 }

@@ -6,7 +6,7 @@ import { InvalidInputError } from '@/error/InvalidInputError';
 import { SanityError } from '@/error/SanityError';
 import { Stream } from '@/stream/Stream';
 import { StreamGroup } from '@/stream/StreamGroup';
-import { EntryIterator } from '@/sui/iterator/iterator';
+import { EntryIterator, SuiIterator } from '@/sui/iterator/iterator';
 import { ListOidIterator, ObjectBatchIterator } from '@/sui/iterator/object';
 import { PagedData, Requester } from '@/sui/iterator/requester';
 import {
@@ -18,13 +18,26 @@ import {
 import { IncomingStreamQuery, OutgoingStreamQuery } from '@/types/client';
 import { IStream, IStreamGroup, StreamStatus } from '@/types/IStream';
 
-export const STREAM_LIST_PAGE_SIZE = 10;
+export class StreamListIterator
+  extends EntryIterator<IStream | IStreamGroup>
+  implements SuiIterator<IStream | IStreamGroup>
+{
+  private constructor(requester: StreamListRequester) {
+    super(requester);
+  }
 
-export class StreamListIterator implements EntryIterator<IStream | IStreamGroup> extends EntryIterator {
+  static async newIncoming(input: { globals: Globals; query?: IncomingStreamQuery }) {
+    const requester = await StreamListRequester.newIncomingQuery(input);
+    return new StreamListIterator(requester);
+  }
 
+  static async newOutgoing(input: { globals: Globals; query?: OutgoingStreamQuery }) {
+    const requester = await StreamListRequester.newOutgoingQuery(input);
+    return new StreamListIterator(requester);
+  }
 }
 
-export class IncomingStreamRequester implements Requester<IStream | IStreamGroup> {
+export class StreamListRequester implements Requester<IStream | IStreamGroup> {
   public current = 0;
 
   public objectIter: ObjectBatchIterator;
@@ -40,12 +53,20 @@ export class IncomingStreamRequester implements Requester<IStream | IStreamGroup
     this.objectIter = new ObjectBatchIterator(globals.suiClient, oidIter);
   }
 
-  static async new(input: { globals: Globals; query?: IncomingStreamQuery | OutgoingStreamQuery }) {
+  static async newIncomingQuery(input: { globals: Globals; query?: IncomingStreamQuery }) {
     const backendQuery = convertToIncomingBackendQuery(input.query);
     const recipient = await input.globals.walletAddress();
-    const refs = await input.globals.backend.getIncomingStreams(await input.globals.walletAddress(), backendQuery);
+    const refs = await input.globals.backend.getIncomingStreams(recipient, backendQuery);
     const groupedRefs = groupAndSortRefs(refs);
-    return new IncomingStreamRequester(input.globals, recipient, groupedRefs, input.query);
+    return new StreamListRequester(input.globals, recipient, groupedRefs, input.query);
+  }
+
+  static async newOutgoingQuery(input: { globals: Globals; query?: OutgoingStreamQuery }) {
+    const backendQuery = convertToOutgoingBackendQuery(input.query);
+    const sender = await input.globals.walletAddress();
+    const refs = await input.globals.backend.getOutgoingStreams(sender, backendQuery);
+    const groupedRefs = groupAndSortRefs(refs);
+    return new StreamListRequester(input.globals, sender, groupedRefs, input.query);
   }
 
   async doNextRequest(): Promise<PagedData<IStream | IStreamGroup>> {

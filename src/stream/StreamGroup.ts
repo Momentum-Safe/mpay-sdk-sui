@@ -36,17 +36,7 @@ export class StreamGroup implements IStreamGroup {
   }
 
   static async newFromObjectResponse(globals: Globals, ids: string[], responses: SuiObjectResponse[]) {
-    const streams = responses
-      .map((obj, i) => Stream.fromObjectData(globals, ids[i], obj))
-      .filter((stream) => !!stream) as Stream[];
-
-    if (new Set(streams.map((st) => st.groupId)).size !== 1) {
-      throw new InvalidStreamGroupError('Not same group ID');
-    }
-    if (!this.checkStreamGroup(streams)) {
-      throw new InvalidStreamGroupError('Not same stream settings');
-    }
-
+    const streams = await StreamGroup.parseGroupStreams(globals, ids, responses);
     return new StreamGroup(globals, streams);
   }
 
@@ -60,6 +50,16 @@ export class StreamGroup implements IStreamGroup {
       }
     });
     return isEqual;
+  }
+
+  async refresh() {
+    const streamObjs = await getObjectsById(
+      this.globals.suiClient,
+      this.streams.map((stream) => stream.streamId),
+    );
+    this.streams.forEach((stream, i) => {
+      stream.refreshWithData(streamObjs[i] as SuiObjectResponse);
+    });
   }
 
   get groupId() {
@@ -115,6 +115,20 @@ export class StreamGroup implements IStreamGroup {
       pageSize: 0,
       totalSize: 0,
     };
+  }
+
+  private static async parseGroupStreams(globals: Globals, ids: string[], responses: SuiObjectResponse[]) {
+    const streams = responses
+      .map((obj, i) => Stream.fromObjectData(globals, ids[i], obj))
+      .filter((stream) => !!stream) as Stream[];
+
+    if (new Set(streams.map((st) => st.groupId)).size !== 1) {
+      throw new InvalidStreamGroupError('Not same group ID');
+    }
+    if (!this.checkStreamGroup(streams)) {
+      throw new InvalidStreamGroupError('Not same stream settings');
+    }
+    return streams;
   }
 }
 
