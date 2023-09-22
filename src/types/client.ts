@@ -2,7 +2,7 @@ import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 import { SuiIterator } from '@/sui/iterator/iterator';
-import { Stream, IStreamGroup, StreamStatus } from '@/types/stream';
+import { IStreamGroup, StreamStatus, IStream } from '@/types/stream';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 
 export interface IMPayClient {
@@ -11,7 +11,7 @@ export interface IMPayClient {
   connectSingleWallet(wallet: ISingleWallet): void;
   connectMSafeAccount(msafe: IMSafeAccount): void;
 
-  getStream(streamId: string): Promise<Stream>;
+  getStream(streamId: string): Promise<IStream>;
   getIncomingStreams(query?: IncomingStreamQuery): Promise<IStreamListIterator>;
   getOutgoingStreams(query?: OutgoingStreamQuery): Promise<IStreamListIterator>;
 
@@ -22,7 +22,7 @@ export interface IMPayHelper {
   getStreamIdsFromCreateStreamResponse(res: SuiTransactionBlockResponse): string[];
 }
 
-export type IStreamListIterator = SuiIterator<Stream | IStreamGroup>;
+export type IStreamListIterator = SuiIterator<IStream | IStreamGroup>;
 
 export interface IncomingStreamQuery {
   status?: StreamStatus | StreamStatus[];

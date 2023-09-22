@@ -42,7 +42,7 @@ export interface IStream {
 
 export interface IStreamGroup {
   groupId: string;
-  streams: Stream[];
+  streams: IStream[];
   creator: string;
   info: StreamGroupInfo;
   progress: StreamGroupProgress;

@@ -23,7 +23,7 @@
     "sourceType": "module",
     "project": "./tsconfig.json"
   },
-  "ignorePatterns": ["tsup.config.js"],
+  "ignorePatterns": ["tsup.config.ts"],
   "rules": {
     "no-use-before-define": "off",
     "no-useless-constructor": "off",

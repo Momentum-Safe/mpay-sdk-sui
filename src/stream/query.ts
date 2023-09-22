@@ -16,9 +16,9 @@ import {
   StreamRef,
 } from '@/types/backend';
 import { IncomingStreamQuery, IStreamListIterator, OutgoingStreamQuery } from '@/types/client';
-import { Stream, IStreamGroup, StreamStatus } from '@/types/stream';
+import { IStream, IStreamGroup, StreamStatus } from '@/types/stream';
 
-export class StreamListIterator extends EntryIterator<Stream | IStreamGroup> implements IStreamListIterator {
+export class StreamListIterator extends EntryIterator<IStream | IStreamGroup> implements IStreamListIterator {
   private constructor(requester: StreamListRequester) {
     super(requester);
   }
@@ -34,7 +34,7 @@ export class StreamListIterator extends EntryIterator<Stream | IStreamGroup> imp
   }
 }
 
-export class StreamListRequester implements Requester<Stream | IStreamGroup> {
+export class StreamListRequester implements Requester<IStream | IStreamGroup> {
   public current = 0;
 
   public objectIter: ObjectBatchIterator;
@@ -66,7 +66,7 @@ export class StreamListRequester implements Requester<Stream | IStreamGroup> {
     return new StreamListRequester(input.globals, sender, groupedRefs, input.query);
   }
 
-  async doNextRequest(): Promise<PagedData<Stream | IStreamGroup>> {
+  async doNextRequest(): Promise<PagedData<IStream | IStreamGroup>> {
     if (this.current === this.groupRefs.length) {
       return {
         data: [],
@@ -116,7 +116,7 @@ export function groupAndSortRefs(refs: StreamRef[]) {
   );
 }
 
-function isStreamOfStatus(stream: Stream, filter: StreamStatus | StreamStatus[] | undefined): boolean {
+function isStreamOfStatus(stream: IStream, filter: StreamStatus | StreamStatus[] | undefined): boolean {
   if (filter === undefined) {
     return true;
   }
