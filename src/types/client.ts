@@ -1,19 +1,28 @@
+import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 
-import { StreamListIterator } from '@/stream/query';
-import { IStream, StreamStatus } from '@/types/IStream';
+import { SuiIterator } from '@/sui/iterator/iterator';
+import { Stream, IStreamGroup, StreamStatus } from '@/types/stream';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 
 export interface IMPayClient {
+  helper: IMPayHelper;
+
   connectSingleWallet(wallet: ISingleWallet): void;
   connectMSafeAccount(msafe: IMSafeAccount): void;
 
-  getStream(streamId: string): Promise<IStream>;
-  getIncomingStreams(query?: IncomingStreamQuery): Promise<StreamListIterator>;
-  getOutgoingStreams(query?: OutgoingStreamQuery): Promise<StreamListIterator>;
+  getStream(streamId: string): Promise<Stream>;
+  getIncomingStreams(query?: IncomingStreamQuery): Promise<IStreamListIterator>;
+  getOutgoingStreams(query?: OutgoingStreamQuery): Promise<IStreamListIterator>;
 
   createStream(info: CreateStreamInfo): Promise<TransactionBlock>;
 }
+
+export interface IMPayHelper {
+  getStreamIdsFromCreateStreamResponse(res: SuiTransactionBlockResponse): string[];
+}
+
+export type IStreamListIterator = SuiIterator<Stream | IStreamGroup>;
 
 export interface IncomingStreamQuery {
   status?: StreamStatus | StreamStatus[];

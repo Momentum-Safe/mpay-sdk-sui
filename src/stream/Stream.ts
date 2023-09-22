@@ -13,8 +13,8 @@ import { decodeMetadata } from '@/stream/metadata';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
 import { RawStreamData, RawStreamStatusEnum } from '@/types/data';
 import { StreamEvent } from '@/types/events';
-import { IStream, StreamGroupCommonInfo, StreamInfo, StreamProgress, StreamStatus } from '@/types/IStream';
 import { Paginated, PaginationOptions } from '@/types/pagination';
+import { IStream, StreamGroupCommonInfo, StreamInfo, StreamProgress, StreamStatus } from '@/types/stream';
 import { MAX_U64, roundDateTime, roundDuration } from '@/utils/utils';
 
 export class Stream implements IStream {

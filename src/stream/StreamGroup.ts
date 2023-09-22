@@ -7,8 +7,8 @@ import { SanityError } from '@/error/SanityError';
 import { Stream } from '@/stream/Stream';
 import { getObjectsById } from '@/sui/iterator/object';
 import { StreamEvent } from '@/types/events';
-import { IStreamGroup, StreamGroupCommonInfo, StreamGroupInfo, StreamGroupProgress } from '@/types/IStream';
 import { Paginated, PaginationOptions } from '@/types/pagination';
+import { IStreamGroup, StreamGroupCommonInfo, StreamGroupInfo, StreamGroupProgress } from '@/types/stream';
 
 export class StreamGroup implements IStreamGroup {
   constructor(

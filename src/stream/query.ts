@@ -6,7 +6,7 @@ import { InvalidInputError } from '@/error/InvalidInputError';
 import { SanityError } from '@/error/SanityError';
 import { Stream } from '@/stream/Stream';
 import { StreamGroup } from '@/stream/StreamGroup';
-import { EntryIterator, SuiIterator } from '@/sui/iterator/iterator';
+import { EntryIterator } from '@/sui/iterator/iterator';
 import { ListOidIterator, ObjectBatchIterator } from '@/sui/iterator/object';
 import { PagedData, Requester } from '@/sui/iterator/requester';
 import {
@@ -15,13 +15,10 @@ import {
   StreamFilterStatus,
   StreamRef,
 } from '@/types/backend';
-import { IncomingStreamQuery, OutgoingStreamQuery } from '@/types/client';
-import { IStream, IStreamGroup, StreamStatus } from '@/types/IStream';
+import { IncomingStreamQuery, IStreamListIterator, OutgoingStreamQuery } from '@/types/client';
+import { Stream, IStreamGroup, StreamStatus } from '@/types/stream';
 
-export class StreamListIterator
-  extends EntryIterator<IStream | IStreamGroup>
-  implements SuiIterator<IStream | IStreamGroup>
-{
+export class StreamListIterator extends EntryIterator<Stream | IStreamGroup> implements IStreamListIterator {
   private constructor(requester: StreamListRequester) {
     super(requester);
   }
@@ -37,7 +34,7 @@ export class StreamListIterator
   }
 }
 
-export class StreamListRequester implements Requester<IStream | IStreamGroup> {
+export class StreamListRequester implements Requester<Stream | IStreamGroup> {
   public current = 0;
 
   public objectIter: ObjectBatchIterator;
@@ -69,7 +66,7 @@ export class StreamListRequester implements Requester<IStream | IStreamGroup> {
     return new StreamListRequester(input.globals, sender, groupedRefs, input.query);
   }
 
-  async doNextRequest(): Promise<PagedData<IStream | IStreamGroup>> {
+  async doNextRequest(): Promise<PagedData<Stream | IStreamGroup>> {
     if (this.current === this.groupRefs.length) {
       return {
         data: [],
@@ -119,7 +116,7 @@ export function groupAndSortRefs(refs: StreamRef[]) {
   );
 }
 
-function isStreamOfStatus(stream: IStream, filter: StreamStatus | StreamStatus[] | undefined): boolean {
+function isStreamOfStatus(stream: Stream, filter: StreamStatus | StreamStatus[] | undefined): boolean {
   if (filter === undefined) {
     return true;
   }
