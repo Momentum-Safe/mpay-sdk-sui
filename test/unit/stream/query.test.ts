@@ -63,3 +63,5 @@ describe('convertStreamStatus', () => {
     expect(convertStreamStatus([StreamStatus.SETTLED, StreamStatus.STREAMED])).toBe('all');
   });
 });
+
+describe('StreamListIterator', () => {});

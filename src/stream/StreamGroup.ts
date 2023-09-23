@@ -107,14 +107,11 @@ export class StreamGroup implements IStreamGroup {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async historyEvents(options?: PaginationOptions): Promise<Paginated<StreamEvent[]>> {
-    return {
-      data: [],
-      pageNumber: 0,
-      pageSize: 0,
-      totalSize: 0,
-    };
+  async historyEvents(pagination?: PaginationOptions): Promise<Paginated<StreamEvent>> {
+    return this.globals.backend.getStreamHistory({
+      groupID: this.groupId,
+      pagination,
+    });
   }
 
   private static async parseGroupStreams(globals: Globals, ids: string[], responses: SuiObjectResponse[]) {

@@ -48,7 +48,7 @@ export interface IStreamGroup {
   progress: StreamGroupProgress;
 
   refresh(): Promise<void>;
-  historyEvents(options?: PaginationOptions): Promise<Paginated<StreamEvent[]>>;
+  historyEvents(options?: PaginationOptions): Promise<Paginated<StreamEvent>>;
 }
 
 export type StreamInfo = StreamInfoCommon & {

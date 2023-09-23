@@ -83,14 +83,11 @@ export class Stream implements IStream {
     this.rawData = Stream.parseRawStreamData(this.streamId, data);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async historyEvents(options?: PaginationOptions): Promise<Paginated<StreamEvent>> {
-    return {
-      data: [],
-      pageNumber: 0,
-      pageSize: 0,
-      totalSize: 0,
-    };
+  async historyEvents(pagination?: PaginationOptions): Promise<Paginated<StreamEvent>> {
+    return this.globals.backend.getStreamHistory({
+      streamID: this.streamId,
+      pagination,
+    });
   }
 
   async cancel() {
