@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 
-import { groupAndSortRefs } from '@/stream/query';
+import { convertStreamStatus, groupAndSortRefs } from '@/stream/query';
+import { StreamStatus } from '@/types';
 import { StreamRef } from '@/types/backend';
 
 const TEST_REFS: StreamRef[] = [
@@ -42,5 +43,23 @@ describe('groupAndSortRefs', () => {
     const date1 = DateTime.fromISO(res[0][0].createDate);
     const date2 = DateTime.fromISO(res[1][0].createDate);
     expect(date1.toMillis()).toBeGreaterThan(date2.toMillis());
+  });
+});
+
+describe('convertStreamStatus', () => {
+  it('simple', () => {
+    expect(convertStreamStatus(undefined)).toBe('all');
+    expect(convertStreamStatus([])).toBe('all');
+    expect(convertStreamStatus(StreamStatus.CANCELED)).toBe('active');
+    expect(convertStreamStatus(StreamStatus.STREAMING)).toBe('active');
+    expect(convertStreamStatus(StreamStatus.STREAMED)).toBe('active');
+    expect(convertStreamStatus(StreamStatus.COMPLETED)).toBe('inactive');
+    expect(convertStreamStatus(StreamStatus.SETTLED)).toBe('inactive');
+  });
+
+  it('complex', () => {
+    expect(convertStreamStatus([StreamStatus.CANCELED, StreamStatus.STREAMING, StreamStatus.STREAMED])).toBe('active');
+    expect(convertStreamStatus([StreamStatus.COMPLETED, StreamStatus.SETTLED])).toBe('inactive');
+    expect(convertStreamStatus([StreamStatus.SETTLED, StreamStatus.STREAMED])).toBe('all');
   });
 });

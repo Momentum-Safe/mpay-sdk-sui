@@ -16,7 +16,7 @@ export class Globals {
 
   public readonly envConfig: EnvConfig;
 
-  public readonly _backend?: IBackend;
+  public _backend?: IBackend;
 
   constructor(envConfig: EnvConfig) {
     this.envConfig = envConfig;
@@ -43,6 +43,11 @@ export class Globals {
       throw new NoBackendError();
     }
     return this._backend;
+  }
+
+  // Used for test cases
+  set backend(b: IBackend) {
+    this._backend = b;
   }
 
   connectWallet(wallet: IWallet) {

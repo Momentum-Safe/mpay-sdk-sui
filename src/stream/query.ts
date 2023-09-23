@@ -116,7 +116,7 @@ export function groupAndSortRefs(refs: StreamRef[]) {
   );
 }
 
-function isStreamOfStatus(stream: IStream, filter: StreamStatus | StreamStatus[] | undefined): boolean {
+export function isStreamOfStatus(stream: IStream, filter: StreamStatus | StreamStatus[] | undefined): boolean {
   if (filter === undefined) {
     return true;
   }
@@ -126,7 +126,7 @@ function isStreamOfStatus(stream: IStream, filter: StreamStatus | StreamStatus[]
   return filter.includes(stream.progress.status);
 }
 
-function isStreamGroupOfStatus(sg: IStreamGroup, filter: StreamStatus | StreamStatus[] | undefined): boolean {
+export function isStreamGroupOfStatus(sg: IStreamGroup, filter: StreamStatus | StreamStatus[] | undefined): boolean {
   let isStatus = false;
   sg.streams.forEach((stream) => {
     if (isStreamOfStatus(stream, filter)) {
@@ -167,7 +167,7 @@ async function getStreamObjectResponseFromIter(it: ObjectBatchIterator, streamId
 }
 
 // Convert IncomingStreamQuery to BackendIncomingStreamFilterOptions
-export function convertToIncomingBackendQuery(query?: IncomingStreamQuery): BackendIncomingStreamFilterOptions {
+function convertToIncomingBackendQuery(query?: IncomingStreamQuery): BackendIncomingStreamFilterOptions {
   return {
     status: convertStreamStatus(query?.status),
     coinType: query?.coinType,
@@ -175,7 +175,7 @@ export function convertToIncomingBackendQuery(query?: IncomingStreamQuery): Back
   };
 }
 
-export function convertToOutgoingBackendQuery(query?: OutgoingStreamQuery): BackendOutgoingStreamFilterOptions {
+function convertToOutgoingBackendQuery(query?: OutgoingStreamQuery): BackendOutgoingStreamFilterOptions {
   return {
     status: convertStreamStatus(query?.status),
     coinType: query?.coinType,
@@ -183,7 +183,7 @@ export function convertToOutgoingBackendQuery(query?: OutgoingStreamQuery): Back
   };
 }
 
-function convertStreamStatus(status: undefined | StreamStatus | StreamStatus[]): StreamFilterStatus {
+export function convertStreamStatus(status: undefined | StreamStatus | StreamStatus[]): StreamFilterStatus {
   if (status === undefined || status.length === 0) {
     return 'all';
   }
