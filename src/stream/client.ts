@@ -3,11 +3,17 @@ import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { Env, EnvConfigOptions } from '@/common/env';
 import { Globals } from '@/common/globals';
 import { MPayHelper } from '@/stream/helper';
-import { StreamListIterator } from '@/stream/query';
+import { PagedStreamListIterator } from '@/stream/query';
 import { Stream } from '@/stream/Stream';
 import { CreateStreamHelper } from '@/transaction/CreateStreamHelper';
 import { MPayBuilder } from '@/transaction/MPayBuilder';
-import { CreateStreamInfo, IMPayClient, IncomingStreamQuery, OutgoingStreamQuery } from '@/types/client';
+import {
+  CreateStreamInfo,
+  IMPayClient,
+  IncomingStreamQuery,
+  IPagedStreamListIterator,
+  OutgoingStreamQuery,
+} from '@/types/client';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 import { MSafeAccountAdapter } from '@/wallet/MSafeAccountAdapter';
 import { SingleWalletAdapter } from '@/wallet/SingleWalletAdapter';
@@ -41,12 +47,12 @@ export class MPayClient implements IMPayClient {
     return Stream.new(this.globals, streamId);
   }
 
-  async getIncomingStreams(query?: IncomingStreamQuery): Promise<StreamListIterator> {
-    return StreamListIterator.newIncoming({ globals: this.globals, query });
+  async getIncomingStreams(query?: IncomingStreamQuery, pageSize: number = 10): Promise<IPagedStreamListIterator> {
+    return PagedStreamListIterator.newIncoming({ globals: this.globals, query, pageSize });
   }
 
-  async getOutgoingStreams(query?: OutgoingStreamQuery): Promise<StreamListIterator> {
-    return StreamListIterator.newOutgoing({ globals: this.globals, query });
+  async getOutgoingStreams(query?: OutgoingStreamQuery, pageSize: number = 10): Promise<IPagedStreamListIterator> {
+    return PagedStreamListIterator.newOutgoing({ globals: this.globals, query, pageSize });
   }
 
   get wallet() {

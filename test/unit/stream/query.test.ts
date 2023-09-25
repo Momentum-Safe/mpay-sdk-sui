@@ -1,8 +1,8 @@
 import { DateTime, Duration } from 'luxon';
 
 import { Stream } from '@/stream';
-import { convertStreamStatus, groupAndSortRefs, StreamListIterator } from '@/stream/query';
-import { IStream, IStreamGroup, IStreamListIterator, StreamStatus } from '@/types';
+import { convertStreamStatus, groupAndSortRefs, PagedStreamListIterator, StreamListIterator } from '@/stream/query';
+import { IStream, IStreamGroup, StreamStatus } from '@/types';
 import { StreamRef } from '@/types/backend';
 
 import { MockBackend } from '../../lib/backend';
@@ -131,6 +131,46 @@ describe('StreamListIterator', () => {
     });
     await testStreamListIteration(it, [group, canceled, settled]);
   });
+
+  it('Paged: page size 1', async () => {
+    const it = await PagedStreamListIterator.newIncoming({
+      globals: ts.globals,
+      pageSize: 1,
+    });
+    await testPagedStreamListIteration(it, [1, 1, 1, 1]);
+  });
+
+  it('Paged: page size 2', async () => {
+    const it = await PagedStreamListIterator.newIncoming({
+      globals: ts.globals,
+      pageSize: 2,
+    });
+    await testPagedStreamListIteration(it, [2, 2]);
+  });
+
+  it('Paged: page size 3', async () => {
+    const it = await PagedStreamListIterator.newIncoming({
+      globals: ts.globals,
+      pageSize: 3,
+    });
+    await testPagedStreamListIteration(it, [3, 1]);
+  });
+
+  it('Paged: page size 4', async () => {
+    const it = await PagedStreamListIterator.newIncoming({
+      globals: ts.globals,
+      pageSize: 4,
+    });
+    await testPagedStreamListIteration(it, [4]);
+  });
+
+  it('Paged: page size 5', async () => {
+    const it = await PagedStreamListIterator.newIncoming({
+      globals: ts.globals,
+      pageSize: 5,
+    });
+    await testPagedStreamListIteration(it, [4]);
+  });
 });
 
 async function setupStreamsAndBackend() {
@@ -169,9 +209,8 @@ function createMockBackend(streams: Stream[]) {
   return be;
 }
 
-async function testStreamListIteration(it: IStreamListIterator, streamIds: string[][]) {
+async function testStreamListIteration(it: StreamListIterator, streamIds: string[][]) {
   for (let i = 0; i !== streamIds.length; i++) {
-    console.log('iteration', i);
     expect(await it.hasNext()).toBeTruthy();
     const st = await it.next();
     expect(st).toBeDefined();
@@ -187,6 +226,16 @@ async function testStreamListIteration(it: IStreamListIterator, streamIds: strin
         expect(stream.streamId).toBe(streamIds[i][j]);
       }
     }
+  }
+  expect(await it.hasNext()).toBeFalsy();
+}
+
+async function testPagedStreamListIteration(it: PagedStreamListIterator, pagedNumber: number[]) {
+  for (let i = 0; i !== pagedNumber.length; i++) {
+    expect(await it.hasNext()).toBeTruthy();
+    const sts = await it.next();
+    expect(sts).toBeDefined();
+    expect(sts.length).toBe(pagedNumber[i]);
   }
   expect(await it.hasNext()).toBeFalsy();
 }

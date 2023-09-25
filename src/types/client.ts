@@ -12,8 +12,8 @@ export interface IMPayClient {
   connectMSafeAccount(msafe: IMSafeAccount): void;
 
   getStream(streamId: string): Promise<IStream>;
-  getIncomingStreams(query?: IncomingStreamQuery): Promise<IStreamListIterator>;
-  getOutgoingStreams(query?: OutgoingStreamQuery): Promise<IStreamListIterator>;
+  getIncomingStreams(query?: IncomingStreamQuery, pageSize?: number): Promise<IPagedStreamListIterator>;
+  getOutgoingStreams(query?: OutgoingStreamQuery, pageSize?: number): Promise<IPagedStreamListIterator>;
 
   createStream(info: CreateStreamInfo): Promise<TransactionBlock>;
 }
@@ -22,7 +22,7 @@ export interface IMPayHelper {
   getStreamIdsFromCreateStreamResponse(res: SuiTransactionBlockResponse): string[];
 }
 
-export type IStreamListIterator = SuiIterator<IStream | IStreamGroup>;
+export type IPagedStreamListIterator = SuiIterator<(IStream | IStreamGroup)[]>;
 
 export interface IncomingStreamQuery {
   status?: StreamStatus | StreamStatus[];

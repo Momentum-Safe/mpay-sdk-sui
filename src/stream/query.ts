@@ -6,6 +6,7 @@ import { InvalidInputError } from '@/error/InvalidInputError';
 import { SanityError } from '@/error/SanityError';
 import { Stream } from '@/stream/Stream';
 import { StreamGroup } from '@/stream/StreamGroup';
+import { SuiIterator } from '@/sui/iterator/iterator';
 import { ListOidIterator, ObjectBatchIterator } from '@/sui/iterator/object';
 import {
   BackendIncomingStreamFilterOptions,
@@ -13,10 +14,47 @@ import {
   StreamFilterStatus,
   StreamRef,
 } from '@/types/backend';
-import { IncomingStreamQuery, IStreamListIterator, OutgoingStreamQuery } from '@/types/client';
+import { IncomingStreamQuery, IPagedStreamListIterator, OutgoingStreamQuery } from '@/types/client';
 import { IStream, IStreamGroup, StreamStatus } from '@/types/stream';
 
-export class StreamListIterator implements IStreamListIterator {
+export class PagedStreamListIterator implements IPagedStreamListIterator {
+  private constructor(
+    public readonly it: StreamListIterator,
+    public readonly pageSize: number,
+  ) {}
+
+  static async newIncoming(input: {
+    globals: Globals;
+    query?: IncomingStreamQuery;
+    pageSize: number;
+  }): Promise<PagedStreamListIterator> {
+    const it = await StreamListIterator.newIncoming(input);
+    return new PagedStreamListIterator(it, input.pageSize);
+  }
+
+  static async newOutgoing(input: {
+    globals: Globals;
+    query?: OutgoingStreamQuery;
+    pageSize: number;
+  }): Promise<PagedStreamListIterator> {
+    const it = await StreamListIterator.newOutgoing(input);
+    return new PagedStreamListIterator(it, input.pageSize);
+  }
+
+  async hasNext() {
+    return this.it.hasNext();
+  }
+
+  async next(): Promise<(IStream | IStreamGroup)[]> {
+    const res: (IStream | IStreamGroup)[] = [];
+    while (res.length < this.pageSize && (await this.it.hasNext())) {
+      res.push(await this.it.next());
+    }
+    return res;
+  }
+}
+
+export class StreamListIterator implements SuiIterator<IStream | IStreamGroup> {
   cachedNext: IStream | IStreamGroup | undefined | null;
 
   private constructor(private readonly requester: StreamListRequester) {}
@@ -87,7 +125,6 @@ export class StreamListRequester {
   }
 
   async doNextRequest(): Promise<IStream | IStreamGroup | null> {
-    console.log(this.current, this.groupRefs.length);
     if (this.current >= this.groupRefs.length) {
       return null;
     }
