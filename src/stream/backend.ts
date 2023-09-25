@@ -16,7 +16,7 @@ export class Backend implements IBackend {
 
   private static parseResponseData(response: AxiosError | AxiosResponse) {
     if (response instanceof AxiosError) {
-      throw new BackendError(response.response?.statusText);
+      throw new BackendError(response.response?.statusText as string);
     }
     if (response.status === 200) {
       if (response.data.success) {
