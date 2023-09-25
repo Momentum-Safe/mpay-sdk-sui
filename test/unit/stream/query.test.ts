@@ -131,8 +131,6 @@ describe('StreamListIterator', () => {
     });
     await testStreamListIteration(it, [group, canceled, settled]);
   });
-
-  it('filter: ');
 });
 
 async function setupStreamsAndBackend() {

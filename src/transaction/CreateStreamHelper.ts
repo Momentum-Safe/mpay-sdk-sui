@@ -11,6 +11,7 @@ import { InspectViewer } from '@/transaction/contracts/InspectViewer';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
 import { CreateStreamInfo, CreateStreamInfoInternal, RecipientInfoInternal } from '@/types/client';
 import { CoinRequest, GAS_OBJECT_SPEC } from '@/types/wallet';
+import { generateGroupId } from '@/utils/random';
 
 export interface PaymentWithFee {
   totalAmount: bigint;
@@ -29,7 +30,7 @@ export class CreateStreamHelper {
     return {
       metadata: encodeMetadata({
         name: info.name,
-        groupId: info.groupId,
+        groupId: generateGroupId(),
       }),
       coinType: normalizeStructTag(info.coinType),
       recipients: info.recipients.map((recipient) => ({

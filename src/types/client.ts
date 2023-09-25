@@ -38,7 +38,6 @@ export interface OutgoingStreamQuery {
 
 export interface CreateStreamInfo {
   name: string;
-  groupId: string;
   coinType: string;
   recipients: RecipientWithAmount[];
   interval: bigint; // Interval in milliseconds
