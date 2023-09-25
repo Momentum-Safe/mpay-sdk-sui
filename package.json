@@ -1,12 +1,20 @@
 {
   "name": "mpay-sdk-sui",
-  "version": "1.0.1-experiment-45136ec.0",
+  "version": "1.0.1-experiment-180788e.0",
   "description": "MPay SDK on SUI",
-  "main": "src/index.ts",
   "repository": "git@github.com:Momentum-Safe/mpay-sdk-sui.git",
   "author": "MSafe Team <admin@m-safe.io>",
   "license": "MIT",
   "private": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "devDependencies": {
     "@types/jest": "^29.5.4",
     "@types/luxon": "^3.3.2",
@@ -45,6 +53,6 @@
     "localnet": "sui-test-validator 2>/dev/null",
     "test": "jest",
     "integration": "jest mpay.test.ts",
-    "release-exp": "yarn build && ./scripts/publish.sh"
+    "prerelease": "yarn build && ./scripts/publish.sh"
   }
 }
