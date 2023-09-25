@@ -3,7 +3,6 @@ import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
 import { CreateStreamHelper } from '@/transaction/CreateStreamHelper';
-import { IStream, IStreamGroup, IStreamListIterator } from '@/types';
 
 import { getTestSuite, TestSuite } from '../../lib/setup';
 import { defaultStreamParam } from '../../lib/stream';
@@ -42,18 +41,3 @@ describe('builder', () => {
     expect((res as SuiTransactionBlockResponse).effects!.status.status).toBe('success');
   });
 });
-
-async function testStreamListIteration(it: IStreamListIterator, expStreamNumber: number[]) {
-  for (let i = 0; i !== expStreamNumber.length; i++) {
-    expect(await it.hasNext()).toBeTruthy();
-    const st = await it.next();
-    expect(st).toBeDefined();
-    if (expStreamNumber[i] === 1) {
-      expect('streamId' in (st as IStream | IStreamGroup)).toBeTruthy();
-    } else {
-      expect('streams' in (st as IStream | IStreamGroup)).toBeTruthy();
-      expect((st as IStreamGroup).streams.length).toBe(expStreamNumber[i]);
-    }
-  }
-  expect(await it.hasNext()).toBeFalsy();
-}

@@ -6,9 +6,7 @@ import { InvalidInputError } from '@/error/InvalidInputError';
 import { SanityError } from '@/error/SanityError';
 import { Stream } from '@/stream/Stream';
 import { StreamGroup } from '@/stream/StreamGroup';
-import { EntryIterator } from '@/sui/iterator/iterator';
 import { ListOidIterator, ObjectBatchIterator } from '@/sui/iterator/object';
-import { PagedData, Requester } from '@/sui/iterator/requester';
 import {
   BackendIncomingStreamFilterOptions,
   BackendOutgoingStreamFilterOptions,
@@ -18,10 +16,10 @@ import {
 import { IncomingStreamQuery, IStreamListIterator, OutgoingStreamQuery } from '@/types/client';
 import { IStream, IStreamGroup, StreamStatus } from '@/types/stream';
 
-export class StreamListIterator extends EntryIterator<IStream | IStreamGroup> implements IStreamListIterator {
-  private constructor(requester: StreamListRequester) {
-    super(requester);
-  }
+export class StreamListIterator implements IStreamListIterator {
+  cachedNext: IStream | IStreamGroup | undefined | null;
+
+  private constructor(private readonly requester: StreamListRequester) {}
 
   static async newIncoming(input: { globals: Globals; query?: IncomingStreamQuery }) {
     const requester = await StreamListRequester.newIncomingQuery(input);
@@ -32,9 +30,31 @@ export class StreamListIterator extends EntryIterator<IStream | IStreamGroup> im
     const requester = await StreamListRequester.newOutgoingQuery(input);
     return new StreamListIterator(requester);
   }
+
+  async hasNext(): Promise<boolean> {
+    if (this.cachedNext === undefined) {
+      this.cachedNext = await this.requester.doNextRequest();
+    }
+    return this.cachedNext !== null;
+  }
+
+  async next(): Promise<IStream | IStreamGroup> {
+    if (this.cachedNext === undefined) {
+      const res = await this.requester.doNextRequest();
+      if (res === null) {
+        throw new SanityError('No more results');
+      }
+    }
+    const res = this.cachedNext;
+    this.cachedNext = undefined;
+    if (res === null) {
+      throw new SanityError('No more results');
+    }
+    return res as IStream | IStreamGroup;
+  }
 }
 
-export class StreamListRequester implements Requester<IStream | IStreamGroup> {
+export class StreamListRequester {
   public current = 0;
 
   public objectIter: ObjectBatchIterator;
@@ -66,22 +86,16 @@ export class StreamListRequester implements Requester<IStream | IStreamGroup> {
     return new StreamListRequester(input.globals, sender, groupedRefs, input.query);
   }
 
-  async doNextRequest(): Promise<PagedData<IStream | IStreamGroup>> {
-    if (this.current === this.groupRefs.length) {
-      return {
-        data: [],
-        hasNext: false,
-      };
+  async doNextRequest(): Promise<IStream | IStreamGroup | null> {
+    console.log(this.current, this.groupRefs.length);
+    if (this.current >= this.groupRefs.length) {
+      return null;
     }
     const stRefs = this.groupRefs[this.current];
     if (stRefs.length === 1) {
       const stream = await getStreamFromIterator(this.globals, stRefs[0].streamID, this.objectIter);
       this.current++;
-
-      return {
-        data: isStreamOfStatus(stream, this.query?.status) ? [stream] : [],
-        hasNext: this.current >= this.groupRefs.length,
-      };
+      return isStreamOfStatus(stream, this.query?.status) ? stream : this.doNextRequest();
     }
     if (stRefs.length > 1) {
       const sg = await getStreamGroupFromIterator(
@@ -90,11 +104,7 @@ export class StreamListRequester implements Requester<IStream | IStreamGroup> {
         this.objectIter,
       );
       this.current++;
-
-      return {
-        data: isStreamGroupOfStatus(sg, this.query?.status) ? [sg] : [],
-        hasNext: this.current >= this.groupRefs.length,
-      };
+      return isStreamGroupOfStatus(sg, this.query?.status) ? sg : this.doNextRequest();
     }
     throw new SanityError('Stream group with no stream');
   }

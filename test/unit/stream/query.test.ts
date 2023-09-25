@@ -1,8 +1,13 @@
-import { DateTime } from 'luxon';
+import { DateTime, Duration } from 'luxon';
 
-import { convertStreamStatus, groupAndSortRefs } from '@/stream/query';
-import { StreamStatus } from '@/types';
+import { Stream } from '@/stream';
+import { convertStreamStatus, groupAndSortRefs, StreamListIterator } from '@/stream/query';
+import { IStream, IStreamGroup, IStreamListIterator, StreamStatus } from '@/types';
 import { StreamRef } from '@/types/backend';
+
+import { MockBackend } from '../../lib/backend';
+import { getTestSuite, TestSuite } from '../../lib/setup';
+import { createCanceledStream, createSettledStream, createStreamForTest, createStreamGroup } from '../../lib/stream';
 
 const TEST_REFS: StreamRef[] = [
   {
@@ -64,4 +69,126 @@ describe('convertStreamStatus', () => {
   });
 });
 
-describe('StreamListIterator', () => {});
+describe('StreamListIterator', () => {
+  let ts: TestSuite;
+  let streaming: string[];
+  let group: string[];
+  let canceled: string[];
+  let settled: string[];
+
+  beforeAll(async () => {
+    const res = await setupStreamsAndBackend();
+    ts = res.ts;
+    streaming = [res.streaming.streamId];
+    group = res.group.streams.map((stream) => stream.streamId);
+    canceled = [res.canceled.streamId];
+    settled = [res.settled.streamId];
+  });
+
+  it('no filter', async () => {
+    const it = await StreamListIterator.newIncoming({
+      globals: ts.globals,
+    });
+    await testStreamListIteration(it, [streaming, group, canceled, settled]);
+  });
+
+  it('filter: streaming', async () => {
+    const it = await StreamListIterator.newIncoming({
+      globals: ts.globals,
+      query: {
+        status: StreamStatus.STREAMING,
+      },
+    });
+    await testStreamListIteration(it, [streaming, group]);
+  });
+
+  it('filter: canceled', async () => {
+    const it = await StreamListIterator.newIncoming({
+      globals: ts.globals,
+      query: {
+        status: StreamStatus.CANCELED,
+      },
+    });
+    await testStreamListIteration(it, [group, canceled]);
+  });
+
+  it('filter: settled', async () => {
+    const it = await StreamListIterator.newIncoming({
+      globals: ts.globals,
+      query: {
+        status: StreamStatus.SETTLED,
+      },
+    });
+    await testStreamListIteration(it, [settled]);
+  });
+
+  it('filter: settled & streaming', async () => {
+    const it = await StreamListIterator.newIncoming({
+      globals: ts.globals,
+      query: {
+        status: [StreamStatus.SETTLED, StreamStatus.CANCELED],
+      },
+    });
+    await testStreamListIteration(it, [group, canceled, settled]);
+  });
+
+  it('filter: ');
+});
+
+async function setupStreamsAndBackend() {
+  const ts = await getTestSuite();
+
+  const streaming = await createStreamForTest(ts, ts.address);
+  const group = await createStreamGroup(ts, [ts.address, ts.address]);
+  const canceled = await createCanceledStream(ts, ts.address);
+  const settled = await createSettledStream(ts, ts.address);
+
+  const streams = [streaming, ...group.streams, canceled, settled];
+  const mockBackend = createMockBackend(streams);
+  ts.globals.backend = mockBackend;
+  return {
+    ts,
+    streaming,
+    group,
+    canceled,
+    settled,
+  };
+}
+
+function createMockBackend(streams: Stream[]) {
+  const be = new MockBackend();
+  const refs = streams.map((stream, i) => ({
+    groupID: stream.groupId,
+    streamID: stream.streamId,
+    sender: stream.creator,
+    recipient: stream.recipient,
+    coinType: stream.coinType,
+    createDate: DateTime.now()
+      .minus(Duration.fromMillis(i * 10000))
+      .toISODate() as string,
+  }));
+  be.addStreamRef(...refs);
+  return be;
+}
+
+async function testStreamListIteration(it: IStreamListIterator, streamIds: string[][]) {
+  for (let i = 0; i !== streamIds.length; i++) {
+    console.log('iteration', i);
+    expect(await it.hasNext()).toBeTruthy();
+    const st = await it.next();
+    expect(st).toBeDefined();
+    if (streamIds[i].length === 1) {
+      expect('streamId' in (st as IStream | IStreamGroup)).toBeTruthy();
+      expect((st as Stream).streamId).toBe(streamIds[i][0]);
+    } else {
+      expect('streams' in (st as IStream | IStreamGroup)).toBeTruthy();
+      const { streams } = st as IStreamGroup;
+      expect(streams.length).toBe(streamIds[i].length);
+      for (let j = 0; j !== streams.length; j++) {
+        const stream = streams[j];
+        expect(stream.streamId).toBe(streamIds[i][j]);
+      }
+    }
+  }
+  expect(await it.hasNext()).toBeFalsy();
+}

@@ -11,6 +11,7 @@ export enum MPayErrorCode {
   InvalidStreamGroup,
   BackendError,
   NoBackend,
+  TransactionFailed,
 }
 
 export type JsonObject =

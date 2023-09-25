@@ -1,4 +1,4 @@
-import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui.js/dist/cjs/utils/sui-types';
+import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui.js/utils';
 
 import { isSameCoinType } from '@/sui/utils';
 import {
