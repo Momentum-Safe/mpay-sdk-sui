@@ -1,5 +1,6 @@
-import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import { CoinBalance, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
+import { DateTime, Duration } from 'luxon';
 
 import { SuiIterator } from '@/sui/iterator/iterator';
 import { IStreamGroup, StreamStatus, IStream } from '@/types/stream';
@@ -19,7 +20,13 @@ export interface IMPayClient {
 }
 
 export interface IMPayHelper {
+  getBalance(address: string, coinType?: string | null): Promise<CoinBalance>;
+  getAllBalance(address: string): Promise<CoinBalance[]>;
+
   getStreamIdsFromCreateStreamResponse(res: SuiTransactionBlockResponse): string[];
+  calculateStreamAmount(input: { totalAmount: bigint; steps: bigint; cliff?: Fraction }): CalculatedStreamAmount;
+  calculateTimelineByInterval(input: { timeStart: DateTime; interval: Duration; steps: bigint }): CalculatedTimeline;
+  calculateTimelineByTotalDuration(input: { timeStart: DateTime; total: Duration; steps: bigint }): CalculatedTimeline;
 }
 
 export type IPagedStreamListIterator = SuiIterator<(IStream | IStreamGroup)[]>;
@@ -67,4 +74,22 @@ export interface RecipientInfoInternal {
   address: string;
   cliffAmount: bigint;
   amountPerEpoch: bigint;
+}
+
+export interface CalculatedStreamAmount {
+  realTotalAmount: bigint;
+  cliffAmount: bigint;
+  amountPerStep: bigint;
+}
+
+export interface CalculatedTimeline {
+  timeStart: DateTime;
+  timeEnd: DateTime;
+  interval: Duration;
+  steps: bigint;
+}
+
+export interface Fraction {
+  numerator: bigint;
+  denominator: bigint;
 }
