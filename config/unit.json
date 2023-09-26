@@ -1,9 +1,9 @@
 {
-  "transaction": "GXg7Crg5ZpjgoXcRjtxPy5b526EV1fiWyMB6NVoVPwzk",
+  "transaction": "ByByKgL8KeSvaTS4qy65exDKpgcbV6UNy8aKYtcchGAe",
   "status": "success",
-  "contractId": "0x58999b9d598b617e0a623ac798fe05a8d4d3f964b2aa2077e3f6bce3c7d090ce",
-  "roleObjId": "0x1b54c539f41fe38580d77edba8104079c0ecf865b81ffbf772d4262add516bc6",
-  "vaultObjId": "0x7b665c4983012e91b863b5656d902a03830d9805b30013fad8ea939469fffb4f",
-  "feeObjId": "0x727969fb74e758de83285023389b9e61d8dae625c2e353ce120db811e4487c7e",
-  "upgradeCapObjId": "0x6b39ffce3ba1214ede61c3fc18127720b94765bebbb28ea89c6af478814db2c8"
+  "contractId": "0x317d7ab328096b33d7185ab58677662b7c781bfd98609bf7551fd3ceac6786c5",
+  "roleObjId": "0x0a478320067af5b764027eb74bedd0a39a6fefaeebfdfb9dcd4bc6f106a9263e",
+  "vaultObjId": "0x888ccc02fdb29a07ffb145d868b2ff2315540d7fcfbf03d447b79f41497ed795",
+  "feeObjId": "0x29686b4aaa046f68a824a81f6d5965bbe2ff74bd1c4049ef801b463736afdf7c",
+  "upgradeCapObjId": "0x5ca2df4a355bc0b31f849e3b94c11cf95c181d15589f4b3c2d34bb7d7e750fe0"
 }
