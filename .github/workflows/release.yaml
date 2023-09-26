@@ -1,12 +1,11 @@
 name: Publish main
 
 on:
-  push
-#  pull_request:
-#    types:
-#      - closed
-#    branches:
-#      - main
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
 
 env:
   NODE_VERSION: 19
