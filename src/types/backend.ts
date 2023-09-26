@@ -39,7 +39,7 @@ export interface IBackend {
 // SDK will do the filtering for streams.
 // active - 'streamed', 'canceled', 'streaming' - RawStatus.status === OPEN | CANCELED
 // inactive - 'settled', 'completed' === COMPLETED | CANCELED_COMPLETED
-export type StreamFilterStatus = 'none' | 'active' | 'inactive' | 'all';
+export type StreamFilterStatus = 'active' | 'inactive' | 'all';
 
 /// BackendIncomingStreamFilterOptions Options for querying Incoming StreamRefs from backend.
 /// Note that the pagination is currently not supported since the stream number

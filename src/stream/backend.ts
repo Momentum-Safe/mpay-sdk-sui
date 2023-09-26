@@ -28,9 +28,6 @@ export class Backend implements IBackend {
   }
 
   async getIncomingStreams(recipient: string, options?: BackendIncomingStreamFilterOptions): Promise<StreamRef[]> {
-    if (options?.status === 'none') {
-      return [];
-    }
     const res = await axios.post(`${this.apiURL}/stream`, {
       recipient,
       ...options,
@@ -39,9 +36,6 @@ export class Backend implements IBackend {
   }
 
   async getOutgoingStreams(sender: string, options?: BackendOutgoingStreamFilterOptions): Promise<StreamRef[]> {
-    if (options?.status === 'none') {
-      return [];
-    }
     const res = await axios.post(`${this.apiURL}/stream`, {
       sender,
       ...options,
@@ -64,17 +58,11 @@ export class Backend implements IBackend {
   }
 
   async getAllRecipients(sender: string, options?: StreamFilterStatus): Promise<string[]> {
-    if (options === 'none') {
-      return [];
-    }
     const res = await axios.post(`${this.apiURL}/stream-info`, { sender, status: options });
     return Backend.parseResponseData(res);
   }
 
   async getAllSenders(recipient: string, options?: StreamFilterStatus): Promise<string[]> {
-    if (options === 'none') {
-      return [];
-    }
     const res = await axios.post(`${this.apiURL}/stream-info`, { recipient, status: options });
     return Backend.parseResponseData(res);
   }

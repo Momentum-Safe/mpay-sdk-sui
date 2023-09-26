@@ -237,16 +237,16 @@ export function convertStreamStatus(status: undefined | StreamStatus | StreamSta
   if (!Array.isArray(status)) {
     return convertStreamStatusSingle(status);
   }
-  return status.reduce((res, st) => {
+  return status.reduce((res: StreamFilterStatus | undefined, st) => {
     const sts = convertStreamStatus(st);
-    if (res === 'none') {
+    if (!res) {
       return sts;
     }
     if (res === sts) {
       return sts;
     }
     return 'all';
-  }, 'none' as StreamFilterStatus);
+  }, undefined) as StreamFilterStatus;
 }
 
 function convertStreamStatusSingle(status: StreamStatus): StreamFilterStatus {
