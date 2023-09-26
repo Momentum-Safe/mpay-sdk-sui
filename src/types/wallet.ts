@@ -1,6 +1,3 @@
-import { DevInspectResults, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
-
 export enum WalletType {
   single = 'single',
   msafe = 'msafe',
@@ -17,11 +14,6 @@ export interface IWallet {
   address(): Promise<string>;
 
   requestCoin(req: CoinRequest): Promise<CoinRequestResponse>;
-
-  // Depending on the wallet type, return transaction digest or sui rpc response
-  execute(txb: TransactionBlock): Promise<string | SuiTransactionBlockResponse>;
-
-  inspect(txb: TransactionBlock): Promise<DevInspectResults>;
 }
 
 /**
@@ -33,10 +25,6 @@ export interface IMSafeAccount {
 
   // return coin objects by amount.
   requestCoin(reqs: CoinRequest): Promise<CoinRequestResponse>;
-
-  propose(txb: TransactionBlock): Promise<string>; // Return transaction digest
-
-  inspect(txb: TransactionBlock): Promise<DevInspectResults>;
 }
 
 /**
@@ -45,10 +33,6 @@ export interface IMSafeAccount {
  */
 export interface ISingleWallet {
   address(): Promise<string>;
-
-  signAndSubmitTransaction(txb: TransactionBlock): Promise<SuiTransactionBlockResponse>;
-
-  inspect(txb: TransactionBlock): Promise<DevInspectResults>;
 }
 
 export interface CoinRequest {

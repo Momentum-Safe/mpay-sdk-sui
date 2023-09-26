@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 
 import { BackendError } from '@/error/BackendError';
 import {
-  BackedOutgoingStreamFilterOptions,
+  BackendOutgoingStreamFilterOptions,
   BackendIncomingStreamFilterOptions,
   IBackend,
   StreamFilterStatus,
@@ -16,7 +16,7 @@ export class Backend implements IBackend {
 
   private static parseResponseData(response: AxiosError | AxiosResponse) {
     if (response instanceof AxiosError) {
-      throw new BackendError(response.response?.statusText);
+      throw new BackendError(response.response?.statusText as string);
     }
     if (response.status === 200) {
       if (response.data.success) {
@@ -35,7 +35,7 @@ export class Backend implements IBackend {
     return Backend.parseResponseData(res) as StreamRef[];
   }
 
-  async getOutgoingStreams(sender: string, options?: BackedOutgoingStreamFilterOptions): Promise<StreamRef[]> {
+  async getOutgoingStreams(sender: string, options?: BackendOutgoingStreamFilterOptions): Promise<StreamRef[]> {
     const res = await axios.post(`${this.apiURL}/stream`, {
       sender,
       ...options,
@@ -52,7 +52,7 @@ export class Backend implements IBackend {
     return Backend.parseResponseData(res);
   }
 
-  async getAllCoinTypes(address: string): Promise<string> {
+  async getAllCoinTypes(address: string): Promise<string[]> {
     const res = await axios.post(`${this.apiURL}/stream-info`, { address });
     return Backend.parseResponseData(res);
   }

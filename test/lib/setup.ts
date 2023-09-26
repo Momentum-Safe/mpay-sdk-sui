@@ -1,14 +1,13 @@
-import { LocalWallet } from './wallet';
-
 import { Env, EnvConfig, getConfig } from '@/common/env';
 import { Globals } from '@/common/globals';
-import { IWallet } from '@/types/wallet';
 import { SingleWalletAdapter } from '@/wallet/SingleWalletAdapter';
+
+import { LocalWallet } from './wallet';
 
 export interface TestSuite {
   globals: Globals;
   config: EnvConfig;
-  wallet: IWallet;
+  wallet: LocalWallet;
   address: string;
 }
 
@@ -28,7 +27,7 @@ export async function getDevSuite(privateKey: string): Promise<TestSuite> {
   return {
     globals,
     config: globals.envConfig,
-    wallet: singleWallet,
+    wallet,
     address: await singleWallet.address(),
   };
 }
@@ -41,7 +40,7 @@ export async function getTestSuite(): Promise<TestSuite> {
   return {
     globals,
     config: globals.envConfig,
-    wallet: singleWallet,
+    wallet: testWallet,
     address: await singleWallet.address(),
   };
 }

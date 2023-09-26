@@ -1,0 +1,51 @@
+name: Publish main
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+env:
+  NODE_VERSION: 19
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.AUTOMATION_PAT_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          always-auth: true
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Build
+        run: yarn build
+
+      - name: Prepare Publish - environment
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          git config --global user.name "MSafeAdmin"
+          git config --global user.email "admin@m-safe.io"
+
+      - name: Publish - prod - step1
+        env:
+          GIT_TOKEN: ${{ secrets.AUTOMATION_PAT_TOKEN }}
+        run: |
+          npm version patch && git push --follow-tags --force
+
+      - name: Publish - prod - step2
+        run: yarn publish --non-interactive --access public

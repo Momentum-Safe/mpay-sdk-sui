@@ -1,15 +1,17 @@
 import { TransactionArgument, TransactionBlock } from '@mysten/sui.js/transactions';
-import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
+import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 
 import { Globals } from '@/common/globals';
+import { encodeMetadata } from '@/stream/metadata';
 import { isSameCoinType } from '@/sui/utils';
 import { FEE_DENOMINATOR, FEE_NUMERATOR, FLAT_FEE_SUI } from '@/transaction/const';
 import { ResultRef } from '@/transaction/contracts/common';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { InspectViewer } from '@/transaction/contracts/InspectViewer';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
-import { CreateStreamInfoInternal, RecipientInfoInternal } from '@/types/client';
+import { CreateStreamInfo, CreateStreamInfoInternal, RecipientInfoInternal } from '@/types/client';
 import { CoinRequest, GAS_OBJECT_SPEC } from '@/types/wallet';
+import { generateGroupId } from '@/utils/random';
 
 export interface PaymentWithFee {
   totalAmount: bigint;
@@ -23,6 +25,25 @@ export class CreateStreamHelper {
     private readonly feeContract: FeeContract,
     private readonly streamContract: StreamContract,
   ) {}
+
+  static convertCreateStreamInfoToInternal(info: CreateStreamInfo): CreateStreamInfoInternal {
+    return {
+      metadata: encodeMetadata({
+        name: info.name,
+        groupId: generateGroupId(),
+      }),
+      coinType: normalizeStructTag(info.coinType),
+      recipients: info.recipients.map((recipient) => ({
+        address: recipient.address,
+        cliffAmount: recipient.cliffAmount,
+        amountPerEpoch: recipient.amountPerStep,
+      })),
+      epochInterval: info.interval,
+      numberEpoch: info.steps,
+      startTime: info.startTimeMs,
+      cancelable: info.cancelable,
+    };
+  }
 
   async buildCreateStreamTransactionBlock(info: CreateStreamInfoInternal): Promise<TransactionBlock> {
     const txb = new TransactionBlock();
@@ -136,7 +157,10 @@ export class CreateStreamHelper {
 
   async getStreamFeeRemote(streamAmount: bigint) {
     const txb = this.feeContract.streamingFee(new TransactionBlock(), streamAmount);
-    const res = await this.wallet.inspect(txb);
+    const res = await this.globals.suiClient.devInspectTransactionBlock({
+      sender: await this.globals.walletAddress(),
+      transactionBlock: txb,
+    });
     const iv = new InspectViewer(res);
     return iv.getU64();
   }

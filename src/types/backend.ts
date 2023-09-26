@@ -10,20 +10,20 @@ export interface StreamRef {
   sender: string;
   recipient: string;
   coinType: string;
-  createDate: Date;
+  createDate: string;
 }
 
 /// IBackend interface for supporting Stream registry query and history events.
 export interface IBackend {
   getIncomingStreams(recipient: string, options?: BackendIncomingStreamFilterOptions): Promise<StreamRef[]>;
-  getOutgoingStreams(sender: string, options?: BackedOutgoingStreamFilterOptions): Promise<StreamRef[]>;
-  getAllCoinTypes(address: string): Promise<string>;
+  getOutgoingStreams(sender: string, options?: BackendOutgoingStreamFilterOptions): Promise<StreamRef[]>;
+  getAllCoinTypes(address: string): Promise<string[]>;
   getAllRecipients(sender: string, options?: StreamFilterStatus): Promise<string[]>;
   getAllSenders(recipient: string, options?: StreamFilterStatus): Promise<string[]>;
 
   getStreamHistory(query: {
-    streamID?: string;
-    groupID?: string;
+    streamId?: string;
+    groupId?: string;
     pagination?: PaginationOptions;
   }): Promise<Paginated<StreamEvent>>;
 }
@@ -55,7 +55,7 @@ export interface BackendIncomingStreamFilterOptions {
 }
 
 /// BackedOutgoingStreamFilterOptions Options for querying Outgoing StreamRefs from backend.
-export interface BackedOutgoingStreamFilterOptions {
+export interface BackendOutgoingStreamFilterOptions {
   status?: StreamFilterStatus;
 
   coinType?: string | string[];

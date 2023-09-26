@@ -1,12 +1,20 @@
 {
-  "name": "mpay-sdk-sui",
-  "version": "1.0.0",
+  "name": "@msafe/mpay-sdk-sui",
+  "version": "1.0.1",
   "description": "MPay SDK on SUI",
-  "main": "src/index.ts",
   "repository": "git@github.com:Momentum-Safe/mpay-sdk-sui.git",
   "author": "MSafe Team <admin@m-safe.io>",
   "license": "MIT",
-  "private": true,
+  "private": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "devDependencies": {
     "@types/jest": "^29.5.4",
     "@types/luxon": "^3.3.2",
@@ -26,6 +34,7 @@
     "prettier": "^3.0.3",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
+    "tsup": "^7.2.0",
     "typescript": "^5.2.2"
   },
   "dependencies": {
@@ -34,11 +43,17 @@
     "child_process": "^1.0.2",
     "fs": "^0.0.1-security",
     "luxon": "^3.4.3",
+    "nanoid": "3",
     "tsconfig-paths": "^4.2.0"
   },
   "scripts": {
+    "clean": "rm -rf ./dist",
+    "lint": "eslint --fix",
+    "build": "yarn clean && yarn _build:node",
+    "_build:node": "tsup --format cjs,esm --dts",
     "localnet": "sui-test-validator 2>/dev/null",
     "test": "jest",
-    "integration": "jest mpay.test.ts"
+    "integration": "jest mpay.test.ts",
+    "prerelease": "yarn build && ./scripts/publish.sh"
   }
 }

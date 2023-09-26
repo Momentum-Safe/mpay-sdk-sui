@@ -1,23 +1,31 @@
-import { SuiObjectChangeCreated, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
-import { normalizeStructTag } from '@mysten/sui.js/utils';
 
 import { Env, EnvConfigOptions } from '@/common/env';
 import { Globals } from '@/common/globals';
-import { encodeMetadata } from '@/stream/metadata';
+import { MPayHelper } from '@/stream/helper';
+import { PagedStreamListIterator } from '@/stream/query';
 import { Stream } from '@/stream/Stream';
+import { CreateStreamHelper } from '@/transaction/CreateStreamHelper';
 import { MPayBuilder } from '@/transaction/MPayBuilder';
-import { CreateStreamInfo } from '@/types/client';
+import {
+  CreateStreamInfo,
+  IMPayClient,
+  IncomingStreamQuery,
+  IPagedStreamListIterator,
+  OutgoingStreamQuery,
+} from '@/types/client';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 import { MSafeAccountAdapter } from '@/wallet/MSafeAccountAdapter';
 import { SingleWalletAdapter } from '@/wallet/SingleWalletAdapter';
 
-// export class MPayClient implements IMPayClient {
-export class MPayClient {
+export class MPayClient implements IMPayClient {
   public readonly globals: Globals;
+
+  public readonly helper: MPayHelper;
 
   constructor(env: Env, options?: EnvConfigOptions) {
     this.globals = Globals.new(env, options);
+    this.helper = new MPayHelper(this.globals);
   }
 
   connectSingleWallet(wallet: ISingleWallet) {
@@ -30,54 +38,28 @@ export class MPayClient {
     this.globals.connectWallet(adapter);
   }
 
-  builder() {
-    return new MPayBuilder(this.globals);
-  }
-
-  // If single wallet, return created stream Ids. Else return void for multi-sig.
-  async createStream(info: CreateStreamInfo): Promise<string[] | undefined> {
-    const txb = await this.builder().createStreams({
-      metadata: encodeMetadata({
-        name: info.name,
-        groupId: info.groupId,
-      }),
-      coinType: normalizeStructTag(info.coinType),
-      recipients: info.recipients.map((recipient) => ({
-        address: recipient.address,
-        cliffAmount: recipient.cliffAmount,
-        amountPerEpoch: recipient.amountPerStep,
-      })),
-      epochInterval: info.interval,
-      numberEpoch: info.steps,
-      startTime: info.startTimeMs,
-      cancelable: info.cancelable,
-    });
-    const res = await this.wallet.execute(txb);
-    if (this.wallet.type === 'msafe') {
-      return undefined;
-    }
-    return (res as SuiTransactionBlockResponse)
-      .objectChanges!.filter(
-        (change) =>
-          change.type === 'created' &&
-          change.objectType.startsWith(`${this.globals.envConfig.contract.contractId}::stream::Stream`),
-      )
-      .map((change) => (change as SuiObjectChangeCreated).objectId);
+  async createStream(info: CreateStreamInfo): Promise<TransactionBlock> {
+    const infoInternal = CreateStreamHelper.convertCreateStreamInfoToInternal(info);
+    return this.builder().createStreams(infoInternal);
   }
 
   async getStream(streamId: string) {
     return Stream.new(this.globals, streamId);
   }
 
-  async executeTransactionBlock(txb: TransactionBlock) {
-    return this.wallet.execute(txb);
+  async getIncomingStreams(query?: IncomingStreamQuery, pageSize: number = 10): Promise<IPagedStreamListIterator> {
+    return PagedStreamListIterator.newIncoming({ globals: this.globals, query, pageSize });
   }
 
-  async inspectTransactionBlock(txb: TransactionBlock) {
-    return this.wallet.inspect(txb);
+  async getOutgoingStreams(query?: OutgoingStreamQuery, pageSize: number = 10): Promise<IPagedStreamListIterator> {
+    return PagedStreamListIterator.newOutgoing({ globals: this.globals, query, pageSize });
   }
 
   get wallet() {
     return this.globals.wallet;
+  }
+
+  private builder() {
+    return new MPayBuilder(this.globals);
   }
 }

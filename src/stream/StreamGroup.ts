@@ -1,11 +1,14 @@
+import { SuiObjectResponse } from '@mysten/sui.js/client';
+
 import { Globals } from '@/common/globals';
 import { InvalidInputError } from '@/error/InvalidInputError';
 import { InvalidStreamGroupError } from '@/error/InvalidStreamGroupError';
+import { SanityError } from '@/error/SanityError';
 import { Stream } from '@/stream/Stream';
 import { getObjectsById } from '@/sui/iterator/object';
 import { StreamEvent } from '@/types/events';
-import { IStreamGroup, StreamGroupCommonInfo, StreamGroupInfo, StreamGroupProgress } from '@/types/IStream';
 import { Paginated, PaginationOptions } from '@/types/pagination';
+import { IStreamGroup, StreamGroupCommonInfo, StreamGroupInfo, StreamGroupProgress } from '@/types/stream';
 
 export class StreamGroup implements IStreamGroup {
   constructor(
@@ -24,23 +27,16 @@ export class StreamGroup implements IStreamGroup {
 
   static async new(globals: Globals, ids: string[]) {
     const streamObjs = await getObjectsById(globals.suiClient, ids);
-    const streams = streamObjs
-      .map((obj, i) => {
-        if (!obj) {
-          console.warn(`Stream not found: ${ids[i]}`);
-          return undefined;
-        }
-        return Stream.fromObjectData(globals, ids[i], obj);
-      })
-      .filter((stream) => !!stream) as Stream[];
+    streamObjs.forEach((obj) => {
+      if (!obj) {
+        throw new SanityError('stream group object data undefined');
+      }
+    });
+    return StreamGroup.newFromObjectResponse(globals, ids, streamObjs as SuiObjectResponse[]);
+  }
 
-    if (new Set(streams.map((st) => st.groupId)).size !== 1) {
-      throw new InvalidStreamGroupError('Not same group ID');
-    }
-    if (!this.checkStreamGroup(streams)) {
-      throw new InvalidStreamGroupError('Not same stream settings');
-    }
-
+  static async newFromObjectResponse(globals: Globals, ids: string[], responses: SuiObjectResponse[]) {
+    const streams = await StreamGroup.parseGroupStreams(globals, ids, responses);
     return new StreamGroup(globals, streams);
   }
 
@@ -54,6 +50,16 @@ export class StreamGroup implements IStreamGroup {
       }
     });
     return isEqual;
+  }
+
+  async refresh() {
+    const streamObjs = await getObjectsById(
+      this.globals.suiClient,
+      this.streams.map((stream) => stream.streamId),
+    );
+    this.streams.forEach((stream, i) => {
+      stream.refreshWithData(streamObjs[i] as SuiObjectResponse);
+    });
   }
 
   get groupId() {
@@ -97,18 +103,29 @@ export class StreamGroup implements IStreamGroup {
       streamed: this.streams.reduce((sum, st) => sum + st.streamedAmount, 0n),
       claimed: this.streams.reduce((sum, st) => sum + st.claimedAmount, 0n),
       claimable: this.streams.reduce((sum, st) => sum + st.claimable, 0n),
-      canceled: this.streams.reduce((sum, st) => (st.isCanceled ? st.totalAmount - st.streamedAmount : 0n), 0n),
+      canceled: this.streams.reduce((sum, st) => sum + (st.isCanceled ? st.totalAmount - st.streamedAmount : 0n), 0n),
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async historyEvents(options?: PaginationOptions): Promise<Paginated<StreamEvent[]>> {
-    return {
-      data: [],
-      pageNumber: 0,
-      pageSize: 0,
-      totalSize: 0,
-    };
+  async historyEvents(pagination?: PaginationOptions): Promise<Paginated<StreamEvent>> {
+    return this.globals.backend.getStreamHistory({
+      groupId: this.groupId,
+      pagination,
+    });
+  }
+
+  private static async parseGroupStreams(globals: Globals, ids: string[], responses: SuiObjectResponse[]) {
+    const streams = responses
+      .map((obj, i) => Stream.fromObjectData(globals, ids[i], obj))
+      .filter((stream) => !!stream) as Stream[];
+
+    if (new Set(streams.map((st) => st.groupId)).size !== 1) {
+      throw new InvalidStreamGroupError('Not same group ID');
+    }
+    if (!this.checkStreamGroup(streams)) {
+      throw new InvalidStreamGroupError('Not same stream settings');
+    }
+    return streams;
   }
 }
 

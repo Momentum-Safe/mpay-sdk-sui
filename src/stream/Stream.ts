@@ -7,13 +7,14 @@ import { Globals } from '@/common/globals';
 import { NotCreatorError } from '@/error/NotCreatorError';
 import { NotRecipientError } from '@/error/NotRecipientError';
 import { RpcError } from '@/error/RpcError';
+import { SanityError } from '@/error/SanityError';
 import { StreamNotFoundError } from '@/error/StreamNotFoundError';
 import { decodeMetadata } from '@/stream/metadata';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
 import { RawStreamData, RawStreamStatusEnum } from '@/types/data';
 import { StreamEvent } from '@/types/events';
-import { IStream, StreamGroupCommonInfo, StreamInfo, StreamProgress, StreamStatus } from '@/types/IStream';
 import { Paginated, PaginationOptions } from '@/types/pagination';
+import { IStream, StreamGroupCommonInfo, StreamInfo, StreamProgress, StreamStatus } from '@/types/stream';
 import { MAX_U64, roundDateTime, roundDuration } from '@/utils/utils';
 
 export class Stream implements IStream {
@@ -75,14 +76,18 @@ export class Stream implements IStream {
     this.rawData = await Stream.fetchStreamData(this.globals, this.streamId);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async historyEvents(options?: PaginationOptions): Promise<Paginated<StreamEvent>> {
-    return {
-      data: [],
-      pageNumber: 0,
-      pageSize: 0,
-      totalSize: 0,
-    };
+  refreshWithData(data: SuiObjectResponse) {
+    if (data.data?.objectId !== this.streamId) {
+      throw new SanityError('Object Id does not align');
+    }
+    this.rawData = Stream.parseRawStreamData(this.streamId, data);
+  }
+
+  async historyEvents(pagination?: PaginationOptions): Promise<Paginated<StreamEvent>> {
+    return this.globals.backend.getStreamHistory({
+      streamId: this.streamId,
+      pagination,
+    });
   }
 
   async cancel() {
@@ -94,7 +99,7 @@ export class Stream implements IStream {
       streamId: this.streamId,
       coinType: this.coinType,
     });
-    return this.executeAndRefresh(txb);
+    return txb;
   }
 
   async claim() {
@@ -106,7 +111,7 @@ export class Stream implements IStream {
       streamId: this.streamId,
       coinType: this.coinType,
     });
-    return this.executeAndRefresh(txb);
+    return txb;
   }
 
   async setAutoClaim(enabled: boolean) {
@@ -119,7 +124,7 @@ export class Stream implements IStream {
       coinType: this.coinType,
       enabled,
     });
-    return this.executeAndRefresh(txb);
+    return txb;
   }
 
   async claimByProxy() {
@@ -128,7 +133,7 @@ export class Stream implements IStream {
       streamId: this.streamId,
       coinType: this.coinType,
     });
-    return this.executeAndRefresh(txb);
+    return txb;
   }
 
   get wallet() {
@@ -349,13 +354,5 @@ export class Stream implements IStream {
         epochClaimed: BigInt(status.epoch_claimed),
       },
     };
-  }
-
-  private async executeAndRefresh(txb: TransactionBlock) {
-    const execRes = await this.wallet.execute(txb);
-    if (this.globals.wallet.type === 'single') {
-      await this.refresh();
-    }
-    return execRes;
   }
 }

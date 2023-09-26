@@ -30,8 +30,11 @@ describe('stream', () => {
       await st.refresh();
     }
     expect(st.claimable).toBeGreaterThan(0n);
-    const res = await st.claim();
+    const txb = await st.claim();
+    const res = await ts.wallet.signAndSubmitTransaction(txb);
     expect((res as SuiTransactionBlockResponse).effects?.status?.status).toBe('success');
+
+    await st.refresh();
     expect(st.progress.streamed).toBeGreaterThan(0n);
     expect(st.progress.status).toBe('STREAMING');
   });
@@ -43,10 +46,11 @@ describe('stream', () => {
     expect(st.cancelable).toBeTruthy();
     expect(st.progress.status).toBe('STREAMING');
 
-    const res = await st.cancel();
-    await st.refresh();
+    const txb = await st.cancel();
+    const res = await ts.wallet.signAndSubmitTransaction(txb);
     expect((res as SuiTransactionBlockResponse).effects?.status?.status).toBe('success');
 
+    await st.refresh();
     expect(st.progress.status === 'CANCELED' || st.progress.status === 'SETTLED').toBeTruthy();
   });
 
@@ -54,18 +58,21 @@ describe('stream', () => {
     const stIds = await createStreamHelper(ts, ts.address);
     const st = await Stream.new(ts.globals, stIds[0]);
 
-    expect(st.cancelable).toBeTruthy();
+    expect(st.autoClaim).toBeFalsy();
     expect(st.streamStatus).toBe('STREAMING');
-    const res1 = await st.setAutoClaim(true);
+    const txb1 = await st.setAutoClaim(true);
+    const res1 = await ts.wallet.signAndSubmitTransaction(txb1);
     expect((res1 as SuiTransactionBlockResponse).effects?.status.status).toBe('success');
-    expect(st.cancelable).toBeTruthy();
+    await st.refresh();
+    expect(st.autoClaim).toBeTruthy();
 
     if (st.claimable === 0n) {
       await sleep(1000);
       await st.refresh();
     }
     expect(st.claimable).toBeGreaterThan(0n);
-    const res2 = await st.claimByProxy();
+    const txb2 = await st.claimByProxy();
+    const res2 = await ts.wallet.signAndSubmitTransaction(txb2);
     expect((res2 as SuiTransactionBlockResponse).effects?.status?.status).toBe('success');
     expect(st.progress.streamed).toBeGreaterThan(0n);
     expect(st.progress.status).toBe('STREAMING');

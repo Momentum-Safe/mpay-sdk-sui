@@ -10,6 +10,8 @@ export enum MPayErrorCode {
   NotRecipient,
   InvalidStreamGroup,
   BackendError,
+  NoBackend,
+  TransactionFailed,
 }
 
 export type JsonObject =
@@ -31,7 +33,7 @@ export class MPayError extends Error {
   constructor(mpayErrorCode: number, msg: string, options: { cause?: unknown; context?: JsonObject } = {}) {
     const { cause, context } = options;
     if (cause) {
-      super(`[MPay] ${msg}: ${cause}`, { cause });
+      super(`[MPay] ${msg}: ${cause}`);
     } else {
       super(`[MPay] ${msg}`);
     }

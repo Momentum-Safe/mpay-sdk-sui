@@ -1,7 +1,7 @@
 import { bcs } from '@mysten/sui.js/bcs';
 
 import { InvalidInputError } from '@/error/InvalidInputError';
-import { StreamMetadata } from '@/types/IStream';
+import { StreamMetadata } from '@/types/stream';
 
 export const metadataBcsType = {
   groupId: 'string',
