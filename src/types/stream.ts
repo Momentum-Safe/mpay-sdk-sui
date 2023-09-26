@@ -54,6 +54,7 @@ export interface IStreamGroup {
 export type StreamInfo = StreamInfoCommon & {
   groupId: string;
   streamId: string;
+  recipient: string;
   progress: StreamProgress;
 };
 

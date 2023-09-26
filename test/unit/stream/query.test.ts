@@ -196,8 +196,8 @@ async function setupStreamsAndBackend() {
 function createMockBackend(streams: Stream[]) {
   const be = new MockBackend();
   const refs = streams.map((stream, i) => ({
-    groupID: stream.groupId,
-    streamID: stream.streamId,
+    groupId: stream.groupId,
+    streamId: stream.streamId,
     sender: stream.creator,
     recipient: stream.recipient,
     coinType: stream.coinType,
