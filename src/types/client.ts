@@ -1,4 +1,4 @@
-import { CoinBalance, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import { CoinBalance, CoinMetadata, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { DateTime, Duration } from 'luxon';
 
@@ -22,6 +22,7 @@ export interface IMPayClient {
 export interface IMPayHelper {
   getBalance(address: string, coinType?: string | null): Promise<CoinBalance>;
   getAllBalance(address: string): Promise<CoinBalance[]>;
+  getCoinMeta(coinType: string): Promise<CoinMetadata | undefined>;
 
   getStreamIdsFromCreateStreamResponse(res: SuiTransactionBlockResponse): string[];
   calculateStreamAmount(input: { totalAmount: bigint; steps: bigint; cliff?: Fraction }): CalculatedStreamAmount;

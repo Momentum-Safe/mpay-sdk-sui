@@ -1,4 +1,5 @@
-import { SuiObjectChangeCreated, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import { CoinMetadata, SuiClient, SuiObjectChangeCreated, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import { normalizeStructTag } from '@mysten/sui.js/utils';
 import { DateTime, Duration } from 'luxon';
 
 import { Globals } from '@/common/globals';
@@ -6,7 +7,11 @@ import { TransactionFailedError } from '@/error/TransactionFailedError';
 import { CalculatedStreamAmount, CalculatedTimeline, Fraction, IMPayHelper } from '@/types';
 
 export class MPayHelper implements IMPayHelper {
-  constructor(public readonly globals: Globals) {}
+  private readonly coinMetaHelper: CoinMetaHelper;
+
+  constructor(public readonly globals: Globals) {
+    this.coinMetaHelper = new CoinMetaHelper(globals.suiClient);
+  }
 
   getStreamIdsFromCreateStreamResponse(res: SuiTransactionBlockResponse) {
     if (res.effects?.status.status !== 'success') {
@@ -55,7 +60,7 @@ export class MPayHelper implements IMPayHelper {
     return {
       timeStart: input.timeStart,
       timeEnd,
-      interval: Duration.fromMillis(intervalMilli),
+      interval: Duration.fromMillis(Number(intervalMilli)),
       steps: input.steps,
     };
   }
@@ -71,5 +76,34 @@ export class MPayHelper implements IMPayHelper {
     return this.globals.suiClient.getAllBalances({
       owner: address,
     });
+  }
+
+  async getCoinMeta(coinType: string) {
+    return this.coinMetaHelper.getCoinMeta(coinType);
+  }
+}
+
+export class CoinMetaHelper {
+  private coinMetaReg: Map<string, CoinMetadata>;
+
+  constructor(private readonly suiClient: SuiClient) {
+    this.coinMetaReg = new Map();
+  }
+
+  async getCoinMeta(coinType: string): Promise<CoinMetadata | undefined> {
+    const normalized = normalizeStructTag(coinType);
+    if (this.coinMetaReg.has(normalized)) {
+      return this.coinMetaReg.get(normalized);
+    }
+    const meta = await this.queryCoinMeta(normalized);
+    if (meta) {
+      this.coinMetaReg.set(normalized, meta);
+    }
+    return meta;
+  }
+
+  private async queryCoinMeta(coinType: string): Promise<CoinMetadata | undefined> {
+    const res = await this.suiClient.getCoinMetadata({ coinType });
+    return res || undefined;
   }
 }
