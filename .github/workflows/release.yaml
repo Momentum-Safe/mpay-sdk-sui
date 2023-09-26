@@ -32,7 +32,7 @@ jobs:
         run: yarn
 
       - name: Build
-        run: yarn build-lib
+        run: yarn build
 
       - name: Prepare Publish - environment
         env:
