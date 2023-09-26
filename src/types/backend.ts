@@ -5,8 +5,8 @@ import { Paginated, PaginationOptions } from '@/types/pagination';
 /// Full stream info shall be obtained from chain data. StreamRef is a brief for immutable stream
 /// config info.
 export interface StreamRef {
-  groupID: string;
-  streamID: string;
+  groupId: string;
+  streamId: string;
   sender: string;
   recipient: string;
   coinType: string;
@@ -22,8 +22,8 @@ export interface IBackend {
   getAllSenders(recipient: string, options?: StreamFilterStatus): Promise<string[]>;
 
   getStreamHistory(query: {
-    streamID?: string;
-    groupID?: string;
+    streamId?: string;
+    groupId?: string;
     pagination?: PaginationOptions;
   }): Promise<Paginated<StreamEvent>>;
 }

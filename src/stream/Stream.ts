@@ -85,7 +85,7 @@ export class Stream implements IStream {
 
   async historyEvents(pagination?: PaginationOptions): Promise<Paginated<StreamEvent>> {
     return this.globals.backend.getStreamHistory({
-      streamID: this.streamId,
+      streamId: this.streamId,
       pagination,
     });
   }

@@ -109,7 +109,7 @@ export class StreamGroup implements IStreamGroup {
 
   async historyEvents(pagination?: PaginationOptions): Promise<Paginated<StreamEvent>> {
     return this.globals.backend.getStreamHistory({
-      groupID: this.groupId,
+      groupId: this.groupId,
       pagination,
     });
   }

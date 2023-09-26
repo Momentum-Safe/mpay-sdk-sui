@@ -104,7 +104,7 @@ export class StreamListRequester {
     public readonly query?: IncomingStreamQuery | OutgoingStreamQuery,
   ) {
     this.current = 0;
-    const oidIter = new ListOidIterator(groupRefs.flat().map((ref) => ref.streamID));
+    const oidIter = new ListOidIterator(groupRefs.flat().map((ref) => ref.streamId));
     this.objectIter = new ObjectBatchIterator(globals.suiClient, oidIter);
   }
 
@@ -130,14 +130,14 @@ export class StreamListRequester {
     }
     const stRefs = this.groupRefs[this.current];
     if (stRefs.length === 1) {
-      const stream = await getStreamFromIterator(this.globals, stRefs[0].streamID, this.objectIter);
+      const stream = await getStreamFromIterator(this.globals, stRefs[0].streamId, this.objectIter);
       this.current++;
       return isStreamOfStatus(stream, this.query?.status) ? stream : this.doNextRequest();
     }
     if (stRefs.length > 1) {
       const sg = await getStreamGroupFromIterator(
         this.globals,
-        stRefs.map((ref) => ref.streamID),
+        stRefs.map((ref) => ref.streamId),
         this.objectIter,
       );
       this.current++;
@@ -150,12 +150,12 @@ export class StreamListRequester {
 export function groupAndSortRefs(refs: StreamRef[]) {
   const m = new Map<string, StreamRef[]>();
   refs.forEach((ref) => {
-    const groupList = m.get(ref.groupID);
+    const groupList = m.get(ref.groupId);
     if (groupList) {
       groupList.push(ref);
-      m.set(ref.groupID, groupList);
+      m.set(ref.groupId, groupList);
     } else {
-      m.set(ref.groupID, [ref]);
+      m.set(ref.groupId, [ref]);
     }
   });
   return Array.from(m.values()).sort(
