@@ -84,6 +84,7 @@ export class MPayHelper implements IMPayHelper {
     const coinMeta = await this.getCoinMeta(coinType);
     return {
       ...balance,
+      coinType: normalizeStructTag(balance.coinType),
       coinMeta,
     };
   }
@@ -93,7 +94,11 @@ export class MPayHelper implements IMPayHelper {
       owner: address,
     });
     const coinMetas = await Promise.all(allBalance.map((bal) => this.getCoinMeta(bal.coinType)));
-    return allBalance.map((bal, i) => ({ ...bal, coinMeta: coinMetas[i] }));
+    return allBalance.map((bal, i) => ({
+      ...bal,
+      coinType: normalizeStructTag(bal.coinType),
+      coinMeta: coinMetas[i],
+    }));
   }
 
   async getCoinMeta(coinType: string | null | undefined) {
