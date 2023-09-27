@@ -3,6 +3,7 @@ import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { DateTime, Duration } from 'luxon';
 
 import { SuiIterator } from '@/sui/iterator/iterator';
+import { StreamFilterStatus } from '@/types/backend';
 import { IStreamGroup, StreamStatus, IStream } from '@/types/stream';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 
@@ -15,6 +16,9 @@ export interface IMPayClient {
   getStream(streamId: string): Promise<IStream>;
   getIncomingStreams(query?: IncomingStreamQuery, pageSize?: number): Promise<IPagedStreamListIterator>;
   getOutgoingStreams(query?: OutgoingStreamQuery, pageSize?: number): Promise<IPagedStreamListIterator>;
+  getCoinTypesForStreamFilter(): Promise<string[]>;
+  getRecipientsForStreamFilter(options?: StreamFilterStatus): Promise<string[]>;
+  getCreatorsForStreamFilter(options?: StreamFilterStatus): Promise<string[]>;
 
   createStream(info: CreateStreamInfo): Promise<TransactionBlock>;
 }
