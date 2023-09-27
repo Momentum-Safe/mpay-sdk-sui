@@ -11,6 +11,8 @@ import { Paginated, PaginationOptions } from '@/types/pagination';
 import { IStreamGroup, StreamGroupCommonInfo, StreamGroupInfo, StreamGroupProgress } from '@/types/stream';
 
 export class StreamGroup implements IStreamGroup {
+  public readonly type = 'StreamGroup';
+
   constructor(
     public readonly globals: Globals,
     public readonly streams: Stream[],

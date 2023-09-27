@@ -20,6 +20,8 @@ import { MAX_U64, roundDateTime, roundDuration } from '@/utils/utils';
 export class Stream implements IStream {
   private readonly streamContract: StreamContract;
 
+  public readonly type = 'Stream';
+
   constructor(
     public readonly globals: Globals,
     public readonly streamId: string,
@@ -146,7 +148,7 @@ export class Stream implements IStream {
   }
 
   get coinType() {
-    return this.rawData.coinType;
+    return normalizeStructTag(this.rawData.coinType);
   }
 
   get progress(): StreamProgress {
