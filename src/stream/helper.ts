@@ -3,8 +3,12 @@ import { normalizeStructTag } from '@mysten/sui.js/utils';
 import { DateTime, Duration } from 'luxon';
 
 import { Globals } from '@/common/globals';
+import { InvalidInputError } from '@/error/InvalidInputError';
 import { TransactionFailedError } from '@/error/TransactionFailedError';
 import { CalculatedStreamAmount, CalculatedTimeline, Fraction, IMPayHelper } from '@/types';
+
+// Minimum time interval is 1 second
+export const MIN_INTERVAL_MS = 1000;
 
 export class MPayHelper implements IMPayHelper {
   private readonly coinMetaHelper: CoinMetaHelper;
@@ -37,32 +41,40 @@ export class MPayHelper implements IMPayHelper {
     const amountPerStep = (input.totalAmount - cliffAmount) / input.steps;
     const realTotalAmount = amountPerStep * input.steps + cliffAmount;
 
-    return {
+    const res = {
       realTotalAmount,
       cliffAmount,
       amountPerStep,
     };
+    this.validateStreamAmount(res, input.totalAmount);
+    return res;
   }
 
   calculateTimelineByInterval(input: { timeStart: DateTime; interval: Duration; steps: bigint }): CalculatedTimeline {
     const timeEnd = input.timeStart.plus(input.interval.toMillis() * Number(input.steps));
-    return {
+
+    const res = {
       timeStart: input.timeStart,
       timeEnd,
       interval: input.interval,
       steps: input.steps,
     };
+    this.validateTimeline(res);
+    return res;
   }
 
   calculateTimelineByTotalDuration(input: { timeStart: DateTime; total: Duration; steps: bigint }): CalculatedTimeline {
     const intervalMilli = BigInt(input.total.toMillis()) / input.steps;
     const timeEnd = input.timeStart.plus(Duration.fromMillis(Number(intervalMilli * input.steps)));
-    return {
+
+    const res = {
       timeStart: input.timeStart,
       timeEnd,
       interval: Duration.fromMillis(Number(intervalMilli)),
       steps: input.steps,
     };
+    this.validateTimeline(res);
+    return res;
   }
 
   async getBalance(address: string, coinType?: string | null) {
@@ -80,6 +92,18 @@ export class MPayHelper implements IMPayHelper {
 
   async getCoinMeta(coinType: string) {
     return this.coinMetaHelper.getCoinMeta(coinType);
+  }
+
+  private validateStreamAmount(val: CalculatedStreamAmount, originTotalAmount: bigint) {
+    if (val.amountPerStep === 0n) {
+      throw new InvalidInputError('Stream amount too small', 'totalAmount', originTotalAmount);
+    }
+  }
+
+  private validateTimeline(val: CalculatedTimeline) {
+    if (val.interval.toMillis() < MIN_INTERVAL_MS) {
+      throw new InvalidInputError('Interval shall be at least 1 second', 'interval', val.interval);
+    }
   }
 }
 
