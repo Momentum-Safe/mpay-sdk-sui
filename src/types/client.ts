@@ -1,7 +1,9 @@
-import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import { CoinBalance, CoinMetadata, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
+import { DateTime, Duration } from 'luxon';
 
 import { SuiIterator } from '@/sui/iterator/iterator';
+import { StreamFilterStatus } from '@/types/backend';
 import { IStreamGroup, StreamStatus, IStream } from '@/types/stream';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 
@@ -14,12 +16,22 @@ export interface IMPayClient {
   getStream(streamId: string): Promise<IStream>;
   getIncomingStreams(query?: IncomingStreamQuery, pageSize?: number): Promise<IPagedStreamListIterator>;
   getOutgoingStreams(query?: OutgoingStreamQuery, pageSize?: number): Promise<IPagedStreamListIterator>;
+  getCoinTypesForStreamFilter(): Promise<string[]>;
+  getRecipientsForStreamFilter(options?: StreamFilterStatus): Promise<string[]>;
+  getCreatorsForStreamFilter(options?: StreamFilterStatus): Promise<string[]>;
 
   createStream(info: CreateStreamInfo): Promise<TransactionBlock>;
 }
 
 export interface IMPayHelper {
+  getBalance(address: string, coinType?: string | null): Promise<CoinBalanceWithMeta>;
+  getAllBalance(address: string): Promise<CoinBalanceWithMeta[]>;
+  getCoinMeta(coinType: string): Promise<CoinMetadata | undefined>;
+
   getStreamIdsFromCreateStreamResponse(res: SuiTransactionBlockResponse): string[];
+  calculateStreamAmount(input: { totalAmount: bigint; steps: bigint; cliff?: Fraction }): CalculatedStreamAmount;
+  calculateTimelineByInterval(input: { timeStart: DateTime; interval: Duration; steps: bigint }): CalculatedTimeline;
+  calculateTimelineByTotalDuration(input: { timeStart: DateTime; total: Duration; steps: bigint }): CalculatedTimeline;
 }
 
 export type IPagedStreamListIterator = SuiIterator<(IStream | IStreamGroup)[]>;
@@ -43,7 +55,6 @@ export interface CreateStreamInfo {
   interval: bigint; // Interval in milliseconds
   steps: bigint;
   startTimeMs: bigint;
-  cliffAmount: bigint;
   cancelable: boolean;
 }
 
@@ -68,3 +79,25 @@ export interface RecipientInfoInternal {
   cliffAmount: bigint;
   amountPerEpoch: bigint;
 }
+
+export interface CalculatedStreamAmount {
+  realTotalAmount: bigint;
+  cliffAmount: bigint;
+  amountPerStep: bigint;
+}
+
+export interface CalculatedTimeline {
+  timeStart: DateTime;
+  timeEnd: DateTime;
+  interval: Duration;
+  steps: bigint;
+}
+
+export interface Fraction {
+  numerator: bigint;
+  denominator: bigint;
+}
+
+export type CoinBalanceWithMeta = CoinBalance & {
+  coinMeta: CoinMetadata | undefined;
+};

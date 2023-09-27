@@ -1,4 +1,5 @@
 import { TransactionBlock } from '@mysten/sui.js/transactions';
+import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui.js/utils';
 
 import { Env, EnvConfigOptions } from '@/common/env';
 import { Globals } from '@/common/globals';
@@ -7,6 +8,7 @@ import { PagedStreamListIterator } from '@/stream/query';
 import { Stream } from '@/stream/Stream';
 import { CreateStreamHelper } from '@/transaction/CreateStreamHelper';
 import { MPayBuilder } from '@/transaction/MPayBuilder';
+import { StreamFilterStatus } from '@/types';
 import {
   CreateStreamInfo,
   IMPayClient,
@@ -53,6 +55,24 @@ export class MPayClient implements IMPayClient {
 
   async getOutgoingStreams(query?: OutgoingStreamQuery, pageSize: number = 10): Promise<IPagedStreamListIterator> {
     return PagedStreamListIterator.newOutgoing({ globals: this.globals, query, pageSize });
+  }
+
+  async getCoinTypesForStreamFilter(): Promise<string[]> {
+    const address = await this.wallet.address();
+    const coinTypes = await this.globals.backend.getAllCoinTypes(address);
+    return coinTypes.map((coinType) => normalizeStructTag(coinType));
+  }
+
+  async getRecipientsForStreamFilter(options?: StreamFilterStatus): Promise<string[]> {
+    const address = await this.wallet.address();
+    const recipients = await this.globals.backend.getAllRecipients(address, options);
+    return recipients.map((recipient) => normalizeSuiAddress(recipient));
+  }
+
+  async getCreatorsForStreamFilter(options?: StreamFilterStatus): Promise<string[]> {
+    const address = await this.wallet.address();
+    const creators = await this.globals.backend.getAllSenders(address, options);
+    return creators.map((creator) => normalizeSuiAddress(creator));
   }
 
   get wallet() {

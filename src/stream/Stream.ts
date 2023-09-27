@@ -56,6 +56,7 @@ export class Stream implements IStream {
 
       groupId: this.groupId,
       streamId: this.streamId,
+      recipient: this.recipient,
       progress: this.progress,
     };
   }

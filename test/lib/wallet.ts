@@ -39,6 +39,15 @@ export class LocalWallet implements ISingleWallet {
   }
 }
 
+// Fake wallet with no private key. Used for debugging and testing
+export class FakeWallet implements ISingleWallet {
+  constructor(public readonly walletAddress: string) {}
+
+  async address() {
+    return this.walletAddress;
+  }
+}
+
 export function makeKeyPairFromPrivateKey(privateKey: string) {
   return Ed25519Keypair.fromSecretKey(Buffer.from(privateKey, 'hex'));
 }
