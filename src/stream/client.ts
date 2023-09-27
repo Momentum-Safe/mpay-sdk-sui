@@ -50,11 +50,31 @@ export class MPayClient implements IMPayClient {
   }
 
   async getIncomingStreams(query?: IncomingStreamQuery, pageSize: number = 10): Promise<IPagedStreamListIterator> {
-    return PagedStreamListIterator.newIncoming({ globals: this.globals, query, pageSize });
+    return PagedStreamListIterator.newIncoming({
+      globals: this.globals,
+      query: query
+        ? {
+            status: query.status,
+            sender: query?.sender ? normalizeSuiAddress(query?.sender as string) : undefined,
+            coinType: query?.coinType ? normalizeStructTag(query?.coinType as string) : undefined,
+          }
+        : undefined,
+      pageSize,
+    });
   }
 
   async getOutgoingStreams(query?: OutgoingStreamQuery, pageSize: number = 10): Promise<IPagedStreamListIterator> {
-    return PagedStreamListIterator.newOutgoing({ globals: this.globals, query, pageSize });
+    return PagedStreamListIterator.newOutgoing({
+      globals: this.globals,
+      query: query
+        ? {
+            status: query.status,
+            recipient: query?.recipient ? normalizeSuiAddress(query?.recipient as string) : undefined,
+            coinType: query?.coinType ? normalizeStructTag(query?.coinType as string) : undefined,
+          }
+        : undefined,
+      pageSize,
+    });
   }
 
   async getCoinTypesForStreamFilter(): Promise<string[]> {

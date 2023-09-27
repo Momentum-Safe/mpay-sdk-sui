@@ -1,4 +1,5 @@
 import { SuiObjectResponse } from '@mysten/sui.js/client';
+import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui.js/utils';
 import { DateTime } from 'luxon';
 
 import { Globals } from '@/common/globals';
@@ -217,16 +218,16 @@ async function getStreamObjectResponseFromIter(it: ObjectBatchIterator, streamId
 function convertToIncomingBackendQuery(query?: IncomingStreamQuery): BackendIncomingStreamFilterOptions {
   return {
     status: convertStreamStatus(query?.status),
-    coinType: query?.coinType,
-    sender: query?.sender,
+    coinType: query?.coinType ? normalizeStructTag(query?.coinType as string) : undefined,
+    sender: query?.sender ? normalizeSuiAddress(query?.sender as string) : undefined,
   };
 }
 
 function convertToOutgoingBackendQuery(query?: OutgoingStreamQuery): BackendOutgoingStreamFilterOptions {
   return {
     status: convertStreamStatus(query?.status),
-    coinType: query?.coinType,
-    recipient: query?.recipient,
+    coinType: query?.coinType ? normalizeStructTag(query?.coinType as string) : undefined,
+    recipient: query?.recipient ? normalizeSuiAddress(query?.recipient as string) : undefined,
   };
 }
 

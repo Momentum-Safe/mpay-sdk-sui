@@ -20,6 +20,7 @@ export enum StreamStatus {
 
 export interface IStream {
   streamId: string;
+  type: 'Stream';
   groupId: string;
   creator: string;
   recipient: string;
@@ -42,6 +43,7 @@ export interface IStream {
 
 export interface IStreamGroup {
   groupId: string;
+  type: 'StreamGroup';
   streams: IStream[];
   creator: string;
   info: StreamGroupInfo;
