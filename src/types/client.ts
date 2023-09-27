@@ -20,8 +20,8 @@ export interface IMPayClient {
 }
 
 export interface IMPayHelper {
-  getBalance(address: string, coinType?: string | null): Promise<CoinBalance>;
-  getAllBalance(address: string): Promise<CoinBalance[]>;
+  getBalance(address: string, coinType?: string | null): Promise<CoinBalanceWithMeta>;
+  getAllBalance(address: string): Promise<CoinBalanceWithMeta[]>;
   getCoinMeta(coinType: string): Promise<CoinMetadata | undefined>;
 
   getStreamIdsFromCreateStreamResponse(res: SuiTransactionBlockResponse): string[];
@@ -94,3 +94,7 @@ export interface Fraction {
   numerator: bigint;
   denominator: bigint;
 }
+
+export type CoinBalanceWithMeta = CoinBalance & {
+  coinMeta: CoinMetadata | undefined;
+};

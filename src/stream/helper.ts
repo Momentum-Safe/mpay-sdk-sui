@@ -1,5 +1,5 @@
 import { CoinMetadata, SuiClient, SuiObjectChangeCreated, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
-import { normalizeStructTag } from '@mysten/sui.js/utils';
+import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 import { DateTime, Duration } from 'luxon';
 
 import { Globals } from '@/common/globals';
@@ -78,19 +78,26 @@ export class MPayHelper implements IMPayHelper {
   }
 
   async getBalance(address: string, coinType?: string | null) {
-    return this.globals.suiClient.getBalance({
+    const balance = await this.globals.suiClient.getBalance({
       owner: address,
       coinType,
     });
+    const coinMeta = await this.getCoinMeta(coinType);
+    return {
+      ...balance,
+      coinMeta,
+    };
   }
 
   async getAllBalance(address: string) {
-    return this.globals.suiClient.getAllBalances({
+    const allBalance = await this.globals.suiClient.getAllBalances({
       owner: address,
     });
+    const coinMetas = await Promise.all(allBalance.map((bal) => this.getCoinMeta(bal.coinType)));
+    return allBalance.map((bal, i) => ({ ...bal, coinMeta: coinMetas[i] }));
   }
 
-  async getCoinMeta(coinType: string) {
+  async getCoinMeta(coinType: string | null | undefined) {
     return this.coinMetaHelper.getCoinMeta(coinType);
   }
 
@@ -114,8 +121,8 @@ export class CoinMetaHelper {
     this.coinMetaReg = new Map();
   }
 
-  async getCoinMeta(coinType: string): Promise<CoinMetadata | undefined> {
-    const normalized = normalizeStructTag(coinType);
+  async getCoinMeta(coinType: string | null | undefined): Promise<CoinMetadata | undefined> {
+    const normalized = normalizeStructTag(coinType || SUI_TYPE_ARG);
     if (this.coinMetaReg.has(normalized)) {
       return this.coinMetaReg.get(normalized);
     }

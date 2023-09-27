@@ -54,6 +54,7 @@
     "localnet": "sui-test-validator 2>/dev/null",
     "test": "jest",
     "integration": "jest mpay.test.ts",
+    "playground": "jest playground.test.ts",
     "prerelease": "yarn build && ./scripts/publish.sh"
   }
 }
