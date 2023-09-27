@@ -55,7 +55,6 @@ export interface CreateStreamInfo {
   interval: bigint; // Interval in milliseconds
   steps: bigint;
   startTimeMs: bigint;
-  cliffAmount: bigint;
   cancelable: boolean;
 }
 

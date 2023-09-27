@@ -42,6 +42,16 @@ describe('MPayHelper', () => {
     ).toThrow(InvalidInputError);
   });
 
+  it('calculateStreamAmount cliff too large', () => {
+    expect(() =>
+      helper.calculateStreamAmount({
+        totalAmount: 10000n,
+        steps: 3n,
+        cliff: { numerator: 101n, denominator: 100n },
+      }),
+    ).toThrow(InvalidInputError);
+  });
+
   it('calculateTimelineByInterval', () => {
     const res = helper.calculateTimelineByInterval({
       timeStart: DateTime.now(),

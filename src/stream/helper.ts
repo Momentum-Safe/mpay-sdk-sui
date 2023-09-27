@@ -66,7 +66,6 @@ export class MPayHelper implements IMPayHelper {
   calculateTimelineByTotalDuration(input: { timeStart: DateTime; total: Duration; steps: bigint }): CalculatedTimeline {
     const intervalMilli = BigInt(input.total.toMillis()) / input.steps;
     const timeEnd = input.timeStart.plus(Duration.fromMillis(Number(intervalMilli * input.steps)));
-
     const res = {
       timeStart: input.timeStart,
       timeEnd,
@@ -104,6 +103,9 @@ export class MPayHelper implements IMPayHelper {
   private validateStreamAmount(val: CalculatedStreamAmount, originTotalAmount: bigint) {
     if (val.amountPerStep === 0n) {
       throw new InvalidInputError('Stream amount too small', 'totalAmount', originTotalAmount);
+    }
+    if (val.cliffAmount > val.realTotalAmount) {
+      throw new InvalidInputError('Invalid cliff settings');
     }
   }
 
