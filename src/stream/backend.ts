@@ -49,7 +49,22 @@ export class Backend implements IBackend {
     pagination?: PaginationOptions;
   }): Promise<Paginated<StreamEvent>> {
     const res = await axios.post(`${this.apiURL}/stream-events`, query);
-    return Backend.parseResponseData(res);
+    const paginatedData = Backend.parseResponseData(res);
+    paginatedData.data.forEach((event: StreamEvent) => {
+      const formalizedEvent = event;
+      if (formalizedEvent.data.type === 'create_stream') {
+        formalizedEvent.data.balance = BigInt(formalizedEvent.data.balance);
+      } else if (formalizedEvent.data.type === 'cancel_stream') {
+        formalizedEvent.data.withdrawAmount = BigInt(formalizedEvent.data.withdrawAmount);
+      } else if (formalizedEvent.data.type === 'claim' || formalizedEvent.data.type === 'auto_claim') {
+        formalizedEvent.data.claimAmount = BigInt(formalizedEvent.data.claimAmount);
+      } else if (formalizedEvent.data.type === 'set_auto_claim') {
+        formalizedEvent.data.enabled = !!formalizedEvent.data.enabled;
+      }
+      return formalizedEvent;
+    });
+
+    return paginatedData;
   }
 
   async getAllCoinTypes(address: string): Promise<string[]> {

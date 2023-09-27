@@ -73,15 +73,26 @@ describe('integration', () => {
     const backend = new Backend(env.envConfig.backend!.url);
     const outStreams = await backend.getOutgoingStreams(
       '0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7',
+      {
+        status: 'all',
+      },
     );
     expect(outStreams.length > 0).toBe(true);
-    expect(outStreams[0].coinType).toBe('0000000000000000000000000000000000000000000000000000000000000002::sui::SUI');
+    expect(outStreams[0].streamId).not.toBeUndefined();
+    expect(outStreams[0].groupId).not.toBeUndefined();
+    expect(outStreams[0].sender).toBe('0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7');
+    expect(outStreams[0].recipient).toBe('0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7');
+    expect(outStreams[0].coinType).toBe('0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI');
 
     const inStreams = await backend.getIncomingStreams(
       '0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7',
     );
     expect(inStreams.length > 0).toBe(true);
-    expect(inStreams[0].coinType).toBe('0000000000000000000000000000000000000000000000000000000000000002::sui::SUI');
+    expect(inStreams[0].coinType).toBe('0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI');
+    expect(outStreams[0].groupId).not.toBeUndefined();
+    expect(inStreams[0].streamId).not.toBeUndefined();
+    expect(inStreams[0].sender).toBe('0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7');
+    expect(inStreams[0].recipient).toBe('0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7');
 
     const inactiveStreams = await backend.getOutgoingStreams(
       '0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7',
@@ -90,20 +101,36 @@ describe('integration', () => {
       },
     );
     expect(inactiveStreams.length > 0).toBe(true);
+    expect(outStreams[0].groupId).not.toBeUndefined();
+    expect(inStreams[0].streamId).not.toBeUndefined();
+    expect(inStreams[0].sender).toBe('0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7');
+    expect(inStreams[0].recipient).toBe('0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7');
 
-    const events = await backend.getStreamHistory({});
+    const events: any = await backend.getStreamHistory({});
     expect(events.data.length > 0).toBe(true);
+    expect(events.data[0].txDigest).not.toBeUndefined();
+    expect(events.data[0].streamId).not.toBeUndefined();
+    expect(events.data[0].sender).not.toBeUndefined();
+
+    expect(events.data[0].data.type).not.toBeUndefined();
+    expect(events.data[0].data.coinType).toBe(
+      '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI',
+    );
+    expect(events.data[0].data.balance).not.toBeUndefined();
 
     const coinTypes = await backend.getAllCoinTypes(
       '0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7',
     );
     expect(coinTypes.length > 0).toBe(true);
+    expect(coinTypes[0]).toBe('0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI');
     const recipients = await backend.getAllRecipients(
       '0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7',
     );
     expect(recipients.length > 0).toBe(true);
+    expect(recipients[0]).toBe('0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7');
     const sender = await backend.getAllSenders('0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7');
     expect(sender.length > 0).toBe(true);
+    expect(sender[0]).toBe('0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7');
   });
 
   it('single stream creation on testNet', async () => {
