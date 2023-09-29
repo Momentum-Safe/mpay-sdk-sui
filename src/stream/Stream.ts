@@ -60,6 +60,7 @@ export class Stream implements IStream {
       streamId: this.streamId,
       recipient: this.recipient,
       progress: this.progress,
+      autoClaim: this.autoClaim,
     };
   }
 

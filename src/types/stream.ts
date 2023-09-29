@@ -58,6 +58,7 @@ export type StreamInfo = StreamInfoCommon & {
   streamId: string;
   recipient: string;
   progress: StreamProgress;
+  autoClaim: boolean;
 };
 
 export type StreamGroupInfo = StreamInfoCommon & {
