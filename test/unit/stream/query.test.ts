@@ -171,6 +171,26 @@ describe('StreamListIterator', () => {
     });
     await testPagedStreamListIteration(it, [4]);
   });
+
+  it('claimable', async () => {
+    const it = await StreamListIterator.newIncoming({
+      globals: ts.globals,
+      query: {
+        claimable: true,
+      },
+    });
+    await testStreamListIteration(it, [streaming, group, canceled]);
+  });
+
+  it('not claimable', async () => {
+    const it = await StreamListIterator.newIncoming({
+      globals: ts.globals,
+      query: {
+        claimable: false,
+      },
+    });
+    await testStreamListIteration(it, [settled]);
+  });
 });
 
 async function setupStreamsAndBackend() {

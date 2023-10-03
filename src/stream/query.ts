@@ -133,7 +133,7 @@ export class StreamListRequester {
     if (stRefs.length === 1) {
       const stream = await getStreamFromIterator(this.globals, stRefs[0].streamId, this.objectIter);
       this.current++;
-      return isStreamOfStatus(stream, this.query?.status) ? stream : this.doNextRequest();
+      return isStreamOfQuery(stream, this.query) ? stream : this.doNextRequest();
     }
     if (stRefs.length > 1) {
       const sg = await getStreamGroupFromIterator(
@@ -142,7 +142,7 @@ export class StreamListRequester {
         this.objectIter,
       );
       this.current++;
-      return isStreamGroupOfStatus(sg, this.query?.status) ? sg : this.doNextRequest();
+      return isStreamGroupOfQuery(sg, this.query) ? sg : this.doNextRequest();
     }
     throw new SanityError('Stream group with no stream');
   }
@@ -164,7 +164,19 @@ export function groupAndSortRefs(refs: StreamRef[]) {
   );
 }
 
-export function isStreamOfStatus(stream: IStream, filter: StreamStatus | StreamStatus[] | undefined): boolean {
+function isStreamOfQuery(stream: IStream, query: IncomingStreamQuery | OutgoingStreamQuery | undefined) {
+  if (query === undefined) {
+    return true;
+  }
+  const isStatus = isStreamOfStatus(stream, query.status);
+  if (query && 'claimable' in query) {
+    const isClaimable = query.claimable ? stream.progress.claimable !== 0n : stream.progress.claimable === 0n;
+    return isStatus && isClaimable;
+  }
+  return isStatus;
+}
+
+function isStreamOfStatus(stream: IStream, filter: StreamStatus | StreamStatus[] | undefined): boolean {
   if (filter === undefined) {
     return true;
   }
@@ -174,10 +186,13 @@ export function isStreamOfStatus(stream: IStream, filter: StreamStatus | StreamS
   return filter.includes(stream.progress.status);
 }
 
-export function isStreamGroupOfStatus(sg: IStreamGroup, filter: StreamStatus | StreamStatus[] | undefined): boolean {
+function isStreamGroupOfQuery(sg: IStreamGroup, query: IncomingStreamQuery | OutgoingStreamQuery | undefined): boolean {
+  if (!query) {
+    return true;
+  }
   let isStatus = false;
   sg.streams.forEach((stream) => {
-    if (isStreamOfStatus(stream, filter)) {
+    if (isStreamOfQuery(stream, query)) {
       isStatus = true;
     }
   });
