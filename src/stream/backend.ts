@@ -61,6 +61,7 @@ export class Backend implements IBackend {
       } else if (formalizedEvent.data.type === 'set_auto_claim') {
         formalizedEvent.data.enabled = !!formalizedEvent.data.enabled;
       }
+      formalizedEvent.createdAt = new Date(formalizedEvent.createdAt);
       return formalizedEvent;
     });
 
