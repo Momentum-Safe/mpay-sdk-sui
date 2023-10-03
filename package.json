@@ -1,6 +1,6 @@
 {
   "name": "@msafe/mpay-sdk-sui",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "MPay SDK on SUI",
   "repository": "git@github.com:Momentum-Safe/mpay-sdk-sui.git",
   "author": "MSafe Team <admin@m-safe.io>",
