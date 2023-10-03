@@ -1,8 +1,8 @@
+import { SanityError } from '@/error/SanityError';
+
 import * as devContractConfig from '../../config/dev.json';
 import * as localContractConfig from '../../config/local.json';
 import * as unitContractConfig from '../../config/unit.json';
-
-import { SanityError } from '@/error/SanityError';
 
 export enum Env {
   local = 'local',
@@ -41,7 +41,7 @@ export interface ContractConfig {
   feeObjId: string;
 }
 
-export const UNIT_RPC_ENDPOINT = 'https://49zv7vxt2h.execute-api.us-west-1.amazonaws.com/sui-endpoint';
+export const UNIT_RPC_ENDPOINT = 'http://ec2-54-241-42-141.us-west-1.compute.amazonaws.com:9000';
 export const DEV_RPC_ENDPOINT = 'https://sui-testnet.blockvision.org/v1/2Sgk89ivT64MnKdcGzjmyjY2ndD';
 export const STG_RPC_ENDPOINT = 'https://sui-testnet.blockvision.org/v1/2Sgk89ivT64MnKdcGzjmyjY2ndD';
 export const PROD_RPC_ENDPOINT = 'https://sui-mainnet.blockvision.org/v1/2Sgk7NPvqkd7mESYkxF01yX15l7';
@@ -62,8 +62,9 @@ const ENV_CONFIG: Map<Env, EnvConfig> = new Map([
     {
       env: Env.unit,
       rpc: {
-        url: `${UNIT_RPC_ENDPOINT}/fullnode`,
-        faucet: 'http://ec2-13-52-78-128.us-west-1.compute.amazonaws.com:9123',
+        // url: `${UNIT_RPC_ENDPOINT}/fullnode`,
+        url: UNIT_RPC_ENDPOINT,
+        faucet: 'http://ec2-54-241-42-141.us-west-1.compute.amazonaws.com:9123',
       },
       contract: CONTRACT_UNIT,
     },

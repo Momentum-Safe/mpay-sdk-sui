@@ -171,6 +171,46 @@ describe('StreamListIterator', () => {
     });
     await testPagedStreamListIteration(it, [4]);
   });
+
+  it('claimable', async () => {
+    const it = await StreamListIterator.newIncoming({
+      globals: ts.globals,
+      query: {
+        claimable: true,
+      },
+    });
+    await testStreamListIteration(it, [streaming, group, canceled]);
+  });
+
+  it('not claimable', async () => {
+    const it = await StreamListIterator.newIncoming({
+      globals: ts.globals,
+      query: {
+        claimable: false,
+      },
+    });
+    await testStreamListIteration(it, [settled]);
+  });
+
+  it('list of coin types', async () => {
+    const it = await StreamListIterator.newIncoming({
+      globals: ts.globals,
+      query: {
+        coinType: ['0x2::sui::SUI'],
+      },
+    });
+    await testStreamListIteration(it, [streaming, group, canceled, settled]);
+  });
+
+  it('list of sender', async () => {
+    const it = await StreamListIterator.newIncoming({
+      globals: ts.globals,
+      query: {
+        sender: [ts.address],
+      },
+    });
+    await testStreamListIteration(it, [streaming, group, canceled, settled]);
+  });
 });
 
 async function setupStreamsAndBackend() {

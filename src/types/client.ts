@@ -40,6 +40,7 @@ export interface IncomingStreamQuery {
   status?: StreamStatus | StreamStatus[];
   sender?: string | string[];
   coinType?: string | string[];
+  claimable?: boolean;
 }
 
 export interface OutgoingStreamQuery {

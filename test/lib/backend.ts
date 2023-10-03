@@ -40,7 +40,8 @@ export class MockBackend implements IBackend {
       .filter((ref) => {
         if (options && options.coinType) {
           if (Array.isArray(options.coinType)) {
-            return options.coinType.findIndex((coin) => isSameCoinType(ref.coinType, coin)) !== -1;
+            const index = options.coinType.findIndex((coin) => isSameCoinType(ref.coinType, coin));
+            return index !== -1;
           }
           if (options.coinType) {
             return isSameCoinType(options.coinType, ref.coinType);
@@ -51,9 +52,10 @@ export class MockBackend implements IBackend {
       .filter((ref) => {
         if (options && options.sender) {
           if (Array.isArray(options.sender)) {
-            return options.sender.findIndex(
+            const index = options.sender.findIndex(
               (sender) => normalizeSuiAddress(sender) === normalizeSuiAddress(ref.sender),
             );
+            return index !== -1;
           }
           if (options.sender) {
             return normalizeSuiAddress(options.sender) === normalizeSuiAddress(ref.sender);
