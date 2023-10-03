@@ -233,16 +233,16 @@ async function getStreamObjectResponseFromIter(it: ObjectBatchIterator, streamId
 function convertToIncomingBackendQuery(query?: IncomingStreamQuery): BackendIncomingStreamFilterOptions {
   return {
     status: convertStreamStatus(query?.status),
-    coinType: query?.coinType ? normalizeStructTag(query?.coinType as string) : undefined,
-    sender: query?.sender ? normalizeSuiAddress(query?.sender as string) : undefined,
+    coinType: normalizeCoinTypeFilter(query?.coinType),
+    sender: normalizeAddressFilter(query?.sender),
   };
 }
 
 function convertToOutgoingBackendQuery(query?: OutgoingStreamQuery): BackendOutgoingStreamFilterOptions {
   return {
     status: convertStreamStatus(query?.status),
-    coinType: query?.coinType ? normalizeStructTag(query?.coinType as string) : undefined,
-    recipient: query?.recipient ? normalizeSuiAddress(query?.recipient as string) : undefined,
+    coinType: normalizeCoinTypeFilter(query?.coinType),
+    recipient: normalizeAddressFilter(query?.recipient),
   };
 }
 
@@ -277,4 +277,24 @@ function convertStreamStatusSingle(status: StreamStatus): StreamFilterStatus {
     default:
       throw new InvalidInputError('Unknown stream filtered status');
   }
+}
+
+function normalizeCoinTypeFilter(coinType: string | string[] | undefined) {
+  if (!coinType) {
+    return undefined;
+  }
+  if (!Array.isArray(coinType)) {
+    return normalizeStructTag(coinType);
+  }
+  return coinType.length !== 0 ? coinType.map((ct) => normalizeStructTag(ct)) : undefined;
+}
+
+function normalizeAddressFilter(address: string | string[] | undefined) {
+  if (!address) {
+    return undefined;
+  }
+  if (!Array.isArray(address)) {
+    return normalizeSuiAddress(address);
+  }
+  return address.length !== 0 ? address.map((addr) => normalizeSuiAddress(addr)) : undefined;
 }
