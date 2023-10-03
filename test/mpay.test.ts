@@ -6,6 +6,7 @@ import { Backend } from '@/stream/backend';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
 import { CreateStreamHelper } from '@/transaction/CreateStreamHelper';
+import { StreamEvent } from '@/types';
 
 import { getDevSuite, getTestSuite, newDevGlobals } from './lib/setup';
 import { defaultStreamParam } from './lib/stream';
@@ -113,10 +114,12 @@ describe('integration', () => {
     expect(events.data[0].sender).not.toBeUndefined();
 
     expect(events.data[0].data.type).not.toBeUndefined();
-    expect(events.data[0].data.coinType).toBe(
+    expect(events.data.filter((s: StreamEvent) => s.data.type !== 'set_auto_claim')[0].data.coinType).toBe(
       '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI',
     );
-    expect(events.data[0].data.balance).not.toBeUndefined();
+    expect(
+      events.data.filter((s: StreamEvent) => s.data.type !== 'set_auto_claim')[0].data.balance,
+    ).not.toBeUndefined();
 
     const coinTypes = await backend.getAllCoinTypes(
       '0xb7fc1102e0250e7c0d3deab435d106a38aa41cc9985d226a1e57a9fbdf95daf7',
