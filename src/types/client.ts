@@ -1,10 +1,11 @@
 import { CoinBalance, CoinMetadata, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import { DevInspectResults } from '@mysten/sui.js/src/client/types';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { DateTime, Duration } from 'luxon';
 
 import { SuiIterator } from '@/sui/iterator/iterator';
 import { StreamFilterStatus } from '@/types/backend';
-import { IStreamGroup, StreamStatus, IStream } from '@/types/stream';
+import { IStream, IStreamGroup, StreamStatus } from '@/types/stream';
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 
 export interface IMPayClient {
@@ -23,15 +24,30 @@ export interface IMPayClient {
   createStream(info: CreateStreamInfo): Promise<TransactionBlock>;
 }
 
+export interface PaymentWithFee {
+  totalAmount: bigint;
+  streamFeeAmount: bigint;
+  flatFeeAmount: bigint;
+}
+
+export interface MPayFees {
+  createFeePercent: Fraction;
+  claimFeePercent: Fraction;
+  flatFeePerStream: bigint;
+}
+
 export interface IMPayHelper {
   getBalance(address: string, coinType?: string | null): Promise<CoinBalanceWithMeta>;
   getAllBalance(address: string): Promise<CoinBalanceWithMeta[]>;
   getCoinMeta(coinType: string): Promise<CoinMetadata | undefined>;
 
   getStreamIdsFromCreateStreamResponse(res: SuiTransactionBlockResponse): string[];
+  calculateCreateStreamFees(info: CreateStreamInfo): PaymentWithFee;
+  feeParams(): MPayFees;
   calculateStreamAmount(input: { totalAmount: bigint; steps: bigint; cliff?: Fraction }): CalculatedStreamAmount;
   calculateTimelineByInterval(input: { timeStart: DateTime; interval: Duration; steps: bigint }): CalculatedTimeline;
   calculateTimelineByTotalDuration(input: { timeStart: DateTime; total: Duration; steps: bigint }): CalculatedTimeline;
+  simulateTransactionBlock(txb: TransactionBlock): Promise<DevInspectResults>;
 }
 
 export type IPagedStreamListIterator = SuiIterator<(IStream | IStreamGroup)[]>;

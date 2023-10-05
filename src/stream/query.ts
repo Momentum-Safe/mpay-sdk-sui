@@ -114,6 +114,7 @@ export class StreamListRequester {
     const recipient = await input.globals.walletAddress();
     const refs = await input.globals.backend.getIncomingStreams(recipient, backendQuery);
     const groupedRefs = groupAndSortRefs(refs);
+
     return new StreamListRequester(input.globals, recipient, groupedRefs, input.query);
   }
 

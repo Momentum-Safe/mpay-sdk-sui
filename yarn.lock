@@ -725,10 +725,10 @@
   dependencies:
     bs58 "^5.0.0"
 
-"@mysten/sui.js@^0.41.1":
-  version "0.41.2"
-  resolved "https://registry.yarnpkg.com/@mysten/sui.js/-/sui.js-0.41.2.tgz#0ef09ce8777f254c1a25f4108fb55c4755a60943"
-  integrity sha512-00Kkk4don9H9iRWBqXfRC4wUPY0hqAvmzxhwaYZIHj9Tmb71Nx51zLLFsxeA7dlR6cJFaXFMbZkt6WR2vP8WLQ==
+"@mysten/sui.js@0.42.0":
+  version "0.42.0"
+  resolved "https://registry.yarnpkg.com/@mysten/sui.js/-/sui.js-0.42.0.tgz#db57ad931aa7683fe1526cb4b308425234e1eecf"
+  integrity sha512-khYpfrWTRNk7WTuDWJx/KCbleqY1B40gVRt1DttqlNkD2lvg134xZn7F/r94jxgnUETbK+hVoQvBY7F36MsfRw==
   dependencies:
     "@mysten/bcs" "0.7.4"
     "@noble/curves" "^1.1.0"

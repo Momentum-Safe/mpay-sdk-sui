@@ -6,8 +6,8 @@ import { Globals } from '@/common/globals';
 import { MPayHelper } from '@/stream/helper';
 import { PagedStreamListIterator } from '@/stream/query';
 import { Stream } from '@/stream/Stream';
-import { CreateStreamHelper } from '@/transaction/CreateStreamHelper';
-import { MPayBuilder } from '@/transaction/MPayBuilder';
+import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
+import { MPayBuilder } from '@/transaction/builder/MPayBuilder';
 import { StreamFilterStatus } from '@/types';
 import {
   CreateStreamInfo,
@@ -52,13 +52,7 @@ export class MPayClient implements IMPayClient {
   async getIncomingStreams(query?: IncomingStreamQuery, pageSize: number = 10): Promise<IPagedStreamListIterator> {
     return PagedStreamListIterator.newIncoming({
       globals: this.globals,
-      query: query
-        ? {
-            status: query.status,
-            sender: query?.sender ? normalizeSuiAddress(query?.sender as string) : undefined,
-            coinType: query?.coinType ? normalizeStructTag(query?.coinType as string) : undefined,
-          }
-        : undefined,
+      query,
       pageSize,
     });
   }
@@ -66,13 +60,7 @@ export class MPayClient implements IMPayClient {
   async getOutgoingStreams(query?: OutgoingStreamQuery, pageSize: number = 10): Promise<IPagedStreamListIterator> {
     return PagedStreamListIterator.newOutgoing({
       globals: this.globals,
-      query: query
-        ? {
-            status: query.status,
-            recipient: query?.recipient ? normalizeSuiAddress(query?.recipient as string) : undefined,
-            coinType: query?.coinType ? normalizeStructTag(query?.coinType as string) : undefined,
-          }
-        : undefined,
+      query,
       pageSize,
     });
   }

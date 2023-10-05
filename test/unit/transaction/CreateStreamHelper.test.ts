@@ -1,11 +1,11 @@
 import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 
+import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
-import { CreateStreamHelper } from '@/transaction/CreateStreamHelper';
 
 import { getTestSuite, TestSuite } from '../../lib/setup';
-import { defaultStreamParam } from '../../lib/stream';
+import { defaultStreamParamInternal } from '../../lib/stream';
 
 describe('builder', () => {
   let testSuite: TestSuite;
@@ -35,7 +35,7 @@ describe('builder', () => {
   });
 
   it('createStream', async () => {
-    const txb = await builder.buildCreateStreamTransactionBlock(defaultStreamParam(testSuite.address));
+    const txb = await builder.buildCreateStreamTransactionBlock(defaultStreamParamInternal(testSuite.address));
     const res = await testSuite.wallet.signAndSubmitTransaction(txb);
     expect((res as SuiTransactionBlockResponse).errors).toBeUndefined();
     expect((res as SuiTransactionBlockResponse).effects!.status.status).toBe('success');

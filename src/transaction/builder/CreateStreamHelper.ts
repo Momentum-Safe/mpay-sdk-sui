@@ -4,20 +4,20 @@ import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 import { Globals } from '@/common/globals';
 import { encodeMetadata } from '@/stream/metadata';
 import { isSameCoinType } from '@/sui/utils';
-import { FEE_DENOMINATOR, FEE_NUMERATOR, FLAT_FEE_SUI } from '@/transaction/const';
+import { CLAIM_FEE_NUMERATOR, FEE_DENOMINATOR, FEE_NUMERATOR, FLAT_FEE_SUI } from '@/transaction/builder/const';
 import { ResultRef } from '@/transaction/contracts/common';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { InspectViewer } from '@/transaction/contracts/InspectViewer';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
-import { CreateStreamInfo, CreateStreamInfoInternal, RecipientInfoInternal } from '@/types/client';
+import {
+  CreateStreamInfo,
+  CreateStreamInfoInternal,
+  MPayFees,
+  PaymentWithFee,
+  RecipientInfoInternal,
+} from '@/types/client';
 import { CoinRequest, GAS_OBJECT_SPEC } from '@/types/wallet';
 import { generateGroupId } from '@/utils/random';
-
-export interface PaymentWithFee {
-  totalAmount: bigint;
-  streamFeeAmount: bigint;
-  flatFeeAmount: bigint;
-}
 
 export class CreateStreamHelper {
   constructor(
@@ -80,6 +80,25 @@ export class CreateStreamHelper {
       });
     }
     return txb;
+  }
+
+  calculateCreateStreamFees(createInfo: CreateStreamInfo) {
+    const infoInternal = CreateStreamHelper.convertCreateStreamInfoToInternal(createInfo);
+    return this.calculateFees(infoInternal);
+  }
+
+  feeParams(): MPayFees {
+    return {
+      createFeePercent: {
+        numerator: FEE_NUMERATOR,
+        denominator: FEE_DENOMINATOR,
+      },
+      claimFeePercent: {
+        numerator: CLAIM_FEE_NUMERATOR,
+        denominator: FEE_DENOMINATOR,
+      },
+      flatFeePerStream: FLAT_FEE_SUI,
+    };
   }
 
   private async addMergeCoins(txb: TransactionBlock, coinReq: CoinRequest): Promise<TransactionArgument> {
