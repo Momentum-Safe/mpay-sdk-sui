@@ -1,3 +1,4 @@
+import { DevInspectResults } from '@mysten/sui.js/src/client/types';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui.js/utils';
 
@@ -81,6 +82,13 @@ export class MPayClient implements IMPayClient {
     const address = await this.wallet.address();
     const creators = await this.globals.backend.getAllSenders(address, options);
     return creators.map((creator) => normalizeSuiAddress(creator));
+  }
+
+  async simulateTxb(txb: TransactionBlock): Promise<DevInspectResults> {
+    return this.globals.suiClient.devInspectTransactionBlock({
+      transactionBlock: txb,
+      sender: await this.wallet.address(),
+    });
   }
 
   get wallet() {

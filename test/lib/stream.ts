@@ -2,12 +2,10 @@ import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 
 import { Stream, StreamGroup } from '@/stream';
 import { MPayHelper } from '@/stream/helper';
-import { encodeMetadata } from '@/stream/metadata';
 import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
-import { CreateStreamInfoInternal } from '@/types/client';
-import { generateGroupId } from '@/utils/random';
+import { CreateStreamInfo, CreateStreamInfoInternal } from '@/types/client';
 
 import { TestSuite } from './setup';
 import { sleep } from './utils';
@@ -20,7 +18,7 @@ export async function createStreamHelper(ts: TestSuite, recipient: string, modif
     new FeeContract(ts.globals.envConfig.contract, ts.globals),
     new StreamContract(ts.globals.envConfig.contract, ts.globals),
   );
-  let createParams = defaultStreamParam(recipient);
+  let createParams = defaultStreamParamInternal(recipient);
   if (modifier) {
     createParams = modifier(createParams);
   }
@@ -82,29 +80,30 @@ export async function createStreamGroup(ts: TestSuite, recipients: string[]) {
   return sg;
 }
 
-export function defaultStreamParam(recipient: string): CreateStreamInfoInternal {
-  const metadata = encodeMetadata({
-    name: 'test name',
-    groupId: generateGroupId(),
-  });
+export function defaultStreamParamInternal(recipient: string): CreateStreamInfoInternal {
+  const params = defaultStreamParam(recipient);
+  return CreateStreamHelper.convertCreateStreamInfoToInternal(params);
+}
+
+export function defaultStreamParam(recipient: string): CreateStreamInfo {
   return {
-    metadata,
+    name: 'test name',
     coinType: SUI_TYPE_ARG,
     recipients: [
       {
         address: recipient,
         cliffAmount: 10000n,
-        amountPerEpoch: 5000n,
+        amountPerStep: 10000n,
       },
       {
         address: recipient,
         cliffAmount: 5000n,
-        amountPerEpoch: 1000n,
+        amountPerStep: 1000n,
       },
     ],
-    epochInterval: 1000n,
-    numberEpoch: 100n,
-    startTime: BigInt(new Date().getTime()),
+    interval: 1000n,
+    steps: 100n,
+    startTimeMs: BigInt(new Date().getTime()),
     cancelable: true,
   };
 }

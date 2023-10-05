@@ -9,7 +9,7 @@ import { StreamContract } from '@/transaction/contracts/StreamContract';
 import { StreamEvent } from '@/types';
 
 import { getDevSuite, getTestSuite, newDevGlobals } from './lib/setup';
-import { defaultStreamParam } from './lib/stream';
+import { defaultStreamParamInternal } from './lib/stream';
 import { sleep } from './lib/utils';
 
 describe('integration', () => {
@@ -21,7 +21,7 @@ describe('integration', () => {
       new StreamContract(ts.config.contract, ts.globals),
     );
 
-    const streamParams = defaultStreamParam(ts.address);
+    const streamParams = defaultStreamParamInternal(ts.address);
     const txb = await builder.buildCreateStreamTransactionBlock(streamParams);
     const createResult = (await ts.wallet.signAndSubmitTransaction(txb)) as SuiTransactionBlockResponse;
     const streamIds = createResult
@@ -143,7 +143,7 @@ describe('integration', () => {
       new FeeContract(ts.config.contract, ts.globals),
       new StreamContract(ts.config.contract, ts.globals),
     );
-    const streamParams = defaultStreamParam(ts.address);
+    const streamParams = defaultStreamParamInternal(ts.address);
     const txb = await builder.buildCreateStreamTransactionBlock(streamParams);
     const createResult = (await ts.wallet.signAndSubmitTransaction(txb)) as SuiTransactionBlockResponse;
 

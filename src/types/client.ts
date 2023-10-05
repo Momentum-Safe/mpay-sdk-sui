@@ -1,4 +1,5 @@
 import { CoinBalance, CoinMetadata, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import { DevInspectResults } from '@mysten/sui.js/src/client/types';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { DateTime, Duration } from 'luxon';
 
@@ -21,6 +22,7 @@ export interface IMPayClient {
   getCreatorsForStreamFilter(options?: StreamFilterStatus): Promise<string[]>;
 
   createStream(info: CreateStreamInfo): Promise<TransactionBlock>;
+  simulateTxb(txb: TransactionBlock): Promise<DevInspectResults>;
 }
 
 export interface PaymentWithFee {
