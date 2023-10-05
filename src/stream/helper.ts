@@ -1,4 +1,6 @@
 import { CoinMetadata, SuiClient, SuiObjectChangeCreated, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import { DevInspectResults } from '@mysten/sui.js/src/client/types';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 import { DateTime, Duration } from 'luxon';
 
@@ -124,6 +126,13 @@ export class MPayHelper implements IMPayHelper {
 
   async getCoinMeta(coinType: string | null | undefined) {
     return this.coinMetaHelper.getCoinMeta(coinType);
+  }
+
+  async simulateTransactionBlock(txb: TransactionBlock): Promise<DevInspectResults> {
+    return this.globals.suiClient.devInspectTransactionBlock({
+      transactionBlock: txb,
+      sender: await this.globals.wallet.address(),
+    });
   }
 
   private validateStreamAmount(val: CalculatedStreamAmount, originTotalAmount: bigint) {

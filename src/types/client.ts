@@ -22,7 +22,6 @@ export interface IMPayClient {
   getCreatorsForStreamFilter(options?: StreamFilterStatus): Promise<string[]>;
 
   createStream(info: CreateStreamInfo): Promise<TransactionBlock>;
-  simulateTxb(txb: TransactionBlock): Promise<DevInspectResults>;
 }
 
 export interface PaymentWithFee {
@@ -48,6 +47,7 @@ export interface IMPayHelper {
   calculateStreamAmount(input: { totalAmount: bigint; steps: bigint; cliff?: Fraction }): CalculatedStreamAmount;
   calculateTimelineByInterval(input: { timeStart: DateTime; interval: Duration; steps: bigint }): CalculatedTimeline;
   calculateTimelineByTotalDuration(input: { timeStart: DateTime; total: Duration; steps: bigint }): CalculatedTimeline;
+  simulateTransactionBlock(txb: TransactionBlock): Promise<DevInspectResults>;
 }
 
 export type IPagedStreamListIterator = SuiIterator<(IStream | IStreamGroup)[]>;
