@@ -112,6 +112,7 @@ describe('integration', () => {
     expect(events.data[0].txDigest).not.toBeUndefined();
     expect(events.data[0].streamId).not.toBeUndefined();
     expect(events.data[0].sender).not.toBeUndefined();
+    expect(events.data[0].createdAt.getTime() < Date.now()).toBe(true);
 
     expect(events.data[0].data.type).not.toBeUndefined();
     expect(events.data.filter((s: StreamEvent) => s.data.type !== 'set_auto_claim')[0].data.coinType).toBe(
