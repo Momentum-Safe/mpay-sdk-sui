@@ -3,9 +3,9 @@ import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 import { Stream, StreamGroup } from '@/stream';
 import { MPayHelper } from '@/stream/helper';
 import { encodeMetadata } from '@/stream/metadata';
+import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
-import { CreateStreamHelper } from '@/transaction/CreateStreamHelper';
 import { CreateStreamInfoInternal } from '@/types/client';
 import { generateGroupId } from '@/utils/random';
 

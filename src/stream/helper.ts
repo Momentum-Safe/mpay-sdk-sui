@@ -5,7 +5,17 @@ import { DateTime, Duration } from 'luxon';
 import { Globals } from '@/common/globals';
 import { InvalidInputError } from '@/error/InvalidInputError';
 import { TransactionFailedError } from '@/error/TransactionFailedError';
-import { CalculatedStreamAmount, CalculatedTimeline, Fraction, IMPayHelper } from '@/types';
+import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
+import { MPayBuilder } from '@/transaction/builder/MPayBuilder';
+import {
+  CalculatedStreamAmount,
+  CalculatedTimeline,
+  CreateStreamInfo,
+  Fraction,
+  IMPayHelper,
+  MPayFees,
+  PaymentWithFee,
+} from '@/types';
 
 // Minimum time interval is 1 second
 export const MIN_INTERVAL_MS = 1000;
@@ -13,8 +23,11 @@ export const MIN_INTERVAL_MS = 1000;
 export class MPayHelper implements IMPayHelper {
   private readonly coinMetaHelper: CoinMetaHelper;
 
+  private readonly createStreamHelper: CreateStreamHelper;
+
   constructor(public readonly globals: Globals) {
     this.coinMetaHelper = new CoinMetaHelper(globals.suiClient);
+    this.createStreamHelper = new MPayBuilder(globals).createStreamHelper();
   }
 
   getStreamIdsFromCreateStreamResponse(res: SuiTransactionBlockResponse) {
@@ -28,6 +41,14 @@ export class MPayHelper implements IMPayHelper {
           change.objectType.startsWith(`${this.globals.envConfig.contract.contractId}::stream::Stream`),
       )
       .map((change) => (change as SuiObjectChangeCreated).objectId);
+  }
+
+  calculateCreateStreamFees(info: CreateStreamInfo): PaymentWithFee {
+    return this.createStreamHelper.calculateCreateStreamFees(info);
+  }
+
+  feeParams(): MPayFees {
+    return this.createStreamHelper.feeParams();
   }
 
   calculateStreamAmount(input: { totalAmount: bigint; steps: bigint; cliff?: Fraction }): CalculatedStreamAmount {

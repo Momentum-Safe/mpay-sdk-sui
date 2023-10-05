@@ -1,8 +1,8 @@
 import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 
+import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
-import { CreateStreamHelper } from '@/transaction/CreateStreamHelper';
 
 import { getTestSuite, TestSuite } from '../../lib/setup';
 import { defaultStreamParam } from '../../lib/stream';

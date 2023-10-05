@@ -3,9 +3,9 @@ import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 
 import { Backend } from '@/stream/backend';
+import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
-import { CreateStreamHelper } from '@/transaction/CreateStreamHelper';
 import { StreamEvent } from '@/types';
 
 import { getDevSuite, getTestSuite, newDevGlobals } from './lib/setup';
