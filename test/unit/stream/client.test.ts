@@ -28,10 +28,22 @@ describe('MPayClient', () => {
       claimable: true,
     });
     const res = await getAllFromIter(it);
+    expect(res.length).toBeGreaterThan(0);
     for (let i = 0; i !== res.length; i++) {
       const st = res[i];
       expect(st.progress.claimable).toBeGreaterThan(0);
     }
+  });
+
+  it('Undefined claimable shall return all', async () => {
+    const it = await client.getIncomingStreams({
+      claimable: undefined,
+    });
+    const res = await getAllFromIter(it);
+    expect(res.length).toBeGreaterThan(0);
+    res.forEach((st) => {
+      console.log(st.progress.claimable);
+    });
   });
 });
 
