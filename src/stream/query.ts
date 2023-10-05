@@ -170,7 +170,7 @@ function isStreamOfQuery(stream: IStream, query: IncomingStreamQuery | OutgoingS
     return true;
   }
   const isStatus = isStreamOfStatus(stream, query.status);
-  if (query && 'claimable' in query) {
+  if (query && 'claimable' in query && query.claimable !== undefined) {
     const isClaimable = query.claimable ? stream.progress.claimable !== 0n : stream.progress.claimable === 0n;
     return isStatus && isClaimable;
   }
