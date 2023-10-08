@@ -1,5 +1,13 @@
-import { CreateStreamInfo } from '@/types/client';
+import { CreateStreamInfo, PaymentWithFee } from '@/types/client';
 import { StreamInfo } from '@/types/stream';
+
+export type StreamDecodedTransaction =
+  | DecodedCreateStream
+  | DecodedSetAutoClaim
+  | DecodedClaimStream
+  | DecodedCancelStream
+  | DecodedClaimByProxy
+  | undefined;
 
 export enum StreamTransactionType {
   CREATE_STREAM = 'CreateStream',
@@ -9,32 +17,40 @@ export enum StreamTransactionType {
   CANCEL = 'Cancel',
 }
 
-export interface CreateStreamTransaction {
+export interface DecodedCreateStream {
   type: StreamTransactionType.CREATE_STREAM;
 
   info: CreateStreamInfo;
+  fees: PaymentWithFee;
+  coinMerges: CoinMerge[];
 }
 
-export interface SetAutoClaimTransaction {
+export interface CoinMerge {
+  coinType: string;
+  primary: string | 'GAS';
+  merged?: string[];
+}
+
+export interface DecodedSetAutoClaim {
   type: StreamTransactionType.SET_AUTO_CLAIM;
 
   streamInfo: StreamInfo;
   enabled: boolean;
 }
 
-export interface ClaimStreamTransaction {
+export interface DecodedClaimStream {
   type: StreamTransactionType.CLAIM;
 
   streamInfo: StreamInfo;
 }
 
-export interface ClaimByProxyTransaction {
+export interface DecodedClaimByProxy {
   type: StreamTransactionType.CLAIM_BY_PROXY;
 
   streamInfo: StreamInfo;
 }
 
-export interface CancelStreamTransaction {
+export interface DecodedCancelStream {
   type: StreamTransactionType.CANCEL;
 
   streamInfo: StreamInfo;

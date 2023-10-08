@@ -47,7 +47,7 @@ export class CreateStreamHelper {
 
   async buildCreateStreamTransactionBlock(info: CreateStreamInfoInternal): Promise<TransactionBlock> {
     const txb = new TransactionBlock();
-    const paymentWithFee = this.calculateFees(info);
+    const paymentWithFee = this.calculateFeesInternal(info);
     const coinReqs = this.getCreateStreamCoinRequests(info, paymentWithFee);
 
     const paymentMergedObject = await this.addMergeCoins(txb, coinReqs[0]);
@@ -84,7 +84,7 @@ export class CreateStreamHelper {
 
   calculateCreateStreamFees(createInfo: CreateStreamInfo) {
     const infoInternal = CreateStreamHelper.convertCreateStreamInfoToInternal(createInfo);
-    return this.calculateFees(infoInternal);
+    return this.calculateFeesInternal(infoInternal);
   }
 
   feeParams(): MPayFees {
@@ -140,7 +140,7 @@ export class CreateStreamHelper {
     ];
   }
 
-  calculateFees(info: CreateStreamInfoInternal): PaymentWithFee {
+  calculateFeesInternal(info: CreateStreamInfoInternal): PaymentWithFee {
     const streamPayment = info.recipients.reduce(
       (sum, recipient) => {
         const totalAmount = this.amountForRecipient(recipient, info.numberEpoch);

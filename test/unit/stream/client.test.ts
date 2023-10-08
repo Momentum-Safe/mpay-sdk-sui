@@ -41,9 +41,6 @@ describe('MPayClient', () => {
     });
     const res = await getAllFromIter(it);
     expect(res.length).toBeGreaterThan(0);
-    res.forEach((st) => {
-      console.log(st.progress.claimable);
-    });
   });
 });
 

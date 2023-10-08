@@ -1,8 +1,9 @@
 import { Env, EnvConfig, getConfig } from '@/common/env';
 import { Globals } from '@/common/globals';
+import { MSafeAccountAdapter } from '@/wallet';
 import { SingleWalletAdapter } from '@/wallet/SingleWalletAdapter';
 
-import { LocalWallet } from './wallet';
+import { FakeMSafeWallet, LocalWallet } from './wallet';
 
 export interface TestSuite {
   globals: Globals;
@@ -33,8 +34,7 @@ export async function getDevSuite(privateKey: string): Promise<TestSuite> {
 }
 
 export async function getTestSuite(): Promise<TestSuite> {
-  const globals = newUnitGlobals();
-  const testWallet = await setupTestWallet();
+  const { globals, testWallet } = await setupTestWallet();
   const singleWallet = new SingleWalletAdapter(testWallet, globals.suiClient);
   globals.connectWallet(singleWallet);
   return {
@@ -45,10 +45,36 @@ export async function getTestSuite(): Promise<TestSuite> {
   };
 }
 
-export async function setupTestWallet() {
+export async function getTestSuiteWithFakeMSafe() {
+  const { globals, testWallet } = await setupFakeMSafeWallet();
+  const msafeWallet = new MSafeAccountAdapter(testWallet);
+  globals.connectWallet(msafeWallet);
+  return {
+    globals,
+    config: globals.envConfig,
+    wallet: testWallet,
+    address: await msafeWallet.address(),
+  };
+}
+
+export async function setupTestWallet(): Promise<{ globals: Globals; testWallet: LocalWallet }> {
   const globals = newUnitGlobals();
   const wallet = new LocalWallet(globals.suiClient);
   const address = await wallet.address();
   await globals.requestFaucet(address);
-  return wallet;
+  return {
+    globals,
+    testWallet: wallet,
+  };
+}
+
+export async function setupFakeMSafeWallet() {
+  const globals = newUnitGlobals();
+  const wallet = new FakeMSafeWallet(globals.suiClient);
+  const address = await wallet.address();
+  await globals.requestFaucet(address);
+  return {
+    globals,
+    testWallet: wallet,
+  };
 }

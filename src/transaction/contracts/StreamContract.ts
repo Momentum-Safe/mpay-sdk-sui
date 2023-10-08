@@ -132,4 +132,24 @@ export class StreamContract extends BaseContract {
       typeArgs: [input.coinType],
     });
   }
+
+  get createStreamTarget() {
+    return `${this.config.contractId}::${StreamContract.ModuleName}::${StreamContract.MethodName.create_stream}`;
+  }
+
+  get setAutoClaimTarget() {
+    return `${this.config.contractId}::${StreamContract.ModuleName}::${StreamContract.MethodName.set_auto_claim}`;
+  }
+
+  get cancelStreamTarget() {
+    return `${this.config.contractId}::${StreamContract.ModuleName}::${StreamContract.MethodName.cancel_stream}`;
+  }
+
+  get claimStreamTarget() {
+    return `${this.config.contractId}::${StreamContract.ModuleName}::${StreamContract.MethodName.claim_stream}`;
+  }
+
+  get claimStreamByProxyTarget() {
+    return `${this.config.contractId}::${StreamContract.ModuleName}::${StreamContract.MethodName.claim_stream_by_proxy}`;
+  }
 }

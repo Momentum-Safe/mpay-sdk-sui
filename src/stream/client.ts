@@ -6,7 +6,6 @@ import { Globals } from '@/common/globals';
 import { MPayHelper } from '@/stream/helper';
 import { PagedStreamListIterator } from '@/stream/query';
 import { Stream } from '@/stream/Stream';
-import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
 import { MPayBuilder } from '@/transaction/builder/MPayBuilder';
 import { StreamFilterStatus } from '@/types';
 import {
@@ -41,8 +40,7 @@ export class MPayClient implements IMPayClient {
   }
 
   async createStream(info: CreateStreamInfo): Promise<TransactionBlock> {
-    const infoInternal = CreateStreamHelper.convertCreateStreamInfoToInternal(info);
-    return this.builder().createStreams(infoInternal);
+    return this.builder().createStreams(info);
   }
 
   async getStream(streamId: string) {
