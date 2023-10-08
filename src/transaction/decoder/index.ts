@@ -1,0 +1,1 @@
+export { StreamTransactionDecoder } from './decoder';
