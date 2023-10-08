@@ -24,7 +24,7 @@ export interface IMSafeAccount {
   address(): Promise<string>;
 
   // return coin objects by amount.
-  requestCoin(reqs: CoinRequest): Promise<CoinRequestResponse>;
+  requestCoin(req: CoinRequest): Promise<CoinRequestResponse>;
 }
 
 /**
