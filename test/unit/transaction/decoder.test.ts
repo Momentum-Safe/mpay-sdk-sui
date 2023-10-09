@@ -19,21 +19,23 @@ import { getTestSuite, getTestSuiteWithFakeMSafe, TestSuite } from '../../lib/se
 import { defaultStreamParam } from '../../lib/stream';
 
 describe('decode create stream transaction', () => {
-  let ts: TestSuite;
+  let msafeTS: TestSuite;
+  let singleTS: TestSuite;
 
   beforeAll(async () => {
-    ts = await getTestSuiteWithFakeMSafe();
+    msafeTS = await getTestSuiteWithFakeMSafe();
+    singleTS = await getTestSuite();
   });
 
   it('single coin, single recipient', async () => {
-    const defaultInfo = defaultStreamParam(await ts.globals.walletAddress());
+    const defaultInfo = defaultStreamParam(await msafeTS.globals.walletAddress());
     const expInfo: CreateStreamInfo = {
       ...defaultInfo,
       coinType: normalizeStructTag(defaultInfo.coinType),
       recipients: [defaultInfo.recipients[0]],
     };
-    const txb = await getCreateStreamTxb(ts.globals, expInfo);
-    const decoded = StreamTransactionDecoder.decodeTransaction(ts.globals, txb) as DecodedCreateStream;
+    const txb = await getCreateStreamTxb(msafeTS.globals, expInfo);
+    const decoded = StreamTransactionDecoder.decodeTransaction(msafeTS.globals, txb) as DecodedCreateStream;
     expect(decoded).toBeDefined();
     expect(decoded?.type).toBe(StreamTransactionType.CREATE_STREAM);
     expect(decoded?.info).toEqual(expInfo);
@@ -41,13 +43,13 @@ describe('decode create stream transaction', () => {
   });
 
   it('single coin, multiple recipient', async () => {
-    const defaultInfo = defaultStreamParam(await ts.globals.walletAddress());
+    const defaultInfo = defaultStreamParam(await msafeTS.globals.walletAddress());
     const expInfo: CreateStreamInfo = {
       ...defaultInfo,
       coinType: normalizeStructTag(defaultInfo.coinType),
     };
-    const txb = await getCreateStreamTxb(ts.globals, expInfo);
-    const decoded = StreamTransactionDecoder.decodeTransaction(ts.globals, txb) as DecodedCreateStream;
+    const txb = await getCreateStreamTxb(msafeTS.globals, expInfo);
+    const decoded = StreamTransactionDecoder.decodeTransaction(msafeTS.globals, txb) as DecodedCreateStream;
     expect(decoded).toBeDefined();
     expect(decoded?.type).toBe(StreamTransactionType.CREATE_STREAM);
     expect(decoded?.info).toEqual(expInfo);
@@ -55,18 +57,34 @@ describe('decode create stream transaction', () => {
   });
 
   it('multiple coin, multiple recipient', async () => {
-    const defaultInfo = defaultStreamParam(await ts.globals.walletAddress());
+    const defaultInfo = defaultStreamParam(await msafeTS.globals.walletAddress());
     const expInfo: CreateStreamInfo = {
       ...defaultInfo,
       coinType: normalizeStructTag('0x3::my_coin::MyCoin'),
     };
-    const txb = await getCreateStreamTxb(ts.globals, expInfo);
-    const decoded = StreamTransactionDecoder.decodeTransaction(ts.globals, txb) as DecodedCreateStream;
+    const txb = await getCreateStreamTxb(msafeTS.globals, expInfo);
+    const decoded = StreamTransactionDecoder.decodeTransaction(msafeTS.globals, txb) as DecodedCreateStream;
     expect(decoded?.type).toBe(StreamTransactionType.CREATE_STREAM);
     expect(decoded?.info).toEqual(expInfo);
     expect(decoded?.coinMerges.length).toBe(2);
     expect(decoded?.coinMerges[0].coinType).toBe(normalizeStructTag('0x3::my_coin::MyCoin'));
     expect(decoded?.coinMerges[1].coinType).toBe(normalizeStructTag(SUI_TYPE_ARG));
+  });
+
+  it('single coin, single signer, get txb.signer', async () => {
+    const defaultInfo = defaultStreamParam(await singleTS.globals.walletAddress());
+    const expInfo: CreateStreamInfo = {
+      ...defaultInfo,
+      coinType: normalizeStructTag(defaultInfo.coinType),
+    };
+    const txb = await getCreateStreamTxb(singleTS.globals, expInfo);
+    const decoded = StreamTransactionDecoder.decodeTransaction(singleTS.globals, txb) as DecodedCreateStream;
+    expect(decoded?.type).toBe(StreamTransactionType.CREATE_STREAM);
+    expect(decoded?.info).toEqual(expInfo);
+    expect(decoded?.coinMerges.length).toBe(1);
+    expect(decoded?.coinMerges[0].coinType).toBe(normalizeStructTag(SUI_TYPE_ARG));
+    expect(decoded?.coinMerges[0].primary).toBe('GAS');
+    expect(decoded?.coinMerges[0].merged).toBe(undefined);
   });
 });
 
