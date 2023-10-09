@@ -33,7 +33,7 @@ describe('decode create stream transaction', () => {
       recipients: [defaultInfo.recipients[0]],
     };
     const txb = await getCreateStreamTxb(ts.globals, expInfo);
-    const decoded = (await StreamTransactionDecoder.decodeTransaction(ts.globals, txb)) as DecodedCreateStream;
+    const decoded = StreamTransactionDecoder.decodeTransaction(ts.globals, txb) as DecodedCreateStream;
     expect(decoded).toBeDefined();
     expect(decoded?.type).toBe(StreamTransactionType.CREATE_STREAM);
     expect(decoded?.info).toEqual(expInfo);
@@ -47,7 +47,7 @@ describe('decode create stream transaction', () => {
       coinType: normalizeStructTag(defaultInfo.coinType),
     };
     const txb = await getCreateStreamTxb(ts.globals, expInfo);
-    const decoded = (await StreamTransactionDecoder.decodeTransaction(ts.globals, txb)) as DecodedCreateStream;
+    const decoded = StreamTransactionDecoder.decodeTransaction(ts.globals, txb) as DecodedCreateStream;
     expect(decoded).toBeDefined();
     expect(decoded?.type).toBe(StreamTransactionType.CREATE_STREAM);
     expect(decoded?.info).toEqual(expInfo);
@@ -61,7 +61,7 @@ describe('decode create stream transaction', () => {
       coinType: normalizeStructTag('0x3::my_coin::MyCoin'),
     };
     const txb = await getCreateStreamTxb(ts.globals, expInfo);
-    const decoded = (await StreamTransactionDecoder.decodeTransaction(ts.globals, txb)) as DecodedCreateStream;
+    const decoded = StreamTransactionDecoder.decodeTransaction(ts.globals, txb) as DecodedCreateStream;
     expect(decoded?.type).toBe(StreamTransactionType.CREATE_STREAM);
     expect(decoded?.info).toEqual(expInfo);
     expect(decoded?.coinMerges.length).toBe(2);
@@ -92,31 +92,31 @@ describe('decode other types of transactions', () => {
 
   it('set auto claim true', async () => {
     const txb = await stream.setAutoClaim(true);
-    const decoded = (await StreamTransactionDecoder.decodeTransaction(globals, txb)) as DecodedSetAutoClaim;
+    const decoded = StreamTransactionDecoder.decodeTransaction(globals, txb) as DecodedSetAutoClaim;
     expect(decoded.type).toBe(StreamTransactionType.SET_AUTO_CLAIM);
     expect(decoded.enabled).toBe(true);
-    expect(decoded.streamInfo.streamId).toBe(stream.streamId);
+    expect(decoded.streamId).toBe(stream.streamId);
   });
 
   it('claim', async () => {
     const txb = await stream.claim();
-    const decoded = (await StreamTransactionDecoder.decodeTransaction(globals, txb)) as DecodedClaimStream;
+    const decoded = StreamTransactionDecoder.decodeTransaction(globals, txb) as DecodedClaimStream;
     expect(decoded.type).toBe(StreamTransactionType.CLAIM);
-    expect(decoded.streamInfo.streamId).toBe(stream.streamId);
+    expect(decoded.streamId).toBe(stream.streamId);
   });
 
   it('claim by proxy', async () => {
     const txb = await stream.claimByProxy();
-    const decoded = (await StreamTransactionDecoder.decodeTransaction(globals, txb)) as DecodedClaimByProxy;
+    const decoded = StreamTransactionDecoder.decodeTransaction(globals, txb) as DecodedClaimByProxy;
     expect(decoded.type).toBe(StreamTransactionType.CLAIM_BY_PROXY);
-    expect(decoded.streamInfo.streamId).toBe(stream.streamId);
+    expect(decoded.streamId).toBe(stream.streamId);
   });
 
   it('cancel', async () => {
     const txb = await stream.cancel();
-    const decoded = (await StreamTransactionDecoder.decodeTransaction(globals, txb)) as DecodedCancelStream;
+    const decoded = StreamTransactionDecoder.decodeTransaction(globals, txb) as DecodedCancelStream;
     expect(decoded.type).toBe(StreamTransactionType.CANCEL);
-    expect(decoded.streamInfo.streamId).toBe(stream.streamId);
+    expect(decoded.streamId).toBe(stream.streamId);
   });
 });
 

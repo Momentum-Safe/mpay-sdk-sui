@@ -2,7 +2,6 @@ import { MoveCallTransaction } from '@mysten/sui.js/src/builder/Transactions';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 import { Globals } from '@/common/globals';
-import { Stream } from '@/stream';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
 import { CreateStreamDecodeHelper } from '@/transaction/decoder/create';
 import { MoveCallHelper } from '@/transaction/decoder/moveCall';
@@ -17,7 +16,7 @@ import {
 } from '@/types/decode';
 
 export class StreamTransactionDecoder {
-  static async decodeTransaction(globals: Globals, txb: TransactionBlock): Promise<StreamDecodedTransaction> {
+  static decodeTransaction(globals: Globals, txb: TransactionBlock): StreamDecodedTransaction {
     const helper = new DecodeHelper(globals, txb);
     return helper.decode();
   }
@@ -33,7 +32,7 @@ export class DecodeHelper {
     this.contract = new StreamContract(globals.envConfig.contract, globals);
   }
 
-  async decode(): Promise<StreamDecodedTransaction> {
+  decode(): StreamDecodedTransaction {
     if (this.isCreateStreamTransaction()) {
       return this.decodeCreateStreamTransaction();
     }
@@ -100,41 +99,37 @@ export class DecodeHelper {
     return helper.decode();
   }
 
-  private async decodeSetAutoClaimTransaction(): Promise<DecodedSetAutoClaim> {
+  private decodeSetAutoClaimTransaction(): DecodedSetAutoClaim {
     const streamId = this.helper.inputObjectArgument(0);
     const enabled = this.helper.inputBoolArgument(1);
-    const stream = await Stream.new(this.globals, streamId);
     return {
       type: StreamTransactionType.SET_AUTO_CLAIM,
-      streamInfo: stream.info,
+      streamId,
       enabled,
     };
   }
 
-  private async decodeClaimTransaction(): Promise<DecodedClaimStream> {
+  private decodeClaimTransaction(): DecodedClaimStream {
     const streamId = this.helper.inputObjectArgument(0);
-    const stream = await Stream.new(this.globals, streamId);
     return {
       type: StreamTransactionType.CLAIM,
-      streamInfo: stream.info,
+      streamId,
     };
   }
 
-  private async decodeClaimByProxyTransaction(): Promise<DecodedClaimByProxy> {
+  private decodeClaimByProxyTransaction(): DecodedClaimByProxy {
     const streamId = this.helper.inputObjectArgument(0);
-    const stream = await Stream.new(this.globals, streamId);
     return {
       type: StreamTransactionType.CLAIM_BY_PROXY,
-      streamInfo: stream.info,
+      streamId,
     };
   }
 
-  private async decodeCancelStreamTransaction(): Promise<DecodedCancelStream> {
+  private decodeCancelStreamTransaction(): DecodedCancelStream {
     const streamId = this.helper.inputObjectArgument(0);
-    const stream = await Stream.new(this.globals, streamId);
     return {
       type: StreamTransactionType.CANCEL,
-      streamInfo: stream.info,
+      streamId,
     };
   }
 

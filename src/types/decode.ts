@@ -1,5 +1,4 @@
 import { CreateStreamInfo, PaymentWithFee } from '@/types/client';
-import { StreamInfo } from '@/types/stream';
 
 export type StreamDecodedTransaction =
   | DecodedCreateStream
@@ -34,24 +33,24 @@ export interface CoinMerge {
 export interface DecodedSetAutoClaim {
   type: StreamTransactionType.SET_AUTO_CLAIM;
 
-  streamInfo: StreamInfo;
+  streamId: string;
   enabled: boolean;
 }
 
 export interface DecodedClaimStream {
   type: StreamTransactionType.CLAIM;
 
-  streamInfo: StreamInfo;
+  streamId: string;
 }
 
 export interface DecodedClaimByProxy {
   type: StreamTransactionType.CLAIM_BY_PROXY;
 
-  streamInfo: StreamInfo;
+  streamId: string;
 }
 
 export interface DecodedCancelStream {
   type: StreamTransactionType.CANCEL;
 
-  streamInfo: StreamInfo;
+  streamId: string;
 }

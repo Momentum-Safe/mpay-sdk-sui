@@ -1,7 +1,7 @@
 import { Globals } from '@/common/globals';
 import { getAllOwnedCoins } from '@/sui/iterator/coin';
 
-import { newUnitGlobals, setupTestWallet } from '../../lib/setup';
+import { setupTestWallet } from '../../lib/setup';
 
 describe('coin', () => {
   let address: string;
@@ -9,9 +9,9 @@ describe('coin', () => {
   const expCoinLength = 5;
 
   beforeAll(async () => {
-    const wallet = await setupTestWallet();
-    globals = newUnitGlobals();
-    address = await wallet.address();
+    const res = await setupTestWallet();
+    globals = res.globals;
+    address = await res.testWallet.address();
   });
 
   it('get all coins', async () => {
