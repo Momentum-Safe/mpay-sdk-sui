@@ -159,7 +159,7 @@ export class Stream implements IStream {
       streamed: this.streamedAmount,
       claimed: this.claimedAmount,
       claimable: this.claimable,
-      canceled: this.isCanceled,
+      canceled: this.canceledAmount,
     };
   }
 
@@ -301,6 +301,10 @@ export class Stream implements IStream {
   get isCanceled() {
     const rawStatus = this.rawData.status.status;
     return rawStatus === RawStreamStatusEnum.CANCELED || rawStatus === RawStreamStatusEnum.CANCELED_COMPLETED;
+  }
+
+  get canceledAmount() {
+    return this.isCanceled ? this.totalAmount - this.streamedAmount : 0n;
   }
 
   private static async fetchStreamData(globals: Globals, streamId: string) {

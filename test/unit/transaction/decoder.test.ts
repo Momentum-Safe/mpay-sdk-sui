@@ -103,6 +103,7 @@ describe('decode other types of transactions', () => {
     globals = client.globals;
     client.connectSingleWallet(ts.wallet);
     const txb = await client.createStream(info);
+
     const res = await ts.wallet.signAndSubmitTransaction(txb);
     const streamIds = client.helper.getStreamIdsFromCreateStreamResponse(res);
     stream = await Stream.new(client.globals, streamIds[0]);
