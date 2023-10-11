@@ -11,7 +11,7 @@ export class MSafeAccountAdapter implements IWallet {
     return this.msafe.address();
   }
 
-  async requestCoin(reqs: CoinRequest): Promise<CoinRequestResponse> {
-    return this.msafe.requestCoin(reqs);
+  async requestCoins(reqs: CoinRequest[]): Promise<CoinRequestResponse[]> {
+    return this.msafe.requestCoins(reqs);
   }
 }

@@ -13,7 +13,7 @@ export interface IWallet {
 
   address(): Promise<string>;
 
-  requestCoin(req: CoinRequest): Promise<CoinRequestResponse>;
+  requestCoins(reqs: CoinRequest[]): Promise<CoinRequestResponse[]>;
 }
 
 /**
@@ -24,7 +24,7 @@ export interface IMSafeAccount {
   address(): Promise<string>;
 
   // return coin objects by amount.
-  requestCoin(req: CoinRequest): Promise<CoinRequestResponse>;
+  requestCoins(reqs: CoinRequest[]): Promise<CoinRequestResponse[]>;
 }
 
 /**

@@ -48,7 +48,11 @@ export class FakeMSafeWallet extends LocalWallet implements IMSafeAccount {
     this.coinIndex = 0;
   }
 
-  async requestCoin(reqs: CoinRequest): Promise<CoinRequestResponse> {
+  async requestCoins(reqs: CoinRequest[]): Promise<CoinRequestResponse[]> {
+    return Promise.all(reqs.map((req) => this.requestCoin(req)));
+  }
+
+  async requestCoin(req: CoinRequest): Promise<CoinRequestResponse> {
     const res = {
       primaryCoin: normalizeSuiAddress(`0x${this.coinIndex}`),
       mergedCoins: [normalizeSuiAddress(`0x${this.coinIndex + 1}`), normalizeSuiAddress(`0x${this.coinIndex + 2}`)],
