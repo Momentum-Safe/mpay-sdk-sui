@@ -8,7 +8,7 @@ export enum Env {
   local = 'local',
   unit = 'unit',
   dev = 'dev',
-  staged = 'staged',
+  stg = 'stg',
   prod = 'prod',
 }
 

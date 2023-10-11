@@ -24,6 +24,10 @@ export class SingleWalletAdapter implements IWallet {
     return this.singleWallet.address();
   }
 
+  async requestCoins(reqs: CoinRequest[]): Promise<CoinRequestResponse[]> {
+    return Promise.all(reqs.map((req) => this.requestCoin(req)));
+  }
+
   async requestCoin(req: CoinRequest): Promise<CoinRequestResponse> {
     if (isSameCoinType(req.coinType, SUI_TYPE_ARG)) {
       return {

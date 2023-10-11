@@ -105,7 +105,7 @@ export class StreamGroup implements IStreamGroup {
       streamed: this.streams.reduce((sum, st) => sum + st.streamedAmount, 0n),
       claimed: this.streams.reduce((sum, st) => sum + st.claimedAmount, 0n),
       claimable: this.streams.reduce((sum, st) => sum + st.claimable, 0n),
-      canceled: this.streams.reduce((sum, st) => sum + (st.isCanceled ? st.totalAmount - st.streamedAmount : 0n), 0n),
+      canceled: this.streams.reduce((sum, st) => sum + st.canceledAmount, 0n),
     };
   }
 

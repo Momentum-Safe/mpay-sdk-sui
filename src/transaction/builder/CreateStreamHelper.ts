@@ -16,7 +16,7 @@ import {
   PaymentWithFee,
   RecipientInfoInternal,
 } from '@/types/client';
-import { CoinRequest, GAS_OBJECT_SPEC } from '@/types/wallet';
+import { CoinRequest, CoinRequestResponse, GAS_OBJECT_SPEC } from '@/types/wallet';
 import { generateGroupId } from '@/utils/random';
 
 export class CreateStreamHelper {
@@ -47,13 +47,14 @@ export class CreateStreamHelper {
 
   async buildCreateStreamTransactionBlock(info: CreateStreamInfoInternal): Promise<TransactionBlock> {
     const txb = new TransactionBlock();
-    const paymentWithFee = this.calculateFees(info);
+    const paymentWithFee = this.calculateFeesInternal(info);
     const coinReqs = this.getCreateStreamCoinRequests(info, paymentWithFee);
+    const coinResp = await this.wallet.requestCoins(coinReqs);
 
-    const paymentMergedObject = await this.addMergeCoins(txb, coinReqs[0]);
+    const paymentMergedObject = await this.addMergeCoins(txb, coinResp[0]);
     let flatFeeMergedObject: TransactionArgument;
     if (coinReqs.length > 1) {
-      flatFeeMergedObject = await this.addMergeCoins(txb, coinReqs[1]);
+      flatFeeMergedObject = await this.addMergeCoins(txb, coinResp[1]);
     } else {
       flatFeeMergedObject = paymentMergedObject;
     }
@@ -84,7 +85,7 @@ export class CreateStreamHelper {
 
   calculateCreateStreamFees(createInfo: CreateStreamInfo) {
     const infoInternal = CreateStreamHelper.convertCreateStreamInfoToInternal(createInfo);
-    return this.calculateFees(infoInternal);
+    return this.calculateFeesInternal(infoInternal);
   }
 
   feeParams(): MPayFees {
@@ -101,8 +102,7 @@ export class CreateStreamHelper {
     };
   }
 
-  private async addMergeCoins(txb: TransactionBlock, coinReq: CoinRequest): Promise<TransactionArgument> {
-    const coins = await this.wallet.requestCoin(coinReq);
+  private async addMergeCoins(txb: TransactionBlock, coins: CoinRequestResponse): Promise<TransactionArgument> {
     let mergedCoin: TransactionArgument;
     if (coins.mergedCoins && coins.mergedCoins.length) {
       mergedCoin = txb.mergeCoins(
@@ -140,7 +140,7 @@ export class CreateStreamHelper {
     ];
   }
 
-  calculateFees(info: CreateStreamInfoInternal): PaymentWithFee {
+  calculateFeesInternal(info: CreateStreamInfoInternal): PaymentWithFee {
     const streamPayment = info.recipients.reduce(
       (sum, recipient) => {
         const totalAmount = this.amountForRecipient(recipient, info.numberEpoch);

@@ -54,6 +54,9 @@ export class MPayHelper implements IMPayHelper {
   }
 
   calculateStreamAmount(input: { totalAmount: bigint; steps: bigint; cliff?: Fraction }): CalculatedStreamAmount {
+    if (input.steps === 0n) {
+      throw new InvalidInputError('Invalid stream steps: 0');
+    }
     const cliffFraction = input.cliff
       ? input.cliff
       : {
@@ -74,6 +77,9 @@ export class MPayHelper implements IMPayHelper {
   }
 
   calculateTimelineByInterval(input: { timeStart: DateTime; interval: Duration; steps: bigint }): CalculatedTimeline {
+    if (input.steps === 0n) {
+      throw new InvalidInputError('Invalid stream steps: 0');
+    }
     const timeEnd = input.timeStart.plus(input.interval.toMillis() * Number(input.steps));
 
     const res = {
@@ -87,6 +93,9 @@ export class MPayHelper implements IMPayHelper {
   }
 
   calculateTimelineByTotalDuration(input: { timeStart: DateTime; total: Duration; steps: bigint }): CalculatedTimeline {
+    if (input.steps === 0n) {
+      throw new InvalidInputError('Invalid stream steps: 0');
+    }
     const intervalMilli = BigInt(input.total.toMillis()) / input.steps;
     const timeEnd = input.timeStart.plus(Duration.fromMillis(Number(intervalMilli * input.steps)));
     const res = {

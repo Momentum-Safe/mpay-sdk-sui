@@ -4,7 +4,7 @@ import { Globals } from '@/common/globals';
 import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
-import { CreateStreamInfoInternal } from '@/types/client';
+import { CreateStreamInfo } from '@/types/client';
 
 // TODO: add vault and admin control related code.
 export class MPayBuilder {
@@ -18,8 +18,9 @@ export class MPayBuilder {
     this.streamContract = new StreamContract(config, globals);
   }
 
-  async createStreams(info: CreateStreamInfoInternal) {
-    return this.createStreamHelper().buildCreateStreamTransactionBlock(info);
+  async createStreams(info: CreateStreamInfo) {
+    const infoInternal = CreateStreamHelper.convertCreateStreamInfoToInternal(info);
+    return this.createStreamHelper().buildCreateStreamTransactionBlock(infoInternal);
   }
 
   createStreamHelper() {

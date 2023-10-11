@@ -101,7 +101,7 @@ export interface StreamProgress {
   streamed: bigint;
   claimed: bigint;
   claimable: bigint;
-  canceled: boolean;
+  canceled: bigint;
 }
 
 export interface StreamGroupProgress {

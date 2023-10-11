@@ -5,3 +5,4 @@ export * from './events';
 export * from './pagination';
 export * from './stream';
 export * from './wallet';
+export * from './decode';
