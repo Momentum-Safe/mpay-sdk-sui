@@ -51,6 +51,7 @@ describe('stream', () => {
     expect((res as SuiTransactionBlockResponse).effects?.status?.status).toBe('success');
 
     await st.refresh();
+    expect(st.progress.canceled).toBeGreaterThan(0n);
     expect(st.progress.status === 'CANCELED' || st.progress.status === 'SETTLED').toBeTruthy();
   });
 
