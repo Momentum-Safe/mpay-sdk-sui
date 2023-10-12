@@ -105,10 +105,11 @@ export class CreateStreamHelper {
   private async addMergeCoins(txb: TransactionBlock, coins: CoinRequestResponse): Promise<TransactionArgument> {
     let mergedCoin: TransactionArgument;
     if (coins.mergedCoins && coins.mergedCoins.length) {
-      mergedCoin = txb.mergeCoins(
+      txb.mergeCoins(
         txb.object(coins.primaryCoin),
         coins.mergedCoins.map((coinId) => txb.object(coinId)),
       );
+      mergedCoin = txb.object(coins.primaryCoin);
     } else if (coins.primaryCoin === GAS_OBJECT_SPEC) {
       mergedCoin = txb.gas;
     } else {

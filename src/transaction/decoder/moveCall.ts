@@ -165,7 +165,7 @@ export class MoveCallHelper {
 
   static getOwnedObjectId(input: TransactionBlockInput) {
     if (input.type !== 'object') {
-      throw new Error('not object argument');
+      throw new Error(`not object argument: ${JSON.stringify(input)}`);
     }
     if (typeof input.value === 'object') {
       if (!('Object' in input.value) || !('ImmOrOwned' in input.value.Object)) {
@@ -173,12 +173,12 @@ export class MoveCallHelper {
       }
       return input.value.Object.ImmOrOwned.objectId as string;
     }
-    return input.value as string;
+    return normalizeSuiAddress(input.value as string);
   }
 
   static getSharedObjectId(input: TransactionBlockInput) {
     if (input.type !== 'object') {
-      throw new Error('not object argument');
+      throw new Error(`not object argument: ${JSON.stringify(input)}`);
     }
     if (typeof input.value !== 'object') {
       return input.value as string;
@@ -186,7 +186,7 @@ export class MoveCallHelper {
     if (!('Object' in input.value) || !('Shared' in input.value.Object)) {
       throw new Error('not Shared');
     }
-    return input.value.Object.Shared.objectId as string;
+    return normalizeSuiAddress(input.value.Object.Shared.objectId as string);
   }
 
   static getPureInput<T>(input: TransactionBlockInput, bcsType: string) {

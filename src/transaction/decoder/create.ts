@@ -139,9 +139,31 @@ export class CreateStreamDecodeHelper {
       };
     }
     if (coinArg.kind === 'Input') {
-      const objectId = MoveCallHelper.getOwnedObjectId(coinArg);
+      const arg = this.getInputArg(coinArg);
+      const objectId = MoveCallHelper.getOwnedObjectId(arg);
+
+      const mergeTx = this.transactions.find((tx) => {
+        if (tx.kind !== 'MergeCoins') {
+          return false;
+        }
+        if (tx.destination.kind !== 'Input') {
+          throw new Error('merge coin destination not Input type');
+        }
+        const primaryCoinInput = this.getInputArg(tx.destination);
+        return MoveCallHelper.getOwnedObjectId(primaryCoinInput) === objectId;
+      });
+      if (!mergeTx) {
+        return {
+          primary: objectId,
+          coinType,
+        };
+      }
       return {
         primary: objectId,
+        merged: (mergeTx as any).sources.map((sourceArg: any) => {
+          const sourceInputArg = this.getInputArg(sourceArg);
+          return MoveCallHelper.getOwnedObjectId(sourceInputArg);
+        }),
         coinType,
       };
     }
@@ -194,6 +216,13 @@ export class CreateStreamDecodeHelper {
 
   private createStreamHelper() {
     return new CreateStreamHelper(this.globals, this.feeContract, this.contract);
+  }
+
+  private getInputArg(arg: TransactionArgument) {
+    if (arg.kind !== 'Input') {
+      throw new Error('not input type');
+    }
+    return 'value' in arg ? arg : this.txb.blockData.inputs[arg.index];
   }
 }
 
