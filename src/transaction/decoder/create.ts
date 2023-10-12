@@ -6,6 +6,7 @@ import { Globals } from '@/common/globals';
 import { InvalidInputError } from '@/error/InvalidInputError';
 import { SanityError } from '@/error/SanityError';
 import { decodeMetadata } from '@/stream/metadata';
+import { isSameTarget } from '@/sui/utils';
 import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
@@ -39,7 +40,7 @@ export class CreateStreamDecodeHelper {
 
   private createStreamTransactions(): MoveCallHelper[] {
     const txs = this.transactions.filter(
-      (tx) => tx.kind === 'MoveCall' && tx.target === this.contract.createStreamTarget,
+      (tx) => tx.kind === 'MoveCall' && isSameTarget(tx.target, this.contract.createStreamTarget),
     ) as MoveCallTransaction[];
     if (txs.length === 0) {
       throw new SanityError('No create stream transactions');
