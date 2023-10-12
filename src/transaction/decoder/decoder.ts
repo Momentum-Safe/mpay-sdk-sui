@@ -100,7 +100,7 @@ export class DecodeHelper {
   }
 
   private decodeSetAutoClaimTransaction(): DecodedSetAutoClaim {
-    const streamId = this.helper.inputObjectArgument(0);
+    const streamId = this.helper.inputSharedObjectArgument(0);
     const enabled = this.helper.inputBoolArgument(1);
     return {
       type: StreamTransactionType.SET_AUTO_CLAIM,
@@ -110,7 +110,7 @@ export class DecodeHelper {
   }
 
   private decodeClaimTransaction(): DecodedClaimStream {
-    const streamId = this.helper.inputObjectArgument(0);
+    const streamId = this.helper.inputSharedObjectArgument(0);
     return {
       type: StreamTransactionType.CLAIM,
       streamId,
@@ -118,7 +118,7 @@ export class DecodeHelper {
   }
 
   private decodeClaimByProxyTransaction(): DecodedClaimByProxy {
-    const streamId = this.helper.inputObjectArgument(0);
+    const streamId = this.helper.inputSharedObjectArgument(0);
     return {
       type: StreamTransactionType.CLAIM_BY_PROXY,
       streamId,
@@ -126,7 +126,7 @@ export class DecodeHelper {
   }
 
   private decodeCancelStreamTransaction(): DecodedCancelStream {
-    const streamId = this.helper.inputObjectArgument(0);
+    const streamId = this.helper.inputSharedObjectArgument(0);
     return {
       type: StreamTransactionType.CANCEL,
       streamId,

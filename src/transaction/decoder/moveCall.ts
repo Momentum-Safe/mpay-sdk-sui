@@ -1,4 +1,5 @@
 // Helper class to decode move call
+import { TransactionArgument } from '@mysten/sui.js/src/builder/export';
 import { MoveCallTransaction } from '@mysten/sui.js/src/builder/Transactions';
 import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui.js/utils';
 
@@ -39,6 +40,42 @@ export class MoveCallHelper {
     const targetArg = this.moveCall.arguments[i];
     if (targetArg.kind !== 'Input' || targetArg.type !== 'object') {
       throw new Error('Argument type not object');
+    }
+    return targetArg.value as string;
+  }
+
+  inputOwnedObjectArgument(i: number): string {
+    const targetArg = this.moveCall.arguments[i];
+    return MoveCallHelper.getOwnedObjectAddress(targetArg);
+  }
+
+  static getOwnedObjectAddress(targetArg: TransactionArgument) {
+    if (targetArg.kind !== 'Input' || targetArg.type !== 'object') {
+      throw new Error('Argument type should be object');
+    }
+    if (targetArg.value.Object) {
+      if (!targetArg.value.Object.ImmOrOwned) {
+        throw new Error('Object transaction argument shall be ImmOrOwned');
+      }
+      return targetArg.value.Object.ImmOrOwned.ObjectId;
+    }
+    return targetArg.value as string;
+  }
+
+  inputSharedObjectArgument(i: number): string {
+    const targetArg = this.moveCall.arguments[i];
+    return MoveCallHelper.getSharedObjectAddress(targetArg);
+  }
+
+  static getSharedObjectAddress(targetArg: TransactionArgument) {
+    if (targetArg.kind !== 'Input' || targetArg.type !== 'object') {
+      throw new Error('Argument type should be object');
+    }
+    if (targetArg.value.Object) {
+      if (!targetArg.value.Object.Shared) {
+        throw new Error(' Object transaction argument shall be shared');
+      }
+      return targetArg.value.Object.Shared.ObjectId;
     }
     return targetArg.value as string;
   }

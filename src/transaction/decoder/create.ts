@@ -1,6 +1,6 @@
 import { MoveCallTransaction } from '@mysten/sui.js/src/builder/Transactions';
 import { TransactionArgument, TransactionBlock } from '@mysten/sui.js/transactions';
-import { normalizeStructTag, normalizeSuiAddress, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
+import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 
 import { Globals } from '@/common/globals';
 import { InvalidInputError } from '@/error/InvalidInputError';
@@ -134,8 +134,9 @@ export class CreateStreamDecodeHelper {
       };
     }
     if (coinArg.kind === 'Input') {
+      const objectId = MoveCallHelper.getOwnedObjectAddress(coinArg);
       return {
-        primary: coinArg.value,
+        primary: objectId,
         coinType,
       };
     }
@@ -154,19 +155,12 @@ export class CreateStreamDecodeHelper {
         throw new InvalidInputError(`Transaction type not expected. Expect MergeCoins, got ${parentTx.kind}`);
       }
       return {
-        primary: this.getInputObjectAddress(parentTx.destination),
-        merged: parentTx.sources.map((arg) => this.getInputObjectAddress(arg)),
+        primary: MoveCallHelper.getOwnedObjectAddress(parentTx.destination),
+        merged: parentTx.sources.map((arg) => MoveCallHelper.getOwnedObjectAddress(arg)),
         coinType,
       };
     }
     throw new Error(`Unknown argument kind`);
-  }
-
-  private getInputObjectAddress(arg: TransactionArgument) {
-    if (arg.kind !== 'Input' || arg.type !== 'object') {
-      throw new InvalidInputError('Not input object type');
-    }
-    return normalizeSuiAddress(arg.value as string);
   }
 
   private mergeCoinTransactions() {
