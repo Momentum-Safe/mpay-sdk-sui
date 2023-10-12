@@ -45,20 +45,20 @@ export class CreateStreamDecodeHelper {
     if (txs.length === 0) {
       throw new SanityError('No create stream transactions');
     }
-    return txs.map((tx) => new MoveCallHelper(tx));
+    return txs.map((tx) => new MoveCallHelper(tx, this.txb));
   }
 
   private getCreationInfoFromMoveCall(moveCall: MoveCallHelper): SingleStreamCreationInfo {
-    const metadata = moveCall.inputStringArgument(4);
+    const metadata = moveCall.decodeInputString(4);
     const { name, groupId } = decodeMetadata(metadata);
 
-    const recipient = moveCall.inputAddressArgument(5);
-    const timeStart = moveCall.inputU64Argument(6);
-    const cliff = moveCall.inputU64Argument(7);
-    const epochInterval = moveCall.inputU64Argument(8);
-    const totalEpoch = moveCall.inputU64Argument(9);
-    const amountPerEpoch = moveCall.inputU64Argument(10);
-    const cancelable = moveCall.inputBoolArgument(11);
+    const recipient = moveCall.decodeInputAddress(5);
+    const timeStart = moveCall.decodeInputU64(6);
+    const cliff = moveCall.decodeInputU64(7);
+    const epochInterval = moveCall.decodeInputU64(8);
+    const totalEpoch = moveCall.decodeInputU64(9);
+    const amountPerEpoch = moveCall.decodeInputU64(10);
+    const cancelable = moveCall.decodeInputBool(11);
     const coinType = moveCall.typeArg(0);
 
     return {
@@ -114,20 +114,24 @@ export class CreateStreamDecodeHelper {
   }
 
   private getCoinMergeForCreateStream(moveCall: MoveCallHelper) {
-    const coinType = normalizeStructTag(moveCall.typeArg(0));
+    const coinType = moveCall.typeArg(0);
 
-    const paymentCoin = moveCall.txArgument(2);
-    const paymentCoinMerge = this.getCoinMergeFromNestedResult(paymentCoin, coinType);
+    const paymentCoin = moveCall.txArg(2);
+    const paymentCoinMerge = this.getCoinMergeFromNestedResult(paymentCoin, coinType, moveCall);
 
     if (coinType === normalizeStructTag(SUI_TYPE_ARG)) {
       return [paymentCoinMerge];
     }
-    const flatFeeCoin = moveCall.txArgument(3);
-    const flatCoinMerge = this.getCoinMergeFromNestedResult(flatFeeCoin, normalizeStructTag(SUI_TYPE_ARG));
+    const flatFeeCoin = moveCall.txArg(3);
+    const flatCoinMerge = this.getCoinMergeFromNestedResult(flatFeeCoin, normalizeStructTag(SUI_TYPE_ARG), moveCall);
     return [paymentCoinMerge, flatCoinMerge];
   }
 
-  private getCoinMergeFromNestedResult(coinArg: TransactionArgument, coinType: string): CoinMerge {
+  private getCoinMergeFromNestedResult(
+    coinArg: TransactionArgument,
+    coinType: string,
+    moveCall: MoveCallHelper,
+  ): CoinMerge {
     if (coinArg.kind === 'GasCoin') {
       return {
         primary: 'GAS',
@@ -135,7 +139,7 @@ export class CreateStreamDecodeHelper {
       };
     }
     if (coinArg.kind === 'Input') {
-      const objectId = MoveCallHelper.getOwnedObjectAddress(coinArg);
+      const objectId = MoveCallHelper.getOwnedObjectId(coinArg);
       return {
         primary: objectId,
         coinType,
@@ -147,7 +151,7 @@ export class CreateStreamDecodeHelper {
       if (parentTx.kind !== 'SplitCoins') {
         throw new InvalidInputError(`Transaction type not expected. Expect SplitCoins, got ${parentTx.kind}`);
       }
-      return this.getCoinMergeFromNestedResult(parentTx.coin, coinType);
+      return this.getCoinMergeFromNestedResult(parentTx.coin, coinType, moveCall);
     }
     if (coinArg.kind === 'Result') {
       // Expect parent is merge coin transaction.
@@ -155,9 +159,17 @@ export class CreateStreamDecodeHelper {
       if (parentTx.kind !== 'MergeCoins') {
         throw new InvalidInputError(`Transaction type not expected. Expect MergeCoins, got ${parentTx.kind}`);
       }
+      if (parentTx.destination.kind !== 'Input') {
+        throw new Error('merge coin destination not input');
+      }
       return {
-        primary: MoveCallHelper.getOwnedObjectAddress(parentTx.destination),
-        merged: parentTx.sources.map((arg) => MoveCallHelper.getOwnedObjectAddress(arg)),
+        primary: MoveCallHelper.getOwnedObjectId(this.txb.blockData.inputs[parentTx.destination.index]),
+        merged: parentTx.sources.map((arg) => {
+          if (arg.kind !== 'Input') {
+            throw new Error('merge coin source not input');
+          }
+          return MoveCallHelper.getOwnedObjectId(this.txb.blockData.inputs[arg.index]);
+        }),
         coinType,
       };
     }

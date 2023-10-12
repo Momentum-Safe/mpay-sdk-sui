@@ -1,3 +1,4 @@
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 
 import { Env } from '@/common';
@@ -85,6 +86,24 @@ describe('decode create stream transaction', () => {
     expect(decoded?.coinMerges[0].coinType).toBe(normalizeStructTag(SUI_TYPE_ARG));
     expect(decoded?.coinMerges[0].primary).toBe('GAS');
     expect(decoded?.coinMerges[0].merged).toBe(undefined);
+  });
+
+  it('single wallet, from payload', async () => {
+    const defaultInfo = defaultStreamParam(await singleTS.globals.walletAddress());
+    const expInfo: CreateStreamInfo = {
+      ...defaultInfo,
+      coinType: normalizeStructTag(defaultInfo.coinType),
+    };
+    const txb = await getCreateStreamTxb(singleTS.globals, expInfo);
+
+    txb.setSender(singleTS.address);
+    const txBytes = await txb.build({ client: singleTS.globals.suiClient });
+    const txb2 = TransactionBlock.from(txBytes);
+
+    const decoded = StreamTransactionDecoder.decodeTransaction(singleTS.globals, txb2) as DecodedCreateStream;
+    expect(decoded?.type).toBe(StreamTransactionType.CREATE_STREAM);
+    expect(decoded.info).toEqual(expInfo);
+    expect(decoded.coinMerges.length).toBe(1);
   });
 });
 
