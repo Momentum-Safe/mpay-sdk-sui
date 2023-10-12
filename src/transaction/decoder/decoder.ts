@@ -2,6 +2,7 @@ import { MoveCallTransaction } from '@mysten/sui.js/src/builder/Transactions';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 import { Globals } from '@/common/globals';
+import { isSameTarget } from '@/sui/utils';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
 import { CreateStreamDecodeHelper } from '@/transaction/decoder/create';
 import { MoveCallHelper } from '@/transaction/decoder/moveCall';
@@ -57,7 +58,7 @@ export class DecodeHelper {
 
   private isCreateStreamTransaction() {
     const createStreamIndex = this.transactions.findIndex(
-      (tx) => tx.kind === 'MoveCall' && tx.target === this.contract.createStreamTarget,
+      (tx) => tx.kind === 'MoveCall' && isSameTarget(tx.target, this.contract.createStreamTarget),
     );
     return createStreamIndex !== -1;
   }
@@ -66,7 +67,7 @@ export class DecodeHelper {
     return (
       this.transactions.length === 1 &&
       this.transactions[0].kind === 'MoveCall' &&
-      this.transactions[0].target === this.contract.setAutoClaimTarget
+      isSameTarget(this.transactions[0].target, this.contract.setAutoClaimTarget)
     );
   }
 
@@ -74,7 +75,7 @@ export class DecodeHelper {
     return (
       this.transactions.length === 1 &&
       this.transactions[0].kind === 'MoveCall' &&
-      this.transactions[0].target === this.contract.cancelStreamTarget
+      isSameTarget(this.transactions[0].target, this.contract.cancelStreamTarget)
     );
   }
 
@@ -82,7 +83,7 @@ export class DecodeHelper {
     return (
       this.transactions.length === 1 &&
       this.transactions[0].kind === 'MoveCall' &&
-      this.transactions[0].target === this.contract.claimStreamTarget
+      isSameTarget(this.transactions[0].target, this.contract.claimStreamTarget)
     );
   }
 
@@ -90,7 +91,7 @@ export class DecodeHelper {
     return (
       this.transactions.length === 1 &&
       this.transactions[0].kind === 'MoveCall' &&
-      this.transactions[0].target === this.contract.claimStreamByProxyTarget
+      isSameTarget(this.transactions[0].target, this.contract.claimStreamByProxyTarget)
     );
   }
 
