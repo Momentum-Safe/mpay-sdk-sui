@@ -176,24 +176,7 @@ export class CreateStreamDecodeHelper {
       return this.getCoinMergeFromNestedResult(parentTx.coin, coinType, moveCall);
     }
     if (coinArg.kind === 'Result') {
-      // Expect parent is merge coin transaction.
-      const parentTx = this.transactions[coinArg.index];
-      if (parentTx.kind !== 'MergeCoins') {
-        throw new InvalidInputError(`Transaction type not expected. Expect MergeCoins, got ${parentTx.kind}`);
-      }
-      if (parentTx.destination.kind !== 'Input') {
-        throw new Error('merge coin destination not input');
-      }
-      return {
-        primary: MoveCallHelper.getOwnedObjectId(this.txb.blockData.inputs[parentTx.destination.index]),
-        merged: parentTx.sources.map((arg) => {
-          if (arg.kind !== 'Input') {
-            throw new Error('merge coin source not input');
-          }
-          return MoveCallHelper.getOwnedObjectId(this.txb.blockData.inputs[arg.index]);
-        }),
-        coinType,
-      };
+      throw new Error('Result type not expected for coin inputs');
     }
     throw new Error(`Unknown argument kind`);
   }
