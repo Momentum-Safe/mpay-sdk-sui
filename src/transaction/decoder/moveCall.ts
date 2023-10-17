@@ -1,64 +1,112 @@
 // Helper class to decode move call
-import { MoveCallTransaction } from '@mysten/sui.js/src/builder/Transactions';
+import { bcs } from '@mysten/sui.js/bcs';
+import { MoveCallTransaction, TransactionBlockInput } from '@mysten/sui.js/src/builder/Transactions';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui.js/utils';
 
-import { InvalidInputError } from '@/error/InvalidInputError';
-
 export class MoveCallHelper {
-  constructor(public readonly moveCall: MoveCallTransaction) {}
+  constructor(
+    public readonly moveCall: MoveCallTransaction,
+    public readonly txb: TransactionBlock,
+  ) {}
 
-  inputStringArgument(index: number): string {
-    const rawVal = this.inputPureArgument(index);
-    return rawVal.value as string;
+  decodeSharedObjectId(argIndex: number) {
+    const input = this.getInputParam(argIndex);
+    return MoveCallHelper.getSharedObjectId(input);
   }
 
-  inputAddressArgument(index: number): string {
-    const addr = this.inputStringArgument(index);
-    return normalizeSuiAddress(addr);
+  decodeOwnedObjectId(argIndex: number) {
+    const input = this.getInputParam(argIndex);
+    return MoveCallHelper.getOwnedObjectId(input);
   }
 
-  inputU64Argument(index: number): bigint {
-    const rawVal = this.inputPureArgument(index);
-    return BigInt(rawVal.value as string);
+  decodeInputU64(argIndex: number) {
+    const strVal = this.decodePureArg<string>(argIndex, 'u64');
+    return BigInt(strVal);
   }
 
-  inputBoolArgument(index: number): boolean {
-    const rawVal = this.inputPureArgument(index);
-    return rawVal.value as boolean;
+  decodeInputAddress(argIndex: number) {
+    const input = this.decodePureArg<string>(argIndex, 'address');
+    return normalizeSuiAddress(input);
   }
 
-  inputPureArgument(i: number) {
-    const targetArg = this.moveCall.arguments[i];
-    if (targetArg.kind !== 'Input' || targetArg.type !== 'pure') {
-      throw new InvalidInputError('Argument type not pure input');
+  decodeInputString(argIndex: number) {
+    return this.decodePureArg<string>(argIndex, 'string');
+  }
+
+  decodeInputBool(argIndex: number) {
+    return this.decodePureArg<boolean>(argIndex, 'bool');
+  }
+
+  decodePureArg<T>(argIndex: number, bcsType: string) {
+    const input = this.getInputParam(argIndex);
+    return MoveCallHelper.getPureInputValue<T>(input, bcsType);
+  }
+
+  getInputParam(argIndex: number) {
+    const arg = this.moveCall.arguments[argIndex];
+    if (arg.kind !== 'Input') {
+      throw new Error('not input type');
     }
-    return targetArg;
+    return this.txb.blockData.inputs[arg.index];
   }
 
-  inputObjectArgument(i: number) {
-    const targetArg = this.moveCall.arguments[i];
-    if (targetArg.kind !== 'Input' || targetArg.type !== 'object') {
-      throw new Error('Argument type not object');
+  static getPureInputValue<T>(input: TransactionBlockInput, bcsType: string) {
+    if (input.type !== 'pure') {
+      throw new Error('not pure argument');
     }
-    return targetArg.value as string;
+    if (typeof input.value === 'object' && 'Pure' in input.value) {
+      const bcsNums = input.value.Pure;
+      return bcs.de(bcsType, new Uint8Array(bcsNums)) as T;
+    }
+    return input.value as T;
   }
 
-  txArgument(i: number) {
-    return this.moveCall.arguments[i];
+  static getOwnedObjectId(input: TransactionBlockInput) {
+    if (input.type !== 'object') {
+      throw new Error(`not object argument: ${JSON.stringify(input)}`);
+    }
+    if (typeof input.value === 'object') {
+      if (!('Object' in input.value) || !('ImmOrOwned' in input.value.Object)) {
+        throw new Error('not ImmOrOwned');
+      }
+      return input.value.Object.ImmOrOwned.objectId as string;
+    }
+    return normalizeSuiAddress(input.value as string);
   }
 
-  nestedArgument(i: number) {
-    const targetArg = this.moveCall.arguments[i];
-    if (targetArg.kind !== 'NestedResult') {
-      throw new InvalidInputError('Not nested result');
+  static getSharedObjectId(input: TransactionBlockInput) {
+    if (input.type !== 'object') {
+      throw new Error(`not object argument: ${JSON.stringify(input)}`);
     }
-    if (targetArg.resultIndex !== 0) {
-      throw new InvalidInputError('Nested result index not expected. Expect: 0');
+    if (typeof input.value !== 'object') {
+      return input.value as string;
     }
-    return targetArg;
+    if (!('Object' in input.value) || !('Shared' in input.value.Object)) {
+      throw new Error('not Shared');
+    }
+    return normalizeSuiAddress(input.value.Object.Shared.objectId as string);
+  }
+
+  static getPureInput<T>(input: TransactionBlockInput, bcsType: string) {
+    if (input.type !== 'pure') {
+      throw new Error('not pure argument');
+    }
+    if (typeof input.value !== 'object') {
+      return input.value as T;
+    }
+    if (!('Pure' in input.value)) {
+      throw new Error('Pure not in value');
+    }
+    const bcsVal = input.value.Pure;
+    return bcs.de(bcsType, new Uint8Array(bcsVal)) as T;
   }
 
   typeArg(index: number) {
     return normalizeStructTag(this.moveCall.typeArguments[index]);
+  }
+
+  txArg(index: number) {
+    return this.moveCall.arguments[index];
   }
 }

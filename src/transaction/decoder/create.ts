@@ -1,11 +1,12 @@
 import { MoveCallTransaction } from '@mysten/sui.js/src/builder/Transactions';
 import { TransactionArgument, TransactionBlock } from '@mysten/sui.js/transactions';
-import { normalizeStructTag, normalizeSuiAddress, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
+import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 
 import { Globals } from '@/common/globals';
 import { InvalidInputError } from '@/error/InvalidInputError';
 import { SanityError } from '@/error/SanityError';
 import { decodeMetadata } from '@/stream/metadata';
+import { isSameTarget } from '@/sui/utils';
 import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
@@ -39,25 +40,25 @@ export class CreateStreamDecodeHelper {
 
   private createStreamTransactions(): MoveCallHelper[] {
     const txs = this.transactions.filter(
-      (tx) => tx.kind === 'MoveCall' && tx.target === this.contract.createStreamTarget,
+      (tx) => tx.kind === 'MoveCall' && isSameTarget(tx.target, this.contract.createStreamTarget),
     ) as MoveCallTransaction[];
     if (txs.length === 0) {
       throw new SanityError('No create stream transactions');
     }
-    return txs.map((tx) => new MoveCallHelper(tx));
+    return txs.map((tx) => new MoveCallHelper(tx, this.txb));
   }
 
   private getCreationInfoFromMoveCall(moveCall: MoveCallHelper): SingleStreamCreationInfo {
-    const metadata = moveCall.inputStringArgument(4);
+    const metadata = moveCall.decodeInputString(4);
     const { name, groupId } = decodeMetadata(metadata);
 
-    const recipient = moveCall.inputAddressArgument(5);
-    const timeStart = moveCall.inputU64Argument(6);
-    const cliff = moveCall.inputU64Argument(7);
-    const epochInterval = moveCall.inputU64Argument(8);
-    const totalEpoch = moveCall.inputU64Argument(9);
-    const amountPerEpoch = moveCall.inputU64Argument(10);
-    const cancelable = moveCall.inputBoolArgument(11);
+    const recipient = moveCall.decodeInputAddress(5);
+    const timeStart = moveCall.decodeInputU64(6);
+    const cliff = moveCall.decodeInputU64(7);
+    const epochInterval = moveCall.decodeInputU64(8);
+    const totalEpoch = moveCall.decodeInputU64(9);
+    const amountPerEpoch = moveCall.decodeInputU64(10);
+    const cancelable = moveCall.decodeInputBool(11);
     const coinType = moveCall.typeArg(0);
 
     return {
@@ -113,20 +114,24 @@ export class CreateStreamDecodeHelper {
   }
 
   private getCoinMergeForCreateStream(moveCall: MoveCallHelper) {
-    const coinType = normalizeStructTag(moveCall.typeArg(0));
+    const coinType = moveCall.typeArg(0);
 
-    const paymentCoin = moveCall.txArgument(2);
-    const paymentCoinMerge = this.getCoinMergeFromNestedResult(paymentCoin, coinType);
+    const paymentCoin = moveCall.txArg(2);
+    const paymentCoinMerge = this.getCoinMergeFromNestedResult(paymentCoin, coinType, moveCall);
 
     if (coinType === normalizeStructTag(SUI_TYPE_ARG)) {
       return [paymentCoinMerge];
     }
-    const flatFeeCoin = moveCall.txArgument(3);
-    const flatCoinMerge = this.getCoinMergeFromNestedResult(flatFeeCoin, normalizeStructTag(SUI_TYPE_ARG));
+    const flatFeeCoin = moveCall.txArg(3);
+    const flatCoinMerge = this.getCoinMergeFromNestedResult(flatFeeCoin, normalizeStructTag(SUI_TYPE_ARG), moveCall);
     return [paymentCoinMerge, flatCoinMerge];
   }
 
-  private getCoinMergeFromNestedResult(coinArg: TransactionArgument, coinType: string): CoinMerge {
+  private getCoinMergeFromNestedResult(
+    coinArg: TransactionArgument,
+    coinType: string,
+    moveCall: MoveCallHelper,
+  ): CoinMerge {
     if (coinArg.kind === 'GasCoin') {
       return {
         primary: 'GAS',
@@ -134,8 +139,31 @@ export class CreateStreamDecodeHelper {
       };
     }
     if (coinArg.kind === 'Input') {
+      const arg = this.getInputArg(coinArg);
+      const objectId = MoveCallHelper.getOwnedObjectId(arg);
+
+      const mergeTx = this.transactions.find((tx) => {
+        if (tx.kind !== 'MergeCoins') {
+          return false;
+        }
+        if (tx.destination.kind !== 'Input') {
+          throw new Error('merge coin destination not Input type');
+        }
+        const primaryCoinInput = this.getInputArg(tx.destination);
+        return MoveCallHelper.getOwnedObjectId(primaryCoinInput) === objectId;
+      });
+      if (!mergeTx) {
+        return {
+          primary: objectId,
+          coinType,
+        };
+      }
       return {
-        primary: coinArg.value,
+        primary: objectId,
+        merged: (mergeTx as any).sources.map((sourceArg: any) => {
+          const sourceInputArg = this.getInputArg(sourceArg);
+          return MoveCallHelper.getOwnedObjectId(sourceInputArg);
+        }),
         coinType,
       };
     }
@@ -145,28 +173,12 @@ export class CreateStreamDecodeHelper {
       if (parentTx.kind !== 'SplitCoins') {
         throw new InvalidInputError(`Transaction type not expected. Expect SplitCoins, got ${parentTx.kind}`);
       }
-      return this.getCoinMergeFromNestedResult(parentTx.coin, coinType);
+      return this.getCoinMergeFromNestedResult(parentTx.coin, coinType, moveCall);
     }
     if (coinArg.kind === 'Result') {
-      // Expect parent is merge coin transaction.
-      const parentTx = this.transactions[coinArg.index];
-      if (parentTx.kind !== 'MergeCoins') {
-        throw new InvalidInputError(`Transaction type not expected. Expect MergeCoins, got ${parentTx.kind}`);
-      }
-      return {
-        primary: this.getInputObjectAddress(parentTx.destination),
-        merged: parentTx.sources.map((arg) => this.getInputObjectAddress(arg)),
-        coinType,
-      };
+      throw new Error('Result type not expected for coin inputs');
     }
     throw new Error(`Unknown argument kind`);
-  }
-
-  private getInputObjectAddress(arg: TransactionArgument) {
-    if (arg.kind !== 'Input' || arg.type !== 'object') {
-      throw new InvalidInputError('Not input object type');
-    }
-    return normalizeSuiAddress(arg.value as string);
   }
 
   private mergeCoinTransactions() {
@@ -187,6 +199,13 @@ export class CreateStreamDecodeHelper {
 
   private createStreamHelper() {
     return new CreateStreamHelper(this.globals, this.feeContract, this.contract);
+  }
+
+  private getInputArg(arg: TransactionArgument) {
+    if (arg.kind !== 'Input') {
+      throw new Error('not input type');
+    }
+    return 'value' in arg ? arg : this.txb.blockData.inputs[arg.index];
   }
 }
 
