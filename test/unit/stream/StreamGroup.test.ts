@@ -4,6 +4,7 @@ import { StreamGroup } from '@/stream/StreamGroup';
 import { StreamStatus } from '@/types';
 import { generateGroupId } from '@/utils/random';
 
+import { requestFaucetForTestnet } from '../../lib/faucet';
 import { getTestSuite, TestSuite } from '../../lib/setup';
 import { createStreamHelper } from '../../lib/stream';
 
@@ -12,6 +13,8 @@ describe('StreamGroup', () => {
 
   beforeAll(async () => {
     ts = await getTestSuite();
+    // Need some additional sui coins for test
+    await requestFaucetForTestnet(ts.globals.suiClient, ts.address);
   });
 
   it('multiple streams', async () => {

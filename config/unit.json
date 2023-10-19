@@ -1,9 +1,0 @@
-{
-  "transaction": "DLwDNDzACXu5ueEaXtviseeB8ATNVQM48dsd6Wi5zYB6",
-  "status": "success",
-  "contractId": "0xc58076a32adc5a786142f9b17e209febaf9e7d2805553693c393af5e77edfe0c",
-  "roleObjId": "0x27d237cd11464a117dc332deb8994ce41c618ff8cd34da561c96267ebf11c303",
-  "vaultObjId": "0xd7fe5d21d670ba12fbf9465503ce6d8ff921b72fd47774955ab6fb6a0696eded",
-  "feeObjId": "0xa23684e34c94179350eab69c3e018bab8d587476ae596c225cdd4354c179f0e9",
-  "upgradeCapObjId": "0xa3db7563ce01a843187ac6ef2e1af5ce543f2cd9df95f292706138cc280e34c0"
-}

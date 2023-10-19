@@ -2,11 +2,9 @@ import { SanityError } from '@/error/SanityError';
 
 import * as devContractConfig from '../../config/dev.json';
 import * as localContractConfig from '../../config/local.json';
-import * as unitContractConfig from '../../config/unit.json';
 
 export enum Env {
   local = 'local',
-  unit = 'unit',
   dev = 'dev',
   stg = 'stg',
   prod = 'prod',
@@ -31,7 +29,6 @@ export interface BackendConfig {
 
 export interface SuiConfig {
   url: string;
-  faucet?: string;
 }
 
 export interface ContractConfig {
@@ -53,22 +50,9 @@ export const STG_BE_API = 'https://rolsbkota7.execute-api.us-west-1.amazonaws.co
 export const PROD_BE_API = 'https://xrae3mrjv5.execute-api.us-west-1.amazonaws.com/prod';
 
 export const CONTRACT_LOCAL: ContractConfig = localContractConfig;
-export const CONTRACT_UNIT: ContractConfig = unitContractConfig;
 export const CONTRACT_DEV: ContractConfig = devContractConfig;
 
 const ENV_CONFIG: Map<Env, EnvConfig> = new Map([
-  [
-    Env.unit,
-    {
-      env: Env.unit,
-      rpc: {
-        // url: `${UNIT_RPC_ENDPOINT}/fullnode`,
-        url: UNIT_RPC_ENDPOINT,
-        faucet: 'http://ec2-54-241-42-141.us-west-1.compute.amazonaws.com:9123',
-      },
-      contract: CONTRACT_UNIT,
-    },
-  ],
   [
     Env.dev,
     {

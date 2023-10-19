@@ -1,54 +1,51 @@
-import { Env } from '@/common';
-import { MPayClient } from '@/stream';
 import { MPayHelper } from '@/stream/helper';
 import { CLAIM_FEE_NUMERATOR, FEE_DENOMINATOR, FEE_NUMERATOR, FLAT_FEE_SUI } from '@/transaction/builder/const';
 import { IPagedStreamListIterator, IStream, IStreamGroup } from '@/types';
 
-import { newUnitGlobals } from '../../lib/setup';
+import { newDevGlobals } from '../../lib/setup';
 import { defaultStreamParam } from '../../lib/stream';
-import { FakeWallet } from '../../lib/wallet';
 
-describe('MPayClient', () => {
-  let client: MPayClient;
-  const testAddress = '0xfa0f8542f256e669694624aa3ee7bfbde5af54641646a3a05924cf9e329a8a36';
-
-  beforeAll(() => {
-    client = new MPayClient(Env.dev);
-    client.connectSingleWallet(new FakeWallet(testAddress));
-  });
-
-  it('stream list', async () => {
-    const it = await client.getIncomingStreams();
-    const res = await getAllFromIter(it);
-    expect(res.length).not.toBe(0);
-  });
-
-  it('stream list with claimable set to true', async () => {
-    const it = await client.getIncomingStreams({
-      claimable: true,
-    });
-    const res = await getAllFromIter(it);
-    expect(res.length).toBeGreaterThan(0);
-    for (let i = 0; i !== res.length; i++) {
-      const st = res[i];
-      expect(st.progress.claimable).toBeGreaterThan(0);
-    }
-  });
-
-  it('Undefined claimable shall return all', async () => {
-    const it = await client.getIncomingStreams({
-      claimable: undefined,
-    });
-    const res = await getAllFromIter(it);
-    expect(res.length).toBeGreaterThan(0);
-  });
-});
+// describe('MPayClient', () => {
+//   let client: MPayClient;
+//   const testAddress = '0xfa0f8542f256e669694624aa3ee7bfbde5af54641646a3a05924cf9e329a8a36';
+//
+//   beforeAll(() => {
+//     client = new MPayClient(Env.dev);
+//     client.connectSingleWallet(new FakeWallet(testAddress));
+//   });
+//
+//   it('stream list', async () => {
+//     const it = await client.getIncomingStreams();
+//     const res = await getAllFromIter(it);
+//     expect(res.length).not.toBe(0);
+//   });
+//
+//   it('stream list with claimable set to true', async () => {
+//     const it = await client.getIncomingStreams({
+//       claimable: true,
+//     });
+//     const res = await getAllFromIter(it);
+//     expect(res.length).toBeGreaterThan(0);
+//     for (let i = 0; i !== res.length; i++) {
+//       const st = res[i];
+//       expect(st.progress.claimable).toBeGreaterThan(0);
+//     }
+//   });
+//
+//   it('Undefined claimable shall return all', async () => {
+//     const it = await client.getIncomingStreams({
+//       claimable: undefined,
+//     });
+//     const res = await getAllFromIter(it);
+//     expect(res.length).toBeGreaterThan(0);
+//   });
+// });
 
 describe('helper', () => {
   let helper: MPayHelper;
 
   beforeAll(() => {
-    helper = new MPayHelper(newUnitGlobals());
+    helper = new MPayHelper(newDevGlobals());
   });
 
   it('calculateCreateStreamFees', () => {

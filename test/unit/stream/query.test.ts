@@ -220,7 +220,6 @@ async function setupStreamsAndBackend() {
   const group = await createStreamGroup(ts, [ts.address, ts.address]);
   const canceled = await createCanceledStream(ts, ts.address);
   const settled = await createSettledStream(ts, ts.address);
-
   const streams = [streaming, ...group.streams, canceled, settled];
   const mockBackend = createMockBackend(streams);
   ts.globals.backend = mockBackend;

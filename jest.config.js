@@ -11,6 +11,6 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   coverageReporters: ['json', 'text', 'cobertura'],
-  maxWorkers: 3,
+  maxWorkers: 5,
   testTimeout: 300000,
 };

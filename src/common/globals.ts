@@ -1,9 +1,7 @@
 import { SuiClient } from '@mysten/sui.js/client';
-import { requestSuiFromFaucetV0 } from '@mysten/sui.js/faucet';
 
 import { Env, EnvConfig, EnvConfigOptions, getConfig } from '@/common/env';
 import { NoBackendError } from '@/error/NoBackendError';
-import { SanityError } from '@/error/SanityError';
 import { WalletNotConnectedError } from '@/error/WalletNotConnectedError';
 import { Backend } from '@/stream/backend';
 import { IBackend } from '@/types/backend';
@@ -67,15 +65,5 @@ export class Globals {
 
   async walletAddress() {
     return this.wallet.address();
-  }
-
-  async requestFaucet(address: string) {
-    if (!this.envConfig.rpc.faucet) {
-      throw new SanityError('Faucet not supported');
-    }
-    return requestSuiFromFaucetV0({
-      host: this.envConfig.rpc.faucet,
-      recipient: address,
-    });
   }
 }

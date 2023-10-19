@@ -93,7 +93,7 @@ export function defaultStreamParam(recipient: string): CreateStreamInfo {
       {
         address: recipient,
         cliffAmount: 10000n,
-        amountPerStep: 10000n,
+        amountPerStep: 100n,
       },
       {
         address: recipient,
