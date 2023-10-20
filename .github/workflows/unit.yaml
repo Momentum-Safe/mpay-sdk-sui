@@ -1,4 +1,4 @@
-name: Unit test
+name: Unit Test
 
 on: push
 
@@ -7,7 +7,7 @@ env:
 
 jobs:
   linting:
-    name: Lint
+    name: Unit Test
     runs-on: ubuntu-latest
     steps:
       - name: Install NodeJS
