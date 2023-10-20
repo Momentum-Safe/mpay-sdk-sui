@@ -265,16 +265,6 @@ function createMockBackend(streams: Stream[]) {
 }
 
 async function testStreamListIteration(it: StreamListIterator, streamIds: string[][]) {
-  // while (await it.hasNext()) {
-  //   const st = await it.next();
-  //   console.log(await it.next());
-  //   console.log((await it.next()).info);
-  //   if ('streamId' in (st as IStream | IStreamGroup)) {
-  //     console.log((st as Stream).streamId);
-  //   } else {
-  //     console.log((st as StreamGroup).streams.map((stream) => stream.streamId));
-  //   }
-  // }
   const res: (IStreamGroup | IStream)[] = [];
   while (await it.hasNext()) {
     res.push(await it.next());
