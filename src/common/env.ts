@@ -13,7 +13,7 @@ export enum Env {
 export interface EnvConfig {
   env: Env;
   rpc: SuiConfig;
-  backend?: BackendConfig; // TODO: Make this field required
+  backend: BackendConfig;
   contract: ContractConfig;
 }
 

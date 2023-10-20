@@ -83,6 +83,7 @@ export class StreamListIterator implements SuiIterator<IStream | IStreamGroup> {
       if (res === null) {
         throw new SanityError('No more results');
       }
+      return res;
     }
     const res = this.cachedNext;
     this.cachedNext = undefined;
@@ -113,6 +114,10 @@ export class StreamListRequester {
     const backendQuery = convertToIncomingBackendQuery(input.query);
     const recipient = await input.globals.walletAddress();
     const refs = await input.globals.backend.getIncomingStreams(recipient, backendQuery);
+    console.log(
+      'incoming refs',
+      refs.map((ref) => ref.streamId),
+    );
     const groupedRefs = groupAndSortRefs(refs);
 
     return new StreamListRequester(input.globals, recipient, groupedRefs, input.query);
@@ -122,6 +127,7 @@ export class StreamListRequester {
     const backendQuery = convertToOutgoingBackendQuery(input.query);
     const sender = await input.globals.walletAddress();
     const refs = await input.globals.backend.getOutgoingStreams(sender, backendQuery);
+    console.log('outgoing refs', refs);
     const groupedRefs = groupAndSortRefs(refs);
     return new StreamListRequester(input.globals, sender, groupedRefs, input.query);
   }
@@ -131,8 +137,10 @@ export class StreamListRequester {
       return null;
     }
     const stRefs = this.groupRefs[this.current];
+    console.log(this.current, stRefs);
     if (stRefs.length === 1) {
       const stream = await getStreamFromIterator(this.globals, stRefs[0].streamId, this.objectIter);
+      // console.log('single', stRefs, stream);
       this.current++;
       return isStreamOfQuery(stream, this.query) ? stream : this.doNextRequest();
     }
@@ -142,6 +150,8 @@ export class StreamListRequester {
         stRefs.map((ref) => ref.streamId),
         this.objectIter,
       );
+      // console.log('group', stRefs, sg);
+      // console.log(isStreamGroupOfQuery(sg, this.query), sg.info, this.query);
       this.current++;
       return isStreamGroupOfQuery(sg, this.query) ? sg : this.doNextRequest();
     }
