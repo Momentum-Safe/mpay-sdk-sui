@@ -70,7 +70,7 @@ export class MoveCallHelper {
       if (!('Object' in input.value) || !('ImmOrOwned' in input.value.Object)) {
         throw new Error('not ImmOrOwned');
       }
-      return input.value.Object.ImmOrOwned.objectId as string;
+      return normalizeSuiAddress(input.value.Object.ImmOrOwned.objectId as string);
     }
     return normalizeSuiAddress(input.value as string);
   }
@@ -80,7 +80,7 @@ export class MoveCallHelper {
       throw new Error(`not object argument: ${JSON.stringify(input)}`);
     }
     if (typeof input.value !== 'object') {
-      return input.value as string;
+      return normalizeSuiAddress(input.value as string);
     }
     if (!('Object' in input.value) || !('Shared' in input.value.Object)) {
       throw new Error('not Shared');
