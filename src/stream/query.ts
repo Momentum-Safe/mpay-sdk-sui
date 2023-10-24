@@ -83,6 +83,7 @@ export class StreamListIterator implements SuiIterator<IStream | IStreamGroup> {
       if (res === null) {
         throw new SanityError('No more results');
       }
+      return res;
     }
     const res = this.cachedNext;
     this.cachedNext = undefined;

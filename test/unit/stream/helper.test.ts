@@ -3,13 +3,13 @@ import { DateTime, Duration } from 'luxon';
 import { InvalidInputError } from '@/error/InvalidInputError';
 import { MPayHelper } from '@/stream/helper';
 
-import { newUnitGlobals } from '../../lib/setup';
+import { newDevGlobals } from '../../lib/setup';
 
 describe('MPayHelper', () => {
   let helper: MPayHelper;
 
   beforeAll(() => {
-    helper = new MPayHelper(newUnitGlobals());
+    helper = new MPayHelper(newDevGlobals());
   });
 
   it('calculateStreamAmount', () => {

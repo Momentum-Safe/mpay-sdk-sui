@@ -15,6 +15,7 @@ import {
   DecodedSetAutoClaim,
   StreamTransactionType,
 } from '@/types/decode';
+import { SingleWalletAdapter } from '@/wallet';
 
 import { getTestSuite, getTestSuiteWithFakeMSafe, TestSuite } from '../../lib/setup';
 import { defaultStreamParam } from '../../lib/stream';
@@ -118,9 +119,9 @@ describe('decode other types of transactions', () => {
       ...defaultInfo,
       recipients: [defaultInfo.recipients[0]],
     };
-    const client = new MPayClient(Env.unit);
+    const client = new MPayClient(Env.dev);
     globals = client.globals;
-    client.connectSingleWallet(ts.wallet);
+    globals.connectWallet(new SingleWalletAdapter(ts.wallet, ts.globals.suiClient));
     const txb = await client.createStream(info);
 
     const res = await ts.wallet.signAndSubmitTransaction(txb);

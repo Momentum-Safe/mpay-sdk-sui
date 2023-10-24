@@ -28,12 +28,19 @@ export async function createStreamHelper(ts: TestSuite, recipient: string, modif
 }
 
 export async function createStreamForTest(ts: TestSuite, recipient: string) {
-  const stId = await createStreamHelper(ts, recipient);
+  const stId = await createStreamHelper(ts, recipient, (info) => {
+    info.recipients = [info.recipients[0]];
+    info.epochInterval = 3154000000000n;
+    return info;
+  });
   return Stream.new(ts.globals, stId[0]);
 }
 
 export async function createCanceledStream(ts: TestSuite, recipient: string) {
-  const stId = await createStreamHelper(ts, recipient);
+  const stId = await createStreamHelper(ts, recipient, (info) => {
+    info.recipients = [info.recipients[0]];
+    return info;
+  });
   const st = await Stream.new(ts.globals, stId[0]);
   const txb = await st.cancel();
   const res = await ts.wallet.signAndSubmitTransaction(txb);
@@ -67,6 +74,7 @@ export async function createStreamGroup(ts: TestSuite, recipients: string[]) {
       ...info.recipients[0],
       address: recipient,
     }));
+    info.epochInterval = 3154000000000n;
     return info;
   });
   const sg = await StreamGroup.new(ts.globals, stIds);
@@ -93,7 +101,7 @@ export function defaultStreamParam(recipient: string): CreateStreamInfo {
       {
         address: recipient,
         cliffAmount: 10000n,
-        amountPerStep: 10000n,
+        amountPerStep: 100n,
       },
       {
         address: recipient,
