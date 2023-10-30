@@ -3,7 +3,7 @@ import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { ContractConfig } from '@/common/env';
 import { Globals } from '@/common/globals';
 import { BaseContract } from '@/transaction/contracts/BaseContract';
-import { MoveNumber, MoveObject } from '@/transaction/contracts/common';
+import { MoveNumber } from '@/transaction/contracts/common';
 
 export class FeeContract extends BaseContract {
   static ModuleName = 'fee_module';
@@ -25,7 +25,7 @@ export class FeeContract extends BaseContract {
     super(FeeContract.ModuleName, config, globals);
   }
 
-  setStreamingFee(txb: TransactionBlock, createFeeNumerator: MoveObject) {
+  setStreamingFee(txb: TransactionBlock, createFeeNumerator: MoveNumber) {
     const roleObject = this.roleObject();
     const feeObject = this.feeObject();
     return this.addContractCall(txb, {
