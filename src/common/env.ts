@@ -1,12 +1,11 @@
 import { SanityError } from '@/error/SanityError';
 
 import * as devContractConfig from '../../config/dev.json';
-import * as localContractConfig from '../../config/local.json';
+import * as prodContractConfig from '../../config/prod.json';
 
 export enum Env {
-  local = 'local',
   dev = 'dev',
-  stg = 'stg',
+  prev = 'prev',
   prod = 'prod',
 }
 
@@ -38,19 +37,17 @@ export interface ContractConfig {
   feeObjId: string;
 }
 
-export const UNIT_RPC_ENDPOINT = 'http://ec2-54-241-42-141.us-west-1.compute.amazonaws.com:9000';
 export const DEV_RPC_ENDPOINT = 'https://sui-testnet.blockvision.org/v1/2Sgk89ivT64MnKdcGzjmyjY2ndD';
-export const STG_RPC_ENDPOINT = 'https://sui-testnet.blockvision.org/v1/2Sgk89ivT64MnKdcGzjmyjY2ndD';
+export const PREV_RPC_ENDPOINT = 'https://sui-mainnet.blockvision.org/v1/2Sgk7NPvqkd7mESYkxF01yX15l7';
 export const PROD_RPC_ENDPOINT = 'https://sui-mainnet.blockvision.org/v1/2Sgk7NPvqkd7mESYkxF01yX15l7';
 
 export const DEV_EXPLORE_URL = `https://suiexplorer.com/?network=${DEV_RPC_ENDPOINT}/fullnode`;
-export const UNIT_BE_API = 'https://lprosu98f6.execute-api.us-west-1.amazonaws.com/prod';
 export const DEV_BE_API = 'https://bc3p6l5unl.execute-api.us-west-1.amazonaws.com/prod';
-export const STG_BE_API = 'https://rolsbkota7.execute-api.us-west-1.amazonaws.com/prod';
+export const PREV_BE_API = 'https://rolsbkota7.execute-api.us-west-1.amazonaws.com/prod';
 export const PROD_BE_API = 'https://xrae3mrjv5.execute-api.us-west-1.amazonaws.com/prod';
 
-export const CONTRACT_LOCAL: ContractConfig = localContractConfig;
 export const CONTRACT_DEV: ContractConfig = devContractConfig;
+export const CONTRACT_PROD: ContractConfig = prodContractConfig;
 
 const ENV_CONFIG: Map<Env, EnvConfig> = new Map([
   [
@@ -64,6 +61,32 @@ const ENV_CONFIG: Map<Env, EnvConfig> = new Map([
         url: DEV_BE_API,
       },
       contract: CONTRACT_DEV,
+    },
+  ],
+  [
+    Env.prev,
+    {
+      env: Env.prev,
+      rpc: {
+        url: PREV_RPC_ENDPOINT,
+      },
+      backend: {
+        url: PREV_BE_API,
+      },
+      contract: CONTRACT_PROD,
+    },
+  ],
+  [
+    Env.prod,
+    {
+      env: Env.prod,
+      rpc: {
+        url: PROD_RPC_ENDPOINT,
+      },
+      backend: {
+        url: PROD_BE_API,
+      },
+      contract: CONTRACT_PROD,
     },
   ],
 ]);
