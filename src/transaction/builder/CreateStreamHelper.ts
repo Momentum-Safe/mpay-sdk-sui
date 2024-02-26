@@ -1,4 +1,4 @@
-import { TransactionArgument, TransactionBlock } from '@mysten/sui.js/transactions';
+import { TransactionArgument, TransactionBlock, TransactionObjectArgument } from '@mysten/sui.js/transactions';
 import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 
 import { Globals } from '@/common/globals';
@@ -102,8 +102,8 @@ export class CreateStreamHelper {
     };
   }
 
-  private async addMergeCoins(txb: TransactionBlock, coins: CoinRequestResponse): Promise<TransactionArgument> {
-    let mergedCoin: TransactionArgument;
+  private async addMergeCoins(txb: TransactionBlock, coins: CoinRequestResponse): Promise<TransactionObjectArgument> {
+    let mergedCoin: TransactionObjectArgument;
     if (coins.mergedCoins && coins.mergedCoins.length) {
       txb.mergeCoins(
         txb.object(coins.primaryCoin),
