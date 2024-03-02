@@ -60,15 +60,14 @@ describe('convertStreamStatus', () => {
     expect(convertStreamStatus([])).toBe('all');
     expect(convertStreamStatus(StreamStatus.CANCELED)).toBe('active');
     expect(convertStreamStatus(StreamStatus.STREAMING)).toBe('active');
-    expect(convertStreamStatus(StreamStatus.STREAMED)).toBe('active');
     expect(convertStreamStatus(StreamStatus.COMPLETED)).toBe('inactive');
     expect(convertStreamStatus(StreamStatus.SETTLED)).toBe('inactive');
   });
 
   it('complex', () => {
-    expect(convertStreamStatus([StreamStatus.CANCELED, StreamStatus.STREAMING, StreamStatus.STREAMED])).toBe('active');
+    expect(convertStreamStatus([StreamStatus.CANCELED, StreamStatus.STREAMING])).toBe('active');
     expect(convertStreamStatus([StreamStatus.COMPLETED, StreamStatus.SETTLED])).toBe('inactive');
-    expect(convertStreamStatus([StreamStatus.SETTLED, StreamStatus.STREAMED])).toBe('all');
+    expect(convertStreamStatus([StreamStatus.SETTLED, StreamStatus.STREAMING])).toBe('all');
   });
 });
 

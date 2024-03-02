@@ -271,7 +271,6 @@ export function convertStreamStatus(status: undefined | StreamStatus | StreamSta
 function convertStreamStatusSingle(status: StreamStatus): StreamFilterStatus {
   switch (status) {
     case 'STREAMING':
-    case 'STREAMED':
     case 'CANCELED':
       return 'active';
     case 'COMPLETED':
