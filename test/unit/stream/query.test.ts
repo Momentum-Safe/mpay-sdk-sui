@@ -8,7 +8,7 @@ import { StreamRef } from '@/types/backend';
 import { SingleWalletAdapter } from '@/wallet';
 
 import { MockBackend } from '../../lib/backend';
-import { getTestSuite, newDevGlobals } from '../../lib/setup';
+import { getTestSuite, newUnitGlobals } from '../../lib/setup';
 import { createCanceledStream, createSettledStream, createStreamForTest, createStreamGroup } from '../../lib/stream';
 import { FakeWallet } from '../../lib/wallet';
 
@@ -75,22 +75,22 @@ describe('StreamListIterator', () => {
   let globals: Globals;
 
   // The following streams are generated with the following code:
-  //    const res = await setupStreamsAndBackend();
 
-  const recipient = '0x868bf060c33152914e78e7e71cb28708dbd75b4abb66d3caba6b87813d7f67bd';
+  const recipient = '0xb924811f0b632a013389ce4038ba8fe565f3cef006df9d960ff3b163e2c08543';
   const sender = recipient;
-  const streaming = ['0x6886f7b8766ac36732d46f3365f381038aa45b8dc0edfcf6b19b8356193681b1'];
+  const streaming = ['0x4affad33481baa99c78a211b6d84dd27c2719b3b488f8d45662def015e580715'];
   const group = [
-    '0x50c6ba31230b0f7f3a1eb35411807de029f00d62a64765a5a925e801934ee456',
-    '0x5ac6822f2d60a2c1a42e706429c2ba717c29d9899d9ff15a1d9cda1fdba51b5c',
+    '0x9546e45576d733bb102532cd04eb872a937bd1d83cef5df5f8731b507281555f',
+    '0xd1acad4d1abc7989672709c2bf397893d80f8710a2336423696c049294fc4e81',
   ];
-  const canceled = ['0x419349ba40393ed8ecd15379e71d35a33a20eba11fc6f617588b1376bc5c9906'];
-  const settled = ['0x9aa6ac8dde3c1210860fc592b4dc60f6c4030d80f760008cc81b0c4c0e3445aa'];
+  const canceled = ['0xb60a7c54c94e8ca61d5217764bf5a4b35b3d2f79341a5d25e3df706dec233b0a'];
+  const settled = ['0xb6e01885a49f3c8d2fb7be24d18e3233a65e482c6e1ed2d8d542ef5efb210ebc'];
 
   beforeAll(async () => {
     // const res = await setupStreamsAndBackend();
-    globals = newDevGlobals();
-    // await requestFaucetForTestnet(globals.suiClient, res.ts.address);
+    globals = newUnitGlobals();
+    // const res = await setupStreamsAndBackend();
+
     // console.log(res);
     // console.log(res.ts.address);
     // console.log(res.streaming.streamId);
