@@ -43,10 +43,10 @@ export const STG_RPC_ENDPOINT = 'https://sui-testnet.blockvision.org/v1/2Sgk89iv
 export const PREV_RPC_ENDPOINT = 'https://sui-mainnet.blockvision.org/v1/2Sgk7NPvqkd7mESYkxF01yX15l7';
 export const PROD_RPC_ENDPOINT = 'https://sui-mainnet.blockvision.org/v1/2Sgk7NPvqkd7mESYkxF01yX15l7';
 
-export const DEV_BE_API = 'https://bc3p6l5unl.execute-api.us-west-1.amazonaws.com/prod';
-export const STG_BE_API = 'https://rolsbkota7.execute-api.us-west-1.amazonaws.com/prod';
-export const PREV_BE_API = 'https://6p6mkx33ne.execute-api.us-west-1.amazonaws.com/prod';
-export const PROD_BE_API = 'https://xrae3mrjv5.execute-api.us-west-1.amazonaws.com/prod';
+export const DEV_BE_API = 'http://127.0.0.1:3000';
+export const STG_BE_API = 'https://sui-dev.m-safe.link';
+export const PREV_BE_API = 'https://sui-stage.m-safe.link';
+export const PROD_BE_API = 'https://sui-prod.m-safe.link';
 
 export const CONTRACT_DEV: ContractConfig = devContractConfig;
 export const CONTRACT_PROD: ContractConfig = prodContractConfig;
