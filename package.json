@@ -16,6 +16,7 @@
     }
   },
   "devDependencies": {
+    "@mysten/sui.js": "^0.50.1",
     "@types/jest": "^29.5.4",
     "@types/luxon": "^3.3.2",
     "@types/node": "^20.6.0",
@@ -38,7 +39,6 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@mysten/sui.js": "^0.50.1",
     "axios": "^1.5.0",
     "child_process": "^1.0.2",
     "exponential-backoff": "^3.1.1",
@@ -57,5 +57,8 @@
     "integration": "jest mpay.test.ts",
     "playground": "jest playground.test.ts",
     "prerelease": "yarn build && ./scripts/publish.sh"
+  },
+  "peerDependencies": {
+    "@mysten/sui.js": "^0.50.1"
   }
 }
