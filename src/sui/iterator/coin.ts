@@ -1,5 +1,4 @@
-import { SuiClient } from '@mysten/sui.js/client';
-import { CoinStruct } from '@mysten/sui.js/src/client/types/generated';
+import { CoinStruct, SuiClient } from '@mysten/sui.js/client';
 
 import { NotEnoughBalanceError } from '@/error/NotEnoughBalanceError';
 import { SanityError } from '@/error/SanityError';

@@ -1,6 +1,6 @@
 // Helper class to decode move call
 import { bcs } from '@mysten/sui.js/bcs';
-import { MoveCallTransaction, TransactionBlockInput } from '@mysten/sui.js/src/builder/Transactions';
+import { MoveCallTransaction, TransactionBlockInput } from '@mysten/sui.js/dist/cjs/builder/Transactions';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui.js/utils';
 

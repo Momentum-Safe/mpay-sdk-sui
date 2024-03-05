@@ -1,5 +1,4 @@
-import { DevInspectResults } from '@mysten/sui.js/src/client/types';
-import { SuiExecutionResult } from '@mysten/sui.js/src/client/types/generated';
+import { DevInspectResults, SuiExecutionResult } from '@mysten/sui.js/client';
 import { normalizeSuiAddress } from '@mysten/sui.js/utils';
 
 import { InvalidRpcResultError } from '@/error/InvalidRpcResultError';

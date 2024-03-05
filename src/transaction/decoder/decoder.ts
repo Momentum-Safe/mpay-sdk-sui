@@ -1,4 +1,4 @@
-import { MoveCallTransaction } from '@mysten/sui.js/src/builder/Transactions';
+import { MoveCallTransaction } from '@mysten/sui.js/dist/cjs/builder';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 import { Globals } from '@/common/globals';

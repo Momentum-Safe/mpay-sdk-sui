@@ -1,5 +1,10 @@
-import { CoinMetadata, SuiClient, SuiObjectChangeCreated, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
-import { DevInspectResults } from '@mysten/sui.js/src/client/types';
+import {
+  CoinMetadata,
+  DevInspectResults,
+  SuiClient,
+  SuiObjectChangeCreated,
+  SuiTransactionBlockResponse,
+} from '@mysten/sui.js/client';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 import { DateTime, Duration } from 'luxon';
