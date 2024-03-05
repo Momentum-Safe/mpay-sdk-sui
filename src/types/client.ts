@@ -1,5 +1,4 @@
-import { CoinBalance, CoinMetadata, SuiTransactionBlockResponse } from '@mysten/sui.js/client';
-import { DevInspectResults } from '@mysten/sui.js/src/client/types';
+import { CoinBalance, CoinMetadata, SuiTransactionBlockResponse, DevInspectResults } from '@mysten/sui.js/client';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { DateTime, Duration } from 'luxon';
 
