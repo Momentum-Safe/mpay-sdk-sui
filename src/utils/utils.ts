@@ -31,3 +31,10 @@ export function roundDuration(duration: Duration | number | bigint) {
   const roundMs = Math.round(durationMs / TIME_ROUND_UNIT);
   return Duration.fromMillis(roundMs * TIME_ROUND_UNIT);
 }
+
+export function addPrefix(s: string, prefix: string) {
+  if (s.startsWith(prefix)) {
+    return s;
+  }
+  return prefix + s;
+}

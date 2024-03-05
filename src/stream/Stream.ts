@@ -251,19 +251,18 @@ export class Stream implements IStream {
 
   get streamStatus(): StreamStatus {
     const rawStatus = this.rawData.status.status;
-    if (rawStatus === RawStreamStatusEnum.CANCELED) {
-      return StreamStatus.CANCELED;
+    switch (rawStatus) {
+      case RawStreamStatusEnum.CANCELED:
+        return StreamStatus.CANCELED;
+      case RawStreamStatusEnum.CANCELED_COMPLETED:
+        return StreamStatus.SETTLED;
+      case RawStreamStatusEnum.COMPLETED:
+        return StreamStatus.COMPLETED;
+      case RawStreamStatusEnum.OPEN:
+        return StreamStatus.STREAMING;
+      default:
+        throw new Error(`Unknown stream status: ${rawStatus}`);
     }
-    if (rawStatus === RawStreamStatusEnum.CANCELED_COMPLETED) {
-      return StreamStatus.SETTLED;
-    }
-    if (rawStatus === RawStreamStatusEnum.COMPLETED) {
-      return StreamStatus.COMPLETED;
-    }
-    if (this.currentEpoch >= this.totalSteps) {
-      return StreamStatus.STREAMED;
-    }
-    return StreamStatus.STREAMING;
   }
 
   get streamedAmount() {

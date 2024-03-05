@@ -2,7 +2,7 @@ import { MPayHelper } from '@/stream/helper';
 import { CLAIM_FEE_NUMERATOR, FEE_DENOMINATOR, FEE_NUMERATOR, FLAT_FEE_SUI } from '@/transaction/builder/const';
 import { IPagedStreamListIterator, IStream, IStreamGroup } from '@/types';
 
-import { newDevGlobals } from '../../lib/setup';
+import { newUnitGlobals } from '../../lib/setup';
 import { defaultStreamParam } from '../../lib/stream';
 
 // describe('MPayClient', () => {
@@ -45,7 +45,7 @@ describe('helper', () => {
   let helper: MPayHelper;
 
   beforeAll(() => {
-    helper = new MPayHelper(newDevGlobals());
+    helper = new MPayHelper(newUnitGlobals());
   });
 
   it('calculateCreateStreamFees', () => {

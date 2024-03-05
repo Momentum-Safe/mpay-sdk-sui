@@ -62,3 +62,47 @@ export interface BackendOutgoingStreamFilterOptions {
 
   recipient?: string | string[];
 }
+
+export type StreamEventDto = {
+  streamId: string;
+  createdAt: Date;
+  sender: string;
+  txDigest: string;
+  data: StreamEventDataDto;
+};
+
+export type StreamEventDataDto =
+  | CreateStreamEventDataDto
+  | CancelStreamEventDataDto
+  | ClaimEventDataDto
+  | AutoClaimEventDataDto
+  | SetAutoClaimEventDataDto;
+
+export interface CreateStreamEventDataDto {
+  type: 'create_stream';
+  coinType: string;
+  balance: string;
+}
+
+export interface CancelStreamEventDataDto {
+  type: 'cancel_stream';
+  coinType: string;
+  withdrawAmount: string;
+}
+
+export interface ClaimEventDataDto {
+  type: 'claim';
+  coinType: string;
+  claimAmount: string;
+}
+
+export interface AutoClaimEventDataDto {
+  type: 'auto_claim';
+  coinType: string;
+  claimAmount: string;
+}
+
+export interface SetAutoClaimEventDataDto {
+  type: 'set_auto_claim';
+  enabled: boolean;
+}

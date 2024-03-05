@@ -4,6 +4,7 @@ import * as devContractConfig from '../../config/dev.json';
 import * as prodContractConfig from '../../config/prod.json';
 
 export enum Env {
+  local = 'local',
   dev = 'dev',
   stg = 'stg',
   prev = 'prev',
@@ -52,6 +53,19 @@ export const CONTRACT_DEV: ContractConfig = devContractConfig;
 export const CONTRACT_PROD: ContractConfig = prodContractConfig;
 
 const ENV_CONFIG: Map<Env, EnvConfig> = new Map([
+  [
+    Env.local,
+    {
+      env: Env.local,
+      rpc: {
+        url: DEV_RPC_ENDPOINT,
+      },
+      backend: {
+        url: 'http://localhost:3000',
+      },
+      contract: CONTRACT_DEV,
+    },
+  ],
   [
     Env.dev,
     {

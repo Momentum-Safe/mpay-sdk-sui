@@ -9,7 +9,7 @@ describe('playground', () => {
     const client = new MPayClient(Env.dev);
     client.connectSingleWallet(new FakeWallet('0xfa0f8542f256e669694624aa3ee7bfbde5af54641646a3a05924cf9e329a8a36'));
     const it = await client.getIncomingStreams({
-      status: [StreamStatus.STREAMED],
+      status: [StreamStatus.STREAMING],
     });
 
     while (await it.hasNext()) {

@@ -12,7 +12,6 @@ import { Paginated, PaginationOptions } from '@/types/pagination';
 
 export enum StreamStatus {
   STREAMING = 'STREAMING',
-  STREAMED = 'STREAMED',
   COMPLETED = 'COMPLETED',
   CANCELED = 'CANCELED',
   SETTLED = 'SETTLED',
