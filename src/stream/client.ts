@@ -18,6 +18,7 @@ import {
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 import { MSafeAccountAdapter } from '@/wallet/MSafeAccountAdapter';
 import { SingleWalletAdapter } from '@/wallet/SingleWalletAdapter';
+import { StreamGroup } from './StreamGroup';
 
 export class MPayClient implements IMPayClient {
   public readonly globals: Globals;
@@ -45,6 +46,15 @@ export class MPayClient implements IMPayClient {
 
   async getStream(streamId: string) {
     return Stream.new(this.globals, streamId);
+  }
+
+  async getStreamGroup(streamGroupId: string) {
+    const groupInfo = await this.globals.backend.getStreamGroupByGroupId(streamGroupId);
+    const streamGroup = await StreamGroup.new(this.globals, groupInfo.streamIds);
+    return {
+      groupId: groupInfo.groupId,
+      streamGroup,
+    };
   }
 
   async getIncomingStreams(query?: IncomingStreamQuery, pageSize: number = 10): Promise<IPagedStreamListIterator> {

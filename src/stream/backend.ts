@@ -15,7 +15,7 @@ import {
 import { addPrefix } from '@/utils';
 
 export class Backend implements IBackend {
-  constructor(private readonly apiUrl: string) {}
+  constructor(private readonly apiUrl: string) { }
 
   async getIncomingStreams(recipient: string, options?: BackendIncomingStreamFilterOptions): Promise<StreamRef[]> {
     const query = {
@@ -60,6 +60,16 @@ export class Backend implements IBackend {
   async getAllSenders(recipient: string, options?: StreamFilterStatus): Promise<string[]> {
     const res = await this.get('/stream/incoming/senders', {
       params: { recipient, filter: options },
+    });
+    return res.data;
+  }
+
+  async getStreamGroupByGroupId(groupId: string): Promise<{
+    groupId: string;
+    streamIds: string[];
+  }> {
+    const res = await this.get('/stream/ids', {
+      params: { groupId },
     });
     return res.data;
   }
