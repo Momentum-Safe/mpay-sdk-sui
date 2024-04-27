@@ -18,6 +18,7 @@ import {
 import { IMSafeAccount, ISingleWallet } from '@/types/wallet';
 import { MSafeAccountAdapter } from '@/wallet/MSafeAccountAdapter';
 import { SingleWalletAdapter } from '@/wallet/SingleWalletAdapter';
+
 import { StreamGroup } from './StreamGroup';
 
 export class MPayClient implements IMPayClient {

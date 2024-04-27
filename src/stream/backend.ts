@@ -15,7 +15,7 @@ import {
 import { addPrefix } from '@/utils';
 
 export class Backend implements IBackend {
-  constructor(private readonly apiUrl: string) { }
+  constructor(private readonly apiUrl: string) {}
 
   async getIncomingStreams(recipient: string, options?: BackendIncomingStreamFilterOptions): Promise<StreamRef[]> {
     const query = {
