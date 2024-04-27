@@ -15,6 +15,10 @@ export interface StreamRef {
 
 /// IBackend interface for supporting Stream registry query and history events.
 export interface IBackend {
+  getStreamGroupByGroupId(groupId: string): Promise<{
+    groupId: string;
+    streamIds: string[];
+  }>;
   getIncomingStreams(recipient: string, options?: BackendIncomingStreamFilterOptions): Promise<StreamRef[]>;
   getOutgoingStreams(sender: string, options?: BackendOutgoingStreamFilterOptions): Promise<StreamRef[]>;
   getAllCoinTypes(address: string): Promise<string[]>;

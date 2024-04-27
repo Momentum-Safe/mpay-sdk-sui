@@ -14,6 +14,10 @@ export interface IMPayClient {
   connectMSafeAccount(msafe: IMSafeAccount): void;
 
   getStream(streamId: string): Promise<IStream>;
+  getStreamGroup(streamGroupId: string): Promise<{
+    groupId: string;
+    streamGroup: IStreamGroup;
+  }>;
   getIncomingStreams(query?: IncomingStreamQuery, pageSize?: number): Promise<IPagedStreamListIterator>;
   getOutgoingStreams(query?: OutgoingStreamQuery, pageSize?: number): Promise<IPagedStreamListIterator>;
   getCoinTypesForStreamFilter(): Promise<string[]>;

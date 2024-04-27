@@ -64,6 +64,16 @@ export class Backend implements IBackend {
     return res.data;
   }
 
+  async getStreamGroupByGroupId(groupId: string): Promise<{
+    groupId: string;
+    streamIds: string[];
+  }> {
+    const res = await this.get('/stream/ids', {
+      params: { groupId },
+    });
+    return res.data;
+  }
+
   async getStreamHistory(query: {
     streamId?: string;
     groupId?: string;
