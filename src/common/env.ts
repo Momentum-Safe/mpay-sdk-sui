@@ -39,10 +39,10 @@ export interface ContractConfig {
   feeObjId: string;
 }
 
-export const DEV_RPC_ENDPOINT = 'https://sui-testnet.blockvision.org/v1/2Sgk89ivT64MnKdcGzjmyjY2ndD';
-export const STG_RPC_ENDPOINT = 'https://sui-testnet.blockvision.org/v1/2Sgk89ivT64MnKdcGzjmyjY2ndD';
-export const PREV_RPC_ENDPOINT = 'https://sui-mainnet.blockvision.org/v1/2Sgk7NPvqkd7mESYkxF01yX15l7';
-export const PROD_RPC_ENDPOINT = 'https://sui-mainnet.blockvision.org/v1/2Sgk7NPvqkd7mESYkxF01yX15l7';
+export const DEV_RPC_ENDPOINT = 'https://fullnode.testnet.sui.io/';
+export const STG_RPC_ENDPOINT = 'https://fullnode.testnet.sui.io/';
+export const PREV_RPC_ENDPOINT = 'https://fullnode.mainnet.sui.io/';
+export const PROD_RPC_ENDPOINT = 'https://fullnode.mainnet.sui.io/';
 
 export const DEV_BE_API = 'https://sui-dev.m-safe.link';
 export const STG_BE_API = 'https://sui-stage.m-safe.link';
