@@ -1,5 +1,6 @@
 # mpay-sdk-sui
-SDK for MPay on Sui
+
+SDK for MPay on Sui.
 
 ## Install
 
@@ -9,6 +10,8 @@ yarn add @msafe/mpay-sdk-sui
 
 ## Use SDK
 
+For SDK integration example, please check out Github repository [mpay-example](https://github.com/Momentum-Safe/mpay-example).
+
 ### Initialize mpay client
 
 ```ts
@@ -16,7 +19,6 @@ import {MPayClient} from "@msafe/mpay-sdk-sui";
 
 // Env.prod refer to mainnet environment
 // Env.dev refer to testnet environment
-// Env.unit refer to unit test environment
 const client = new MPayClient(Env.prod)
 ```
 
@@ -30,7 +32,7 @@ client.connectSingleWallet(singleWallet);
 client.connectMSafeAccount(msafe)
 ```
 
-### Create a stream
+### Create a stream or a stream group
 
 ```ts
 const txb = await client.createStreams(info);
@@ -116,33 +118,10 @@ while (await it.hasNext()) {
 }
 ```
 
-## Appendix 
+## Deployed contracts
 
+The latest deployed contracts information already in the config json file located at `config/*.json`
 
+### Mainnet 
 
-### Deploy contract  (temp)
-
-1. Clone [mpay-core-sui](git@github.com:Momentum-Safe/mpay-core-sui.git).
-2. Change your sui profile to unit environment and use this environment.
-
-```
-  - alias: unit
-    rpc: "http://ec2-54-241-42-141.us-west-1.compute.amazonaws.com:9000"
-    ws: ~
-```
-3. Deploy to unit test environment 
-
-```shell
-yarn deploy-skip-test
-```
-
-### To generate transactions
-
-1. Clone this repo
-2. Copy `published/unit.json` from `mpay-core-sui` to this repo `config/unit.json`
-2. `yarn install`
-3. `yarn integration`
-
-All kinds of transactions will be generated with printed transaction digest in terminal. 
-Use the transaction for development or debugging process. 
-
+config/prod.json`
