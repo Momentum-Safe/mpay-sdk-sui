@@ -1,41 +1,48 @@
-import { SuiClient } from '@mysten/sui.js/client';
-import { Keypair } from '@mysten/sui.js/cryptography';
-import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
-import { normalizeSuiAddress } from '@mysten/sui.js/utils';
+import { Keypair } from '@mysten/sui/cryptography';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import { Transaction } from '@mysten/sui/transactions';
+import { normalizeSuiAddress } from '@mysten/sui/utils';
 
+import type { MPaySuiClient, TransactionResultWithEffects } from '@/sui/client';
+import type { SimulateTransactionResult } from '@/sui/client';
 import { CoinRequest, CoinRequestResponse, IMSafeAccount, ISingleWallet } from '@/types/wallet';
 
 export class LocalWallet implements ISingleWallet {
   private readonly kp: Keypair;
 
-  private readonly client: SuiClient;
+  private readonly client: MPaySuiClient;
 
-  constructor(client: SuiClient, privateKey?: string) {
+  constructor(client: MPaySuiClient, privateKey?: string) {
     this.client = client;
-    this.kp = privateKey ? makeKeyPairFromPrivateKey(privateKey) : new Ed25519Keypair();
+    this.kp = privateKey ? Ed25519Keypair.fromSecretKey(privateKey) : new Ed25519Keypair();
   }
 
   async address() {
     return this.kp.toSuiAddress();
   }
 
-  async signAndSubmitTransaction(txb: TransactionBlock) {
-    return this.client.signAndExecuteTransactionBlock({
-      transactionBlock: txb,
+  exportSecretKey(): string {
+    return this.kp.getSecretKey();
+  }
+
+  async signAndSubmitTransaction(txb: Transaction): Promise<TransactionResultWithEffects> {
+    return this.client.signAndExecuteTransaction({
+      transaction: txb,
       signer: this.kp,
-      options: {
-        showEffects: true,
-        showObjectChanges: true,
-        showEvents: true,
+      include: {
+        effects: true,
+        objectTypes: true,
+        events: true,
       },
     });
   }
 
-  async inspect(txb: TransactionBlock) {
-    return this.client.devInspectTransactionBlock({
-      sender: await this.address(),
-      transactionBlock: txb,
+  async inspect(txb: Transaction): Promise<SimulateTransactionResult> {
+    txb.setSender(await this.address());
+    return this.client.simulateTransaction({
+      transaction: txb,
+      checksEnabled: false,
+      include: { commandResults: true },
     });
   }
 }
@@ -43,7 +50,7 @@ export class LocalWallet implements ISingleWallet {
 export class FakeMSafeWallet extends LocalWallet implements IMSafeAccount {
   coinIndex: number;
 
-  constructor(client: SuiClient, privateKey?: string) {
+  constructor(client: MPaySuiClient, privateKey?: string) {
     super(client, privateKey);
     this.coinIndex = 0;
   }
@@ -72,5 +79,5 @@ export class FakeWallet implements ISingleWallet {
 }
 
 export function makeKeyPairFromPrivateKey(privateKey: string) {
-  return Ed25519Keypair.fromSecretKey(Buffer.from(privateKey, 'hex'));
+  return Ed25519Keypair.fromSecretKey(privateKey);
 }

@@ -1,27 +1,32 @@
 {
   "name": "@msafe/mpay-sdk-sui",
-  "version": "1.0.28",
-  "description": "MPay SDK on SUI",
-  "repository": "git@github.com:Momentum-Safe/mpay-sdk-sui.git",
+  "version": "2.0.0",
   "author": "MSafe Team <admin@m-safe.io>",
-  "license": "MIT",
-  "private": false,
+  "repository": "git@github.com:Momentum-Safe/mpay-sdk-sui.git",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    }
+  "peerDependencies": {
+    "@mysten/sui": "^2.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.5.0",
+    "child_process": "^1.0.2",
+    "exponential-backoff": "^3.1.1",
+    "fs": "^0.0.1-security",
+    "luxon": "^3.4.3",
+    "nanoid": "3",
+    "tsconfig-paths": "^4.2.0"
   },
   "devDependencies": {
-    "@mysten/sui.js": "^0.50.1",
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@mysten/sui": "^2.20.0",
     "@types/jest": "^29.5.4",
     "@types/luxon": "^3.3.2",
     "@types/node": "^20.6.0",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
+    "babel-jest": "^29.7.0",
     "eslint": "^8.48.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.1.0",
@@ -38,27 +43,29 @@
     "tsup": "^7.2.0",
     "typescript": "^5.2.2"
   },
-  "dependencies": {
-    "axios": "^1.5.0",
-    "child_process": "^1.0.2",
-    "exponential-backoff": "^3.1.1",
-    "fs": "^0.0.1-security",
-    "luxon": "^3.4.3",
-    "nanoid": "3",
-    "tsconfig-paths": "^4.2.0"
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
   },
+  "description": "MPay SDK on SUI",
+  "license": "MIT",
+  "private": false,
   "scripts": {
     "clean": "rm -rf ./dist",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint --fix",
     "build": "yarn clean && yarn _build:node",
     "_build:node": "tsup --format cjs,esm --dts",
     "localnet": "sui-test-validator 2>/dev/null",
-    "test": "jest",
-    "integration": "jest mpay.test.ts",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --verbose",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest --verbose test/unit/utils test/unit/stream/metadata.test.ts test/unit/stream/helper.test.ts test/unit/stream/client.test.ts test/unit/utils/env.test.ts test/unit/sui/iter.test.ts",
+    "test:chain": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --verbose test/mpay.test.ts test/unit/stream/Stream.test.ts test/unit/stream/StreamGroup.test.ts test/unit/transaction/CreateStreamHelper.test.ts test/unit/transaction/decoder.test.ts test/unit/sui/coin.test.ts test/unit/stream/query.test.ts",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --verbose test/mpay.test.ts",
+    "integration": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand test/mpay.test.ts",
     "playground": "jest playground.test.ts",
     "prerelease": "yarn build && ./scripts/publish.sh"
   },
-  "peerDependencies": {
-    "@mysten/sui.js": "^0.50.1"
-  }
+  "types": "./dist/index.d.ts"
 }

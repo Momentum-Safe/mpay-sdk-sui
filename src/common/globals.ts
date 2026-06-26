@@ -1,6 +1,5 @@
-import { SuiClient } from '@mysten/sui.js/client';
-
 import { Env, EnvConfig, EnvConfigOptions, getConfig } from '@/common/env';
+import { createSuiClient, MPaySuiClient } from '@/sui/client';
 import { NoBackendError } from '@/error/NoBackendError';
 import { WalletNotConnectedError } from '@/error/WalletNotConnectedError';
 import { Backend } from '@/stream/backend';
@@ -10,15 +9,15 @@ import { IWallet, WalletType } from '@/types/wallet';
 export class Globals {
   public signer: IWallet | undefined;
 
-  public readonly suiClient: SuiClient;
+  public readonly suiClient: MPaySuiClient;
 
   public readonly envConfig: EnvConfig;
 
   public _backend?: IBackend;
 
-  constructor(envConfig: EnvConfig) {
+  constructor(envConfig: EnvConfig, suiClient?: MPaySuiClient) {
     this.envConfig = envConfig;
-    this.suiClient = new SuiClient({ url: envConfig.rpc.url });
+    this.suiClient = suiClient ?? createSuiClient(envConfig.env, envConfig.rpc);
     if (envConfig.backend) {
       this._backend = new Backend(envConfig.backend.url);
     }

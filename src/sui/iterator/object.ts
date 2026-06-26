@@ -1,9 +1,10 @@
-import { SuiClient, SuiObjectDataOptions, SuiObjectResponse } from '@mysten/sui.js/client';
+import type { MPaySuiClient } from '@/sui/client';
+import { getMpayObjects, MPayObjectResponse } from '@/sui/adapters';
 
 import { EntryIterator, getAllFromIterator, SuiIterator } from '@/sui/iterator/iterator';
 import { PagedData, Requester } from '@/sui/iterator/requester';
 
-export type ObjectFilter = (objRes: SuiObjectResponse) => boolean;
+export type ObjectFilter = (objRes: MPayObjectResponse) => boolean;
 
 export const REQUEST_PAGE_SIZE = 25;
 
@@ -12,20 +13,19 @@ export type OidIter = SuiIterator<string>;
 export interface BatchObjectOptions {
   filter?: ObjectFilter;
   pageSize?: number;
-  objectOptions?: SuiObjectDataOptions;
 }
 
 // getObjectsById get the list of objects by id.
 // Compared with the multiGetObject method defined by SUI, this method will do the pagination
 // for get object requests.
 export async function getObjectsById(
-  suiClient: SuiClient,
+  suiClient: MPaySuiClient,
   ids: string[],
   options?: BatchObjectOptions,
-): Promise<(SuiObjectResponse | undefined)[]> {
+): Promise<(MPayObjectResponse | undefined)[]> {
   const oidIter = new ListOidIterator(ids);
   const iter = new ObjectBatchIterator(suiClient, oidIter, options);
-  return (await getAllFromIterator(iter)) as SuiObjectResponse[];
+  return (await getAllFromIterator(iter)) as MPayObjectResponse[];
 }
 
 // ListOidIterator is the iterator that iterate through a list of ids.
@@ -52,9 +52,9 @@ export class ListOidIterator implements OidIter {
   }
 }
 
-export class ObjectBatchIterator extends EntryIterator<SuiObjectResponse> {
+export class ObjectBatchIterator extends EntryIterator<MPayObjectResponse> {
   constructor(
-    public readonly suiClient: SuiClient,
+    public readonly suiClient: MPaySuiClient,
     public readonly idIter: OidIter,
     public readonly options?: BatchObjectOptions,
   ) {
@@ -63,27 +63,21 @@ export class ObjectBatchIterator extends EntryIterator<SuiObjectResponse> {
 }
 
 // TODO: Unit test this class
-export class ObjectBatchRequester implements Requester<SuiObjectResponse> {
+export class ObjectBatchRequester implements Requester<MPayObjectResponse> {
   filter: ObjectFilter | undefined;
 
   pageSize: number;
 
-  objectOptions: SuiObjectDataOptions;
-
   constructor(
-    public readonly suiClient: SuiClient,
+    public readonly suiClient: MPaySuiClient,
     public readonly stringIter: OidIter,
     public options?: BatchObjectOptions,
   ) {
     this.filter = options?.filter;
     this.pageSize = options?.pageSize || REQUEST_PAGE_SIZE;
-    this.objectOptions = options?.objectOptions || {
-      showType: true,
-      showContent: true,
-    };
   }
 
-  async doNextRequest(): Promise<PagedData<SuiObjectResponse>> {
+  async doNextRequest(): Promise<PagedData<MPayObjectResponse>> {
     const requestPage: string[] = [];
     while (requestPage.length < this.pageSize) {
       const hasNext = await this.stringIter.hasNext();
@@ -95,14 +89,11 @@ export class ObjectBatchRequester implements Requester<SuiObjectResponse> {
         requestPage.push(objId);
       }
     }
-    const res = await this.suiClient.multiGetObjects({
-      ids: requestPage,
-      options: this.objectOptions,
-    });
-    let filtered: SuiObjectResponse[];
+    const res = await getMpayObjects(this.suiClient, requestPage);
+    let filtered: MPayObjectResponse[];
     if (this.filter) {
       const { filter } = this;
-      filtered = res.filter((r: SuiObjectResponse) => filter?.(r));
+      filtered = res.filter((r: MPayObjectResponse) => filter?.(r));
     } else {
       filtered = res;
     }

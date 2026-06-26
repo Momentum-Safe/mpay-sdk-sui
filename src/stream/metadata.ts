@@ -1,22 +1,22 @@
-import { bcs } from '@mysten/sui.js/bcs';
+import { bcs } from '@mysten/sui/bcs';
 
 import { InvalidInputError } from '@/error/InvalidInputError';
 import { StreamMetadata } from '@/types/stream';
 
-export const metadataBcsType = {
-  groupId: 'string',
-  name: 'string',
-};
+const metadataSchema = bcs.struct('StreamMetadata', {
+  groupId: bcs.String,
+  name: bcs.String,
+});
 
 const MAX_NAME_SIZE = 64;
 
 export function encodeMetadata(metadata: StreamMetadata) {
   validateMetadata(metadata);
-  return bcs.ser(metadataBcsType, metadata).toString('base64');
+  return metadataSchema.serialize(metadata).toBase64();
 }
 
 export function decodeMetadata(metaStr: string) {
-  const metadata = bcs.de(metadataBcsType, metaStr, 'base64') as StreamMetadata;
+  const metadata = metadataSchema.fromBase64(metaStr) as StreamMetadata;
   validateMetadata(metadata);
   return metadata;
 }

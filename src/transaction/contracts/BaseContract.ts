@@ -1,9 +1,28 @@
-import { TransactionBlock, Transactions } from '@mysten/sui.js/transactions';
+import { Transaction, TransactionCommands } from '@mysten/sui/transactions';
 
 import { ContractConfig } from '@/common/env';
 import { Globals } from '@/common/globals';
 import { MoveObject, ObjectId, ObjectVector, Ref, ResultRef } from '@/transaction/contracts/common';
 import { CLOCK_ID } from '@/transaction/contracts/const';
+
+function toPureArgument(txb: Transaction, arg: unknown) {
+  if (typeof arg === 'boolean') {
+    return txb.pure.bool(arg);
+  }
+  if (typeof arg === 'bigint') {
+    return txb.pure.u64(arg);
+  }
+  if (typeof arg === 'number') {
+    return txb.pure.u64(arg);
+  }
+  if (typeof arg === 'string') {
+    if (arg.startsWith('0x')) {
+      return txb.pure.address(arg);
+    }
+    return txb.pure.string(arg);
+  }
+  throw new Error(`Unsupported pure argument type: ${typeof arg}`);
+}
 
 export class BaseContract {
   constructor(
@@ -12,11 +31,11 @@ export class BaseContract {
     public readonly globals: Globals,
   ) {}
 
-  addContractCall(txb: TransactionBlock, input: { method: string; arguments: any[]; typeArgs?: string[] }) {
+  addContractCall(txb: Transaction, input: { method: string; arguments: any[]; typeArgs?: string[] }) {
     const target =
       `${this.config.contractId}::${this.moduleName}::${input.method}` as `${string}::${string}::${string}`;
     txb.add(
-      Transactions.MoveCall({
+      TransactionCommands.MoveCall({
         target,
         arguments: input.arguments.map((arg) => {
           if (arg instanceof ObjectVector) {
@@ -26,9 +45,9 @@ export class BaseContract {
             return arg.moveArg(txb);
           }
           if (arg instanceof ResultRef) {
-            return arg.moveArg();
+            return arg.moveArg() as ReturnType<typeof txb.object>;
           }
-          return txb.pure(arg);
+          return toPureArgument(txb, arg);
         }),
         typeArguments: input.typeArgs,
       }),
@@ -36,9 +55,9 @@ export class BaseContract {
     return txb;
   }
 
-  private addTransactionBlock(txb: TransactionBlock, target: string, callArgs: any[] = [], typeArgs: string[] = []) {
+  private addTransaction(txb: Transaction, target: string, callArgs: any[] = [], typeArgs: string[] = []) {
     txb.add(
-      Transactions.MoveCall({
+      TransactionCommands.MoveCall({
         target: target as `${string}::${string}::${string}`,
         arguments: callArgs.map((arg) => {
           if (arg instanceof ObjectVector) {
@@ -48,9 +67,9 @@ export class BaseContract {
             return arg.moveArg(txb);
           }
           if (arg instanceof ResultRef) {
-            return arg.moveArg();
+            return arg.moveArg() as ReturnType<typeof txb.object>;
           }
-          return txb.pure(arg);
+          return toPureArgument(txb, arg);
         }),
         typeArguments: typeArgs,
       }),

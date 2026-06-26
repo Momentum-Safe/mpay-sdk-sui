@@ -1,4 +1,4 @@
-import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
+import { SUI_TYPE_ARG } from '@mysten/sui/utils';
 
 import { Stream, StreamGroup } from '@/stream';
 import { MPayHelper } from '@/stream/helper';
@@ -7,10 +7,15 @@ import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
 import { CreateStreamInfo, CreateStreamInfoInternal } from '@/types/client';
 
+import { isSuccessfulTransaction } from '@/sui/adapters';
+
 import { TestSuite } from './setup';
 import { sleep } from './utils';
 
 export type CreateStreamModifier = (info: CreateStreamInfoInternal) => CreateStreamInfoInternal;
+
+/** Long interval so vesting/claim tests do not depend on wall-clock time. */
+export const TEST_STREAM_EPOCH_INTERVAL = 3154000000000n;
 
 export async function createStreamHelper(ts: TestSuite, recipient: string, modifier?: CreateStreamModifier) {
   const builder = new CreateStreamHelper(
@@ -22,15 +27,19 @@ export async function createStreamHelper(ts: TestSuite, recipient: string, modif
   if (modifier) {
     createParams = modifier(createParams);
   }
-  const txb = await builder.buildCreateStreamTransactionBlock(createParams);
+  const txb = await builder.buildCreateStreamTransaction(createParams);
   const res = await ts.wallet.signAndSubmitTransaction(txb);
-  return new MPayHelper(ts.globals).getStreamIdsFromCreateStreamResponse(res);
+  const streamIds = new MPayHelper(ts.globals).getStreamIdsFromCreateStreamResponse(res);
+  if (streamIds.length === 0) {
+    throw new Error('Create stream transaction did not produce stream objects');
+  }
+  return streamIds;
 }
 
 export async function createStreamForTest(ts: TestSuite, recipient: string) {
   const stId = await createStreamHelper(ts, recipient, (info) => {
     info.recipients = [info.recipients[0]];
-    info.epochInterval = 3154000000000n;
+    info.epochInterval = TEST_STREAM_EPOCH_INTERVAL;
     return info;
   });
   return Stream.new(ts.globals, stId[0]);
@@ -44,7 +53,7 @@ export async function createCanceledStream(ts: TestSuite, recipient: string) {
   const st = await Stream.new(ts.globals, stId[0]);
   const txb = await st.cancel();
   const res = await ts.wallet.signAndSubmitTransaction(txb);
-  if (res.effects?.status.status !== 'success') {
+  if (!isSuccessfulTransaction(res)) {
     throw new Error('Failed transaction canceled');
   }
   await st.refresh();
@@ -60,7 +69,7 @@ export async function createSettledStream(ts: TestSuite, recipient: string) {
   if (st.claimable !== 0n) {
     const txb = await st.claim();
     const res = await ts.wallet.signAndSubmitTransaction(txb);
-    if (res.effects?.status.status !== 'success') {
+    if (!isSuccessfulTransaction(res)) {
       throw new Error('Failed claim transaction');
     }
   }
@@ -74,14 +83,13 @@ export async function createStreamGroup(ts: TestSuite, recipients: string[]) {
       ...info.recipients[0],
       address: recipient,
     }));
-    info.epochInterval = 3154000000000n;
+    info.epochInterval = TEST_STREAM_EPOCH_INTERVAL;
     return info;
   });
   const sg = await StreamGroup.new(ts.globals, stIds);
-  // Cancel one stream from the stream group
   const txb = await sg.streams[0].cancel();
   const res = await ts.wallet.signAndSubmitTransaction(txb);
-  if (res.effects?.status.status !== 'success') {
+  if (!isSuccessfulTransaction(res)) {
     throw new Error('Failed cancel stream');
   }
   await sg.refresh();
@@ -93,6 +101,10 @@ export function defaultStreamParamInternal(recipient: string): CreateStreamInfoI
   return CreateStreamHelper.convertCreateStreamInfoToInternal(params);
 }
 
+/**
+ * Minimal on-chain payment amounts for tests.
+ * Note: contract flat fee (~0.1 SUI per stream recipient) dominates the cost, not these amounts.
+ */
 export function defaultStreamParam(recipient: string): CreateStreamInfo {
   return {
     name: 'test name',
@@ -100,17 +112,12 @@ export function defaultStreamParam(recipient: string): CreateStreamInfo {
     recipients: [
       {
         address: recipient,
-        cliffAmount: 10000n,
-        amountPerStep: 100n,
-      },
-      {
-        address: recipient,
-        cliffAmount: 5000n,
-        amountPerStep: 1000n,
+        cliffAmount: 100n,
+        amountPerStep: 1n,
       },
     ],
     interval: 1000n,
-    steps: 100n,
+    steps: 1n,
     startTimeMs: BigInt(new Date().getTime()),
     cancelable: true,
   };

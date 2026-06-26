@@ -1,5 +1,5 @@
-import { SuiClient } from '@mysten/sui.js/client';
-import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
+import type { MPaySuiClient } from '@/sui/client';
+import { SUI_TYPE_ARG } from '@mysten/sui/utils';
 
 import { InvalidInputError } from '@/error/InvalidInputError';
 import { SanityError } from '@/error/SanityError';
@@ -13,7 +13,7 @@ import { CoinRequest, CoinRequestResponse, GAS_OBJECT_SPEC, ISingleWallet, IWall
 export class SingleWalletAdapter implements IWallet {
   constructor(
     private readonly singleWallet: ISingleWallet,
-    private readonly suiClient: SuiClient,
+    private readonly suiClient: MPaySuiClient,
   ) {}
 
   get type() {

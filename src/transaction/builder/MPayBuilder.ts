@@ -1,4 +1,4 @@
-import { TransactionBlock } from '@mysten/sui.js/transactions';
+import { Transaction } from '@mysten/sui/transactions';
 
 import { Globals } from '@/common/globals';
 import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
@@ -20,7 +20,7 @@ export class MPayBuilder {
 
   async createStreams(info: CreateStreamInfo) {
     const infoInternal = CreateStreamHelper.convertCreateStreamInfoToInternal(info);
-    return this.createStreamHelper().buildCreateStreamTransactionBlock(infoInternal);
+    return this.createStreamHelper().buildCreateStreamTransaction(infoInternal);
   }
 
   createStreamHelper() {
@@ -28,7 +28,7 @@ export class MPayBuilder {
   }
 
   setAutoClaim(streamId: string, enabled: boolean, coinType: string) {
-    const txb = new TransactionBlock();
+    const txb = new Transaction();
     return this.streamContract.setAutoClaim(txb, {
       streamId,
       enabled,
@@ -37,7 +37,7 @@ export class MPayBuilder {
   }
 
   claimStream(streamId: string, coinType: string) {
-    const txb = new TransactionBlock();
+    const txb = new Transaction();
     return this.streamContract.claimStream(txb, {
       streamId,
       coinType,
@@ -45,7 +45,7 @@ export class MPayBuilder {
   }
 
   claimStreamByProxy(streamId: string, coinType: string) {
-    const txb = new TransactionBlock();
+    const txb = new Transaction();
     return this.streamContract.claimStreamByProxy(txb, {
       streamId,
       coinType,
@@ -53,7 +53,7 @@ export class MPayBuilder {
   }
 
   cancelStream(streamId: string, coinType: string) {
-    const txb = new TransactionBlock();
+    const txb = new Transaction();
     this.streamContract.cancelStream(txb, {
       streamId,
       coinType,

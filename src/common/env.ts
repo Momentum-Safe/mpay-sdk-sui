@@ -1,7 +1,9 @@
+import type { SuiClientTypes } from '@mysten/sui/client';
+
 import { SanityError } from '@/error/SanityError';
 
-import * as devContractConfig from '../../config/dev.json';
-import * as prodContractConfig from '../../config/prod.json';
+import devContractConfig from '../../config/dev.json';
+import prodContractConfig from '../../config/prod.json';
 
 export enum Env {
   local = 'local',
@@ -119,6 +121,20 @@ const ENV_CONFIG: Map<Env, EnvConfig> = new Map([
     },
   ],
 ]);
+
+export function getNetworkForEnv(env: Env): SuiClientTypes.Network {
+  switch (env) {
+    case Env.local:
+    case Env.dev:
+    case Env.stg:
+      return 'testnet';
+    case Env.prev:
+    case Env.prod:
+      return 'mainnet';
+    default:
+      throw new SanityError(`Env not supported: ${env}`);
+  }
+}
 
 export function getConfig(env: Env, options?: EnvConfigOptions): EnvConfig {
   const ec = ENV_CONFIG.get(env);

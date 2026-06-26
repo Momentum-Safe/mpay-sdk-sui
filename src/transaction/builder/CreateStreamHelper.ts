@@ -1,5 +1,5 @@
-import { TransactionArgument, TransactionBlock, TransactionObjectArgument } from '@mysten/sui.js/transactions';
-import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
+import { TransactionArgument, Transaction, TransactionObjectArgument } from '@mysten/sui/transactions';
+import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui/utils';
 
 import { Globals } from '@/common/globals';
 import { encodeMetadata } from '@/stream/metadata';
@@ -45,8 +45,8 @@ export class CreateStreamHelper {
     };
   }
 
-  async buildCreateStreamTransactionBlock(info: CreateStreamInfoInternal): Promise<TransactionBlock> {
-    const txb = new TransactionBlock();
+  async buildCreateStreamTransaction(info: CreateStreamInfoInternal): Promise<Transaction> {
+    const txb = new Transaction();
     const paymentWithFee = this.calculateFeesInternal(info);
     const coinReqs = this.getCreateStreamCoinRequests(info, paymentWithFee);
     const coinResp = await this.wallet.requestCoins(coinReqs);
@@ -64,11 +64,15 @@ export class CreateStreamHelper {
       const recipient = info.recipients[i];
       const paymentAmount = this.amountForRecipient(recipient, info.numberEpoch);
       const feeAmount = this.getStreamFeeLocal(paymentAmount);
-      const [paymentCoin] = txb.splitCoins(paymentMergedObject, [txb.pure(paymentAmount + feeAmount, 'u64')]);
-      const [flatFeeCoin] = txb.splitCoins(flatFeeMergedObject, [txb.pure(this.flatSuiFee, 'u64')]);
+      const [paymentCoin] = txb.splitCoins(paymentMergedObject as TransactionObjectArgument, [
+        txb.pure.u64(paymentAmount + feeAmount),
+      ]);
+      const [flatFeeCoin] = txb.splitCoins(flatFeeMergedObject as TransactionObjectArgument, [
+        txb.pure.u64(this.flatSuiFee),
+      ]);
       this.streamContract.createStream(txb, {
-        paymentCoin: new ResultRef(paymentCoin as TransactionArgument & TransactionArgument[]),
-        flatFeeCoin: new ResultRef(flatFeeCoin as TransactionArgument & TransactionArgument[]),
+        paymentCoin: new ResultRef(paymentCoin as unknown as TransactionArgument & TransactionArgument[]),
+        flatFeeCoin: new ResultRef(flatFeeCoin as unknown as TransactionArgument & TransactionArgument[]),
         metadata: info.metadata,
         recipient: recipient.address,
         timeStart: info.startTime,
@@ -102,7 +106,7 @@ export class CreateStreamHelper {
     };
   }
 
-  private async addMergeCoins(txb: TransactionBlock, coins: CoinRequestResponse): Promise<TransactionObjectArgument> {
+  private async addMergeCoins(txb: Transaction, coins: CoinRequestResponse): Promise<TransactionObjectArgument> {
     let mergedCoin: TransactionObjectArgument;
     if (coins.mergedCoins && coins.mergedCoins.length) {
       txb.mergeCoins(
@@ -176,10 +180,12 @@ export class CreateStreamHelper {
   }
 
   async getStreamFeeRemote(streamAmount: bigint) {
-    const txb = this.feeContract.streamingFee(new TransactionBlock(), streamAmount);
-    const res = await this.globals.suiClient.devInspectTransactionBlock({
-      sender: await this.globals.walletAddress(),
-      transactionBlock: txb,
+    const txb = this.feeContract.streamingFee(new Transaction(), streamAmount);
+    txb.setSender(await this.globals.walletAddress());
+    const res = await this.globals.suiClient.simulateTransaction({
+      transaction: txb,
+      checksEnabled: false,
+      include: { commandResults: true },
     });
     const iv = new InspectViewer(res);
     return iv.getU64();

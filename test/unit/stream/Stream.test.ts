@@ -1,81 +1,72 @@
-import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
-
 import { Stream } from '@/stream/Stream';
 
-import { getTestSuite, TestSuite } from '../../lib/setup';
-import { createStreamHelper } from '../../lib/stream';
+import { getActiveStream, getPendingCancelStream } from '../../lib/chain-fixtures';
+import { expectTransactionSuccess } from '../../lib/transaction';
 import { sleep } from '../../lib/utils';
 
 describe('stream', () => {
-  let ts: TestSuite;
+  let ts: Awaited<ReturnType<typeof getActiveStream>>['ts'];
+  let sharedStream: Stream;
 
   beforeAll(async () => {
-    ts = await getTestSuite();
+    const res = await getActiveStream();
+    ts = res.ts;
+    sharedStream = res.stream;
   });
 
   it('newFromId', async () => {
-    const stIds = await createStreamHelper(ts, ts.address);
-    const st = await Stream.new(ts.globals, stIds[0]);
-
-    expect(st.info.name).toBe('test name');
-    expect(st.info.groupId).toBeDefined();
+    expect(sharedStream.info.name).toBe('test name');
+    expect(sharedStream.info.groupId).toBeDefined();
   });
 
   it('claim', async () => {
-    const stIds = await createStreamHelper(ts, ts.address);
-    const st = await Stream.new(ts.globals, stIds[0]);
-
-    if (st.claimable === 0n) {
+    if (sharedStream.claimable === 0n) {
       await sleep(1000);
-      await st.refresh();
+      await sharedStream.refresh();
     }
-    expect(st.claimable).toBeGreaterThan(0n);
-    const txb = await st.claim();
+    expect(sharedStream.claimable).toBeGreaterThan(0n);
+    const txb = await sharedStream.claim();
     const res = await ts.wallet.signAndSubmitTransaction(txb);
-    expect((res as SuiTransactionBlockResponse).effects?.status?.status).toBe('success');
+    expectTransactionSuccess(res);
 
-    await st.refresh();
-    expect(st.progress.streamed).toBeGreaterThan(0n);
-    expect(st.progress.status).toBe('STREAMING');
-  });
-
-  it('cancel', async () => {
-    const stIds = await createStreamHelper(ts, ts.address);
-    const st = await Stream.new(ts.globals, stIds[0]);
-
-    expect(st.cancelable).toBeTruthy();
-    expect(st.progress.status).toBe('STREAMING');
-
-    const txb = await st.cancel();
-    const res = await ts.wallet.signAndSubmitTransaction(txb);
-    expect((res as SuiTransactionBlockResponse).effects?.status?.status).toBe('success');
-
-    await st.refresh();
-    expect(st.progress.canceled).toBeGreaterThan(0n);
-    expect(st.progress.status === 'CANCELED' || st.progress.status === 'SETTLED').toBeTruthy();
+    await sharedStream.refresh();
+    expect(sharedStream.progress.streamed).toBeGreaterThan(0n);
+    expect(sharedStream.progress.status).toBe('STREAMING');
   });
 
   it('set auto claim and claim by proxy', async () => {
-    const stIds = await createStreamHelper(ts, ts.address);
-    const st = await Stream.new(ts.globals, stIds[0]);
-
-    expect(st.autoClaim).toBeFalsy();
-    expect(st.streamStatus).toBe('STREAMING');
-    const txb1 = await st.setAutoClaim(true);
+    expect(sharedStream.autoClaim).toBeFalsy();
+    expect(sharedStream.streamStatus).toBe('STREAMING');
+    const txb1 = await sharedStream.setAutoClaim(true);
     const res1 = await ts.wallet.signAndSubmitTransaction(txb1);
-    expect((res1 as SuiTransactionBlockResponse).effects?.status.status).toBe('success');
-    await st.refresh();
-    expect(st.autoClaim).toBeTruthy();
+    expectTransactionSuccess(res1);
+    await sharedStream.refresh();
+    expect(sharedStream.autoClaim).toBeTruthy();
 
-    if (st.claimable === 0n) {
+    if (sharedStream.claimable === 0n) {
       await sleep(1000);
-      await st.refresh();
+      await sharedStream.refresh();
     }
-    expect(st.claimable).toBeGreaterThan(0n);
-    const txb2 = await st.claimByProxy();
+    expect(sharedStream.claimable).toBeGreaterThan(0n);
+    const txb2 = await sharedStream.claimByProxy();
     const res2 = await ts.wallet.signAndSubmitTransaction(txb2);
-    expect((res2 as SuiTransactionBlockResponse).effects?.status?.status).toBe('success');
-    expect(st.progress.streamed).toBeGreaterThan(0n);
-    expect(st.progress.status).toBe('STREAMING');
+    expectTransactionSuccess(res2);
+    expect(sharedStream.progress.streamed).toBeGreaterThan(0n);
+    expect(sharedStream.progress.status).toBe('STREAMING');
+  });
+
+  it('cancel', async () => {
+    const { stream: cancelStream } = await getPendingCancelStream();
+
+    expect(cancelStream.cancelable).toBeTruthy();
+    expect(cancelStream.progress.status).toBe('STREAMING');
+
+    const txb = await cancelStream.cancel();
+    const res = await ts.wallet.signAndSubmitTransaction(txb);
+    expectTransactionSuccess(res);
+
+    await sleep(1500);
+    await cancelStream.refresh();
+    expect(cancelStream.progress.status === 'CANCELED' || cancelStream.progress.status === 'SETTLED').toBeTruthy();
   });
 });

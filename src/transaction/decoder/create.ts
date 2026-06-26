@@ -1,12 +1,23 @@
-import { MoveCallTransaction } from '@mysten/sui.js/dist/cjs/builder';
-import { TransactionArgument, TransactionBlock } from '@mysten/sui.js/transactions';
-import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
+import { TransactionArgument, Transaction } from '@mysten/sui/transactions';
+import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui/utils';
 
 import { Globals } from '@/common/globals';
 import { InvalidInputError } from '@/error/InvalidInputError';
 import { SanityError } from '@/error/SanityError';
 import { decodeMetadata } from '@/stream/metadata';
 import { isSameTarget } from '@/sui/utils';
+import type { MoveCallCommand } from '@/sui/transaction-data';
+import {
+  getInputArgumentIndex,
+  getMoveCallTarget,
+  getNestedResultIndices,
+  getTransactionArgumentKind,
+  getTransactionCommands,
+  getTransactionInputs,
+  isMergeCoinsCommand,
+  isMoveCallCommand,
+  isSplitCoinsCommand,
+} from '@/sui/transaction-data';
 import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
 import { FeeContract } from '@/transaction/contracts/FeeContract';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
@@ -17,7 +28,7 @@ import { CoinMerge, DecodedCreateStream, StreamTransactionType } from '@/types/d
 export class CreateStreamDecodeHelper {
   constructor(
     public readonly globals: Globals,
-    public readonly txb: TransactionBlock,
+    public readonly txb: Transaction,
   ) {}
 
   decode(): DecodedCreateStream {
@@ -40,12 +51,12 @@ export class CreateStreamDecodeHelper {
 
   private createStreamTransactions(): MoveCallHelper[] {
     const txs = this.transactions.filter(
-      (tx) => tx.kind === 'MoveCall' && isSameTarget(tx.target, this.contract.createStreamTarget),
-    ) as MoveCallTransaction[];
+      (tx) => isMoveCallCommand(tx) && isSameTarget(getMoveCallTarget(tx), this.contract.createStreamTarget),
+    );
     if (txs.length === 0) {
       throw new SanityError('No create stream transactions');
     }
-    return txs.map((tx) => new MoveCallHelper(tx, this.txb));
+    return txs.map((tx) => new MoveCallHelper(tx as MoveCallCommand, this.txb));
   }
 
   private getCreationInfoFromMoveCall(moveCall: MoveCallHelper): SingleStreamCreationInfo {
@@ -132,27 +143,29 @@ export class CreateStreamDecodeHelper {
     coinType: string,
     moveCall: MoveCallHelper,
   ): CoinMerge {
-    if (coinArg.kind === 'GasCoin') {
+    const argKind = getTransactionArgumentKind(coinArg);
+    if (argKind === 'GasCoin') {
       return {
         primary: 'GAS',
         coinType,
       };
     }
-    if (coinArg.kind === 'Input') {
+    if (argKind === 'Input') {
       const arg = this.getInputArg(coinArg);
       const objectId = MoveCallHelper.getOwnedObjectId(arg);
 
       const mergeTx = this.transactions.find((tx) => {
-        if (tx.kind !== 'MergeCoins') {
+        if (!isMergeCoinsCommand(tx)) {
           return false;
         }
-        if (tx.destination.kind !== 'Input') {
+        const destination = tx.MergeCoins.destination;
+        if (getTransactionArgumentKind(destination) !== 'Input') {
           throw new Error('merge coin destination not Input type');
         }
-        const primaryCoinInput = this.getInputArg(tx.destination);
+        const primaryCoinInput = this.getInputArg(destination);
         return MoveCallHelper.getOwnedObjectId(primaryCoinInput) === objectId;
       });
-      if (!mergeTx) {
+      if (!mergeTx || !isMergeCoinsCommand(mergeTx)) {
         return {
           primary: objectId,
           coinType,
@@ -160,33 +173,29 @@ export class CreateStreamDecodeHelper {
       }
       return {
         primary: objectId,
-        merged: (mergeTx as any).sources.map((sourceArg: any) => {
+        merged: mergeTx.MergeCoins.sources.map((sourceArg) => {
           const sourceInputArg = this.getInputArg(sourceArg);
           return MoveCallHelper.getOwnedObjectId(sourceInputArg);
         }),
         coinType,
       };
     }
-    if (coinArg.kind === 'NestedResult') {
-      // Expect parent is split coin transaction.
-      const parentTx = this.transactions[coinArg.index];
-      if (parentTx.kind !== 'SplitCoins') {
-        throw new InvalidInputError(`Transaction type not expected. Expect SplitCoins, got ${parentTx.kind}`);
+    if (argKind === 'NestedResult') {
+      const [parentIndex] = getNestedResultIndices(coinArg);
+      const parentTx = this.transactions[parentIndex];
+      if (!isSplitCoinsCommand(parentTx)) {
+        throw new InvalidInputError(`Transaction type not expected. Expect SplitCoins, got ${parentTx.$kind}`);
       }
-      return this.getCoinMergeFromNestedResult(parentTx.coin, coinType, moveCall);
+      return this.getCoinMergeFromNestedResult(parentTx.SplitCoins.coin, coinType, moveCall);
     }
-    if (coinArg.kind === 'Result') {
+    if (argKind === 'Result') {
       throw new Error('Result type not expected for coin inputs');
     }
-    throw new Error(`Unknown argument kind`);
-  }
-
-  private mergeCoinTransactions() {
-    return this.transactions.filter((tx) => tx.kind === 'MergeCoins');
+    throw new Error('Unknown argument kind');
   }
 
   private get transactions() {
-    return this.txb.blockData.transactions;
+    return getTransactionCommands(this.txb);
   }
 
   private get contract() {
@@ -202,10 +211,10 @@ export class CreateStreamDecodeHelper {
   }
 
   private getInputArg(arg: TransactionArgument) {
-    if (arg.kind !== 'Input') {
+    if (getTransactionArgumentKind(arg) !== 'Input') {
       throw new Error('not input type');
     }
-    return 'value' in arg ? arg : this.txb.blockData.inputs[arg.index];
+    return getTransactionInputs(this.txb)[getInputArgumentIndex(arg)];
   }
 }
 

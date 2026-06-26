@@ -14,6 +14,14 @@ import { parseResponseData } from '@/utils/backend';
 export class LegacyBackend implements IBackend {
   constructor(private apiURL: string) {}
 
+  async getStreamGroupByGroupId(groupId: string): Promise<{
+    groupId: string;
+    streamIds: string[];
+  }> {
+    const res = await axios.post(`${this.apiURL}/stream-group`, { groupId });
+    return parseResponseData(res);
+  }
+
   async getIncomingStreams(recipient: string, options?: BackendIncomingStreamFilterOptions): Promise<StreamRef[]> {
     const res = await axios.post(`${this.apiURL}/stream`, {
       recipient,

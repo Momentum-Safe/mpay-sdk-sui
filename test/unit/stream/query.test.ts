@@ -1,16 +1,13 @@
 import { DateTime, Duration } from 'luxon';
 
 import { Globals } from '@/common';
-import { Stream } from '@/stream';
+import { Stream, StreamGroup } from '@/stream';
 import { convertStreamStatus, groupAndSortRefs, PagedStreamListIterator, StreamListIterator } from '@/stream/query';
 import { IStream, IStreamGroup, StreamStatus } from '@/types';
 import { StreamRef } from '@/types/backend';
-import { SingleWalletAdapter } from '@/wallet';
 
 import { MockBackend } from '../../lib/backend';
-import { getTestSuite, newUnitGlobals } from '../../lib/setup';
-import { createCanceledStream, createSettledStream, createStreamForTest, createStreamGroup } from '../../lib/stream';
-import { FakeWallet } from '../../lib/wallet';
+import { getCanceledStream, getChainFixtures, getSettledStream } from '../../lib/chain-fixtures';
 
 const TEST_REFS: StreamRef[] = [
   {
@@ -73,32 +70,21 @@ describe('convertStreamStatus', () => {
 
 describe('StreamListIterator', () => {
   let globals: Globals;
-
-  // The following streams are generated with the following code:
-
-  const recipient = '0xb924811f0b632a013389ce4038ba8fe565f3cef006df9d960ff3b163e2c08543';
-  const sender = recipient;
-  const streaming = ['0x4affad33481baa99c78a211b6d84dd27c2719b3b488f8d45662def015e580715'];
-  const group = [
-    '0x9546e45576d733bb102532cd04eb872a937bd1d83cef5df5f8731b507281555f',
-    '0xd1acad4d1abc7989672709c2bf397893d80f8710a2336423696c049294fc4e81',
-  ];
-  const canceled = ['0xb60a7c54c94e8ca61d5217764bf5a4b35b3d2f79341a5d25e3df706dec233b0a'];
-  const settled = ['0xb6e01885a49f3c8d2fb7be24d18e3233a65e482c6e1ed2d8d542ef5efb210ebc'];
+  let recipient: string;
+  let streaming: string[];
+  let group: string[];
+  let canceled: string[];
+  let settled: string[];
 
   beforeAll(async () => {
-    // const res = await setupStreamsAndBackend();
-    globals = newUnitGlobals();
-    // const res = await setupStreamsAndBackend();
-
-    // console.log(res);
-    // console.log(res.ts.address);
-    // console.log(res.streaming.streamId);
-    // console.log(res.group.streams.map((stream) => stream.streamId));
-    // console.log(res.canceled.streamId);
-    // console.log(res.settled.streamId);
-    globals.connectWallet(new SingleWalletAdapter(new FakeWallet(recipient), globals.suiClient));
-  });
+    const res = await setupStreamsAndBackend();
+    globals = res.ts.globals;
+    recipient = res.ts.address;
+    streaming = [res.streaming.streamId];
+    group = res.group.streams.map((stream: Stream) => stream.streamId);
+    canceled = [res.canceled.streamId];
+    settled = [res.settled.streamId];
+  }, 300_000);
 
   it('no filter', async () => {
     const it = await StreamListIterator.newIncoming({
@@ -221,7 +207,7 @@ describe('StreamListIterator', () => {
     const it = await StreamListIterator.newIncoming({
       globals,
       query: {
-        sender: [sender],
+        sender: [recipient],
       },
     });
     await testStreamListIteration(it, [streaming, group, canceled, settled]);
@@ -229,15 +215,14 @@ describe('StreamListIterator', () => {
 });
 
 async function setupStreamsAndBackend() {
-  const ts = await getTestSuite();
-
-  const streaming = await createStreamForTest(ts, ts.address);
-  const group = await createStreamGroup(ts, [ts.address, ts.address]);
-  const canceled = await createCanceledStream(ts, ts.address);
-  const settled = await createSettledStream(ts, ts.address);
-  // const streams = [streaming, ...group.streams, canceled, settled];
-  // const mockBackend = createMockBackend(streams);
-  // ts.globals.backend = mockBackend;
+  const { ts, fixtures } = await getChainFixtures();
+  console.log('[test] query.setup: loading shared chain fixtures...');
+  const streaming = await Stream.new(ts.globals, fixtures.activeStreamId);
+  const group = await StreamGroup.new(ts.globals, fixtures.groupStreamIds);
+  const { stream: canceled } = await getCanceledStream();
+  const { stream: settled } = await getSettledStream();
+  const streams = [streaming, ...group.streams, canceled, settled];
+  ts.globals.backend = createMockBackend(streams);
   return {
     ts,
     streaming,
@@ -257,7 +242,7 @@ function createMockBackend(streams: Stream[]) {
     coinType: stream.coinType,
     createDate: DateTime.now()
       .minus(Duration.fromMillis(i * 10000))
-      .toISODate() as string,
+      .toISO() as string,
   }));
   be.addStreamRef(...refs);
   return be;

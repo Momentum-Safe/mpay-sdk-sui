@@ -1,5 +1,5 @@
-import { TransactionBlock } from '@mysten/sui.js/transactions';
-import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui.js/utils';
+import { Transaction } from '@mysten/sui/transactions';
+import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui/utils';
 
 import { Env, EnvConfigOptions } from '@/common/env';
 import { Globals } from '@/common/globals';
@@ -41,7 +41,7 @@ export class MPayClient implements IMPayClient {
     this.globals.connectWallet(adapter);
   }
 
-  async createStream(info: CreateStreamInfo): Promise<TransactionBlock> {
+  async createStream(info: CreateStreamInfo): Promise<Transaction> {
     return this.builder().createStreams(info);
   }
 

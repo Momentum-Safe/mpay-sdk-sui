@@ -1,4 +1,4 @@
-import { SuiObjectResponse } from '@mysten/sui.js/client';
+import { MPayObjectResponse } from '@/sui/adapters';
 
 import { Globals } from '@/common/globals';
 import { InvalidInputError } from '@/error/InvalidInputError';
@@ -34,10 +34,10 @@ export class StreamGroup implements IStreamGroup {
         throw new SanityError('stream group object data undefined');
       }
     });
-    return StreamGroup.newFromObjectResponse(globals, ids, streamObjs as SuiObjectResponse[]);
+    return StreamGroup.newFromObjectResponse(globals, ids, streamObjs as MPayObjectResponse[]);
   }
 
-  static async newFromObjectResponse(globals: Globals, ids: string[], responses: SuiObjectResponse[]) {
+  static async newFromObjectResponse(globals: Globals, ids: string[], responses: MPayObjectResponse[]) {
     const streams = await StreamGroup.parseGroupStreams(globals, ids, responses);
     return new StreamGroup(globals, streams);
   }
@@ -60,7 +60,7 @@ export class StreamGroup implements IStreamGroup {
       this.streams.map((stream) => stream.streamId),
     );
     this.streams.forEach((stream, i) => {
-      stream.refreshWithData(streamObjs[i] as SuiObjectResponse);
+      stream.refreshWithData(streamObjs[i] as MPayObjectResponse);
     });
   }
 
@@ -116,7 +116,7 @@ export class StreamGroup implements IStreamGroup {
     });
   }
 
-  private static async parseGroupStreams(globals: Globals, ids: string[], responses: SuiObjectResponse[]) {
+  private static async parseGroupStreams(globals: Globals, ids: string[], responses: MPayObjectResponse[]) {
     const streams = responses
       .map((obj, i) => Stream.fromObjectData(globals, ids[i], obj))
       .filter((stream) => !!stream) as Stream[];

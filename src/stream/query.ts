@@ -1,5 +1,5 @@
-import { SuiObjectResponse } from '@mysten/sui.js/client';
-import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui.js/utils';
+import { MPayObjectResponse } from '@/sui/adapters';
+import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui/utils';
 import { DateTime } from 'luxon';
 
 import { Globals } from '@/common/globals';
@@ -208,7 +208,7 @@ async function getStreamFromIterator(globals: Globals, streamId: string, it: Obj
 }
 
 async function getStreamGroupFromIterator(globals: Globals, streamIds: string[], it: ObjectBatchIterator) {
-  const objResponses: SuiObjectResponse[] = [];
+  const objResponses: MPayObjectResponse[] = [];
   while (objResponses.length < streamIds.length) {
     const data = await getStreamObjectResponseFromIter(it, streamIds[objResponses.length]);
     objResponses.push(data);

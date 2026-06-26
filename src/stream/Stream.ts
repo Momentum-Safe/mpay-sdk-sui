@@ -1,6 +1,5 @@
-import { SuiObjectData, SuiObjectResponse, SuiParsedData } from '@mysten/sui.js/client';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
-import { normalizeStructTag, parseStructTag } from '@mysten/sui.js/utils';
+import { Transaction } from '@mysten/sui/transactions';
+import { normalizeStructTag, parseStructTag } from '@mysten/sui/utils';
 import { DateTime, Duration } from 'luxon';
 
 import { Globals } from '@/common/globals';
@@ -10,6 +9,8 @@ import { RpcError } from '@/error/RpcError';
 import { SanityError } from '@/error/SanityError';
 import { StreamNotFoundError } from '@/error/StreamNotFoundError';
 import { decodeMetadata } from '@/stream/metadata';
+import type { MPaySuiClient } from '@/sui/client';
+import { getMpayObject, MPayObjectResponse, readMoveU64, unwrapMoveFields } from '@/sui/adapters';
 import { StreamContract } from '@/transaction/contracts/StreamContract';
 import { RawStreamData, RawStreamStatusEnum } from '@/types/data';
 import { StreamEvent } from '@/types/events';
@@ -35,7 +36,7 @@ export class Stream implements IStream {
     return new Stream(globals, streamId, rawData);
   }
 
-  static fromObjectData(globals: Globals, streamId: string, data: SuiObjectResponse) {
+  static fromObjectData(globals: Globals, streamId: string, data: MPayObjectResponse) {
     const rawData = Stream.parseRawStreamData(streamId, data);
     return new Stream(globals, streamId, rawData);
   }
@@ -80,7 +81,7 @@ export class Stream implements IStream {
     this.rawData = await Stream.fetchStreamData(this.globals, this.streamId);
   }
 
-  refreshWithData(data: SuiObjectResponse) {
+  refreshWithData(data: MPayObjectResponse) {
     if (data.data?.objectId !== this.streamId) {
       throw new SanityError('Object Id does not align');
     }
@@ -98,7 +99,7 @@ export class Stream implements IStream {
     if ((await this.globals.walletAddress()) !== this.creator) {
       throw new NotCreatorError();
     }
-    const txb = new TransactionBlock();
+    const txb = new Transaction();
     this.streamContract.cancelStream(txb, {
       streamId: this.streamId,
       coinType: this.coinType,
@@ -110,7 +111,7 @@ export class Stream implements IStream {
     if ((await this.globals.walletAddress()) !== this.recipient) {
       throw new NotRecipientError();
     }
-    const txb = new TransactionBlock();
+    const txb = new Transaction();
     this.streamContract.claimStream(txb, {
       streamId: this.streamId,
       coinType: this.coinType,
@@ -122,7 +123,7 @@ export class Stream implements IStream {
     if ((await this.globals.walletAddress()) !== this.recipient) {
       throw new NotRecipientError();
     }
-    const txb = new TransactionBlock();
+    const txb = new Transaction();
     this.streamContract.setAutoClaim(txb, {
       streamId: this.streamId,
       coinType: this.coinType,
@@ -132,7 +133,7 @@ export class Stream implements IStream {
   }
 
   async claimByProxy() {
-    const txb = new TransactionBlock();
+    const txb = new Transaction();
     this.streamContract.claimStreamByProxy(txb, {
       streamId: this.streamId,
       coinType: this.coinType,
@@ -144,7 +145,7 @@ export class Stream implements IStream {
     return this.globals.wallet;
   }
 
-  get client() {
+  get client(): MPaySuiClient {
     return this.globals.suiClient;
   }
 
@@ -307,17 +308,11 @@ export class Stream implements IStream {
   }
 
   private static async fetchStreamData(globals: Globals, streamId: string) {
-    const res = await globals.suiClient.getObject({
-      id: streamId,
-      options: {
-        showContent: true,
-        showType: true,
-      },
-    });
+    const res = await getMpayObject(globals.suiClient, streamId);
     return Stream.parseRawStreamData(streamId, res);
   }
 
-  static parseRawStreamData(streamId: string, res: SuiObjectResponse): RawStreamData {
+  static parseRawStreamData(streamId: string, res: MPayObjectResponse): RawStreamData {
     if (res.error) {
       if (res.error.code === 'notExists') {
         throw new StreamNotFoundError(streamId);
@@ -327,7 +322,7 @@ export class Stream implements IStream {
         ...res.error,
       });
     }
-    const content = (res.data as SuiObjectData).content as SuiParsedData;
+    const content = res.data!.content!;
     if (content.dataType !== 'moveObject') {
       throw new RpcError('Unexpected object type', {
         gotType: content.dataType,
@@ -336,29 +331,29 @@ export class Stream implements IStream {
     const { typeParams } = parseStructTag(content.type);
     const coinType = normalizeStructTag(typeParams[0]);
 
-    const dataFields = content.fields as any;
-    const config = dataFields.config.fields as any;
-    const status = dataFields.status.fields as any;
+    const dataFields = unwrapMoveFields(content.fields);
+    const config = unwrapMoveFields(dataFields.config);
+    const status = unwrapMoveFields(dataFields.status);
 
     return {
       coinType,
       autoClaim: dataFields.auto_claim as boolean,
-      balance: BigInt(dataFields.balance.fields.balance),
+      balance: readMoveU64(dataFields.balance),
       config: {
-        amountPerEpoch: BigInt(config.amount_per_epoch),
-        cancelable: config.cancelable,
-        cliff: BigInt(config.cliff),
-        creator: config.creator,
-        epochInterval: BigInt(config.epoch_interval),
-        metadata: config.metadata,
-        recipient: config.recipient,
-        timeStart: BigInt(config.time_start),
-        totalEpoch: BigInt(config.total_epoch),
+        amountPerEpoch: BigInt(String(config.amount_per_epoch)),
+        cancelable: Boolean(config.cancelable),
+        cliff: BigInt(String(config.cliff)),
+        creator: String(config.creator),
+        epochInterval: BigInt(String(config.epoch_interval)),
+        metadata: String(config.metadata),
+        recipient: String(config.recipient),
+        timeStart: BigInt(String(config.time_start)),
+        totalEpoch: BigInt(String(config.total_epoch)),
       },
       status: {
-        status: status.status as RawStreamStatusEnum,
-        epochCanceled: BigInt(status.epoch_canceled),
-        epochClaimed: BigInt(status.epoch_claimed),
+        status: Number(status.status) as RawStreamStatusEnum,
+        epochCanceled: BigInt(String(status.epoch_canceled)),
+        epochClaimed: BigInt(String(status.epoch_claimed)),
       },
     };
   }

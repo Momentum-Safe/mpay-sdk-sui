@@ -1,5 +1,5 @@
-import { TransactionBlock } from '@mysten/sui.js/transactions';
-import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
+import { Transaction } from '@mysten/sui/transactions';
+import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui/utils';
 
 import { Env } from '@/common';
 import { Globals } from '@/common/globals';
@@ -17,6 +17,7 @@ import {
 } from '@/types/decode';
 import { SingleWalletAdapter } from '@/wallet';
 
+import { getActiveStream } from '../../lib/chain-fixtures';
 import { getTestSuite, getTestSuiteWithFakeMSafe, TestSuite } from '../../lib/setup';
 import { defaultStreamParam } from '../../lib/stream';
 
@@ -25,8 +26,8 @@ describe('decode create stream transaction', () => {
   let singleTS: TestSuite;
 
   beforeAll(async () => {
-    msafeTS = await getTestSuiteWithFakeMSafe();
     singleTS = await getTestSuite();
+    msafeTS = await getTestSuiteWithFakeMSafe();
   });
 
   it('single coin, single recipient', async () => {
@@ -95,11 +96,11 @@ describe('decode create stream transaction', () => {
       ...defaultInfo,
       coinType: normalizeStructTag(defaultInfo.coinType),
     };
-    const txb = await getCreateStreamTxb(singleTS.globals, expInfo);
+    const txb = await getCreateStreamTxb(msafeTS.globals, expInfo);
 
     txb.setSender(singleTS.address);
-    const txBytes = await txb.build({ client: singleTS.globals.suiClient });
-    const txb2 = TransactionBlock.from(txBytes);
+    const txBytes = await txb.build({ onlyTransactionKind: true });
+    const txb2 = Transaction.from(txBytes);
 
     const decoded = StreamTransactionDecoder.decodeTransaction(singleTS.globals, txb2) as DecodedCreateStream;
     expect(decoded?.type).toBe(StreamTransactionType.CREATE_STREAM);
@@ -113,20 +114,11 @@ describe('decode other types of transactions', () => {
   let globals: Globals;
 
   beforeAll(async () => {
-    const ts = await getTestSuite();
-    const defaultInfo = defaultStreamParam(await ts.globals.walletAddress());
-    const info: CreateStreamInfo = {
-      ...defaultInfo,
-      recipients: [defaultInfo.recipients[0]],
-    };
+    const { ts, stream: activeStream } = await getActiveStream();
     const client = new MPayClient(Env.dev);
     globals = client.globals;
     globals.connectWallet(new SingleWalletAdapter(ts.wallet, ts.globals.suiClient));
-    const txb = await client.createStream(info);
-
-    const res = await ts.wallet.signAndSubmitTransaction(txb);
-    const streamIds = client.helper.getStreamIdsFromCreateStreamResponse(res);
-    stream = await Stream.new(client.globals, streamIds[0]);
+    stream = activeStream;
   });
 
   it('set auto claim true', async () => {

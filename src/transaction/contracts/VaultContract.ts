@@ -1,4 +1,4 @@
-import { TransactionBlock } from '@mysten/sui.js/transactions';
+import { Transaction } from '@mysten/sui/transactions';
 
 import { ContractConfig } from '@/common/env';
 import { Globals } from '@/common/globals';
@@ -19,7 +19,7 @@ export class VaultContract extends BaseContract {
     super(VaultContract.ModuleName, config, globals);
   }
 
-  withdrawFee(txb: TransactionBlock, coinType: string) {
+  withdrawFee(txb: Transaction, coinType: string) {
     const roleObject = this.roleObject();
     const vaultObject = this.vaultObject();
     return this.addContractCall(txb, {
@@ -29,7 +29,7 @@ export class VaultContract extends BaseContract {
     });
   }
 
-  balance(txb: TransactionBlock, coinType: string) {
+  balance(txb: Transaction, coinType: string) {
     const vaultObject = this.vaultObject();
     return this.addContractCall(txb, {
       method: VaultContract.MethodName.balance,

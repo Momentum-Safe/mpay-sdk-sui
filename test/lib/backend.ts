@@ -1,4 +1,4 @@
-import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui.js/utils';
+import { normalizeStructTag, normalizeSuiAddress } from '@mysten/sui/utils';
 
 import { isSameCoinType } from '@/sui/utils';
 import {
@@ -33,6 +33,19 @@ export class MockBackend implements IBackend {
 
   addOutStreamREf(...ref: StreamRef[]) {
     this.outRefs.push(...ref);
+  }
+
+  async getStreamGroupByGroupId(groupId: string): Promise<{
+    groupId: string;
+    streamIds: string[];
+  }> {
+    const streamIds = [...this.inRefs, ...this.outRefs]
+      .filter((ref) => ref.groupId === groupId)
+      .map((ref) => ref.streamId);
+    return {
+      groupId,
+      streamIds: [...new Set(streamIds)],
+    };
   }
 
   async getIncomingStreams(recipient: string, options?: BackendIncomingStreamFilterOptions): Promise<StreamRef[]> {

@@ -1,17 +1,13 @@
-import {
-  CoinMetadata,
-  DevInspectResults,
-  SuiClient,
-  SuiObjectChangeCreated,
-  SuiTransactionBlockResponse,
-} from '@mysten/sui.js/client';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
-import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
+import type { SuiClientTypes } from '@mysten/sui/client';
+import { Transaction } from '@mysten/sui/transactions';
+import { normalizeStructTag, SUI_TYPE_ARG } from '@mysten/sui/utils';
 import { DateTime, Duration } from 'luxon';
 
 import { Globals } from '@/common/globals';
 import { InvalidInputError } from '@/error/InvalidInputError';
-import { TransactionFailedError } from '@/error/TransactionFailedError';
+import { getCreatedObjectIdsFromTransaction, TransactionResultWithEffects } from '@/sui/adapters';
+import type { MPaySuiClient, SimulateTransactionResult } from '@/sui/client';
+import { toMpayCoinBalance } from '@/sui/balance';
 import { CreateStreamHelper } from '@/transaction/builder/CreateStreamHelper';
 import { MPayBuilder } from '@/transaction/builder/MPayBuilder';
 import {
@@ -37,17 +33,11 @@ export class MPayHelper implements IMPayHelper {
     this.createStreamHelper = new MPayBuilder(globals).createStreamHelper();
   }
 
-  getStreamIdsFromCreateStreamResponse(res: SuiTransactionBlockResponse) {
-    if (res.effects?.status.status !== 'success') {
-      throw new TransactionFailedError(res.effects?.status.status, res.effects?.status.error);
-    }
-    return res
-      .objectChanges!.filter(
-        (change) =>
-          change.type === 'created' &&
-          change.objectType.startsWith(`${this.globals.envConfig.contract.contractId}::stream::Stream`),
-      )
-      .map((change) => (change as SuiObjectChangeCreated).objectId);
+  getStreamIdsFromCreateStreamResponse(res: TransactionResultWithEffects) {
+    return getCreatedObjectIdsFromTransaction(
+      res,
+      `${this.globals.envConfig.contract.contractId}::stream::Stream`,
+    );
   }
 
   calculateCreateStreamFees(info: CreateStreamInfo): PaymentWithFee {
@@ -114,25 +104,25 @@ export class MPayHelper implements IMPayHelper {
   }
 
   async getBalance(address: string, coinType?: string | null) {
-    const balance = await this.globals.suiClient.getBalance({
+    const { balance } = await this.globals.suiClient.getBalance({
       owner: address,
-      coinType,
+      coinType: coinType ?? undefined,
     });
     const coinMeta = await this.getCoinMeta(coinType);
     return {
-      ...balance,
+      ...toMpayCoinBalance(balance),
       coinType: normalizeStructTag(balance.coinType),
       coinMeta,
     };
   }
 
   async getAllBalance(address: string) {
-    const allBalance = await this.globals.suiClient.getAllBalances({
+    const { balances } = await this.globals.suiClient.listBalances({
       owner: address,
     });
-    const coinMetas = await Promise.all(allBalance.map((bal) => this.getCoinMeta(bal.coinType)));
-    return allBalance.map((bal, i) => ({
-      ...bal,
+    const coinMetas = await Promise.all(balances.map((bal) => this.getCoinMeta(bal.coinType)));
+    return balances.map((bal: SuiClientTypes.Balance, i: number) => ({
+      ...toMpayCoinBalance(bal),
       coinType: normalizeStructTag(bal.coinType),
       coinMeta: coinMetas[i],
     }));
@@ -142,10 +132,12 @@ export class MPayHelper implements IMPayHelper {
     return this.coinMetaHelper.getCoinMeta(coinType);
   }
 
-  async simulateTransactionBlock(txb: TransactionBlock): Promise<DevInspectResults> {
-    return this.globals.suiClient.devInspectTransactionBlock({
-      transactionBlock: txb,
-      sender: await this.globals.wallet.address(),
+  async simulateTransaction(txb: Transaction): Promise<SimulateTransactionResult> {
+    txb.setSender(await this.globals.wallet.address());
+    return this.globals.suiClient.simulateTransaction({
+      transaction: txb,
+      checksEnabled: false,
+      include: { commandResults: true },
     });
   }
 
@@ -166,13 +158,13 @@ export class MPayHelper implements IMPayHelper {
 }
 
 export class CoinMetaHelper {
-  private coinMetaReg: Map<string, CoinMetadata>;
+  private coinMetaReg: Map<string, SuiClientTypes.CoinMetadata>;
 
-  constructor(private readonly suiClient: SuiClient) {
+  constructor(private readonly suiClient: MPaySuiClient) {
     this.coinMetaReg = new Map();
   }
 
-  async getCoinMeta(coinType: string | null | undefined): Promise<CoinMetadata | undefined> {
+  async getCoinMeta(coinType: string | null | undefined): Promise<SuiClientTypes.CoinMetadata | undefined> {
     const normalized = normalizeStructTag(coinType || SUI_TYPE_ARG);
     if (this.coinMetaReg.has(normalized)) {
       return this.coinMetaReg.get(normalized);
@@ -184,8 +176,8 @@ export class CoinMetaHelper {
     return meta;
   }
 
-  private async queryCoinMeta(coinType: string): Promise<CoinMetadata | undefined> {
-    const res = await this.suiClient.getCoinMetadata({ coinType });
-    return res || undefined;
+  private async queryCoinMeta(coinType: string): Promise<SuiClientTypes.CoinMetadata | undefined> {
+    const { coinMetadata } = await this.suiClient.getCoinMetadata({ coinType });
+    return coinMetadata || undefined;
   }
 }
