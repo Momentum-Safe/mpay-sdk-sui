@@ -1,6 +1,10 @@
 # mpay-sdk-sui
 
-SDK for MPay on Sui.
+## 项目介绍
+
+`@msafe/mpay-sdk-sui` 是 Sui 上流支付（MPay）的 TypeScript SDK。MSafe 多签钱包、`msafe-sui-web-v3` 和独立的 stream payment dApp（`pay.m-safe.io`）用它创建、领取、取消流支付，并读取链上 `Stream` 对象。SDK 返回未签名的 `Transaction`，由 MSafe 多签完成模拟、投票和执行。流支付和 Momentum DEX 是两条产品线，本 SDK 只组流支付交易。
+
+技术栈是 TypeScript、tsup、Jest，以及 `@mysten/sui` 的 gRPC 客户端。入口是 `src/index.ts`，业务门面是 `src/stream/client.ts` 的 `MPayClient`。建交易在 `src/transaction/builder/MPayBuilder.ts`，主网和测试网的 package / 共享对象写在 `config/prod.json` 与 `config/dev.json`。
 
 ## Install
 
@@ -34,46 +38,41 @@ client.connectMSafeAccount(msafe)
 
 ### Create a stream or a stream group
 
+`createStream` returns an unsigned `Transaction`. The caller signs it with the connected wallet. `Stream.new` and `StreamGroup.new` are async.
+
 ```ts
-const txb = await client.createStreams(info);
-const res = await wallet.signAndExecuteTransactionBlock(txb);
+const tx = await client.createStream(info);
+const res = await wallet.signAndExecuteTransaction({ transaction: tx });
 const streamIds = client.helper.getStreamIdsFromCreateStreamResponse(res);
-if (streamIds === 1) {
-    const streams = Stream.new(client.globals, streamIds[0]);
+if (streamIds.length === 1) {
+    const stream = await Stream.new(client.globals, streamIds[0]);
 } else {
-    const streamGroup = StreamGroup.new(client.globals, streamIds);
+    const streamGroup = await StreamGroup.new(client.globals, streamIds);
     const streams = streamGroup.streams;
 }
 ```
 
 ### Stream detail information
 
+`info` and `progress` are synchronous getters.
+
 ```ts
-const info = await stream.info;
+const info = stream.info;
 console.log(info);
 
-const progress = await stream.progress;
+const progress = stream.progress;
 console.log(progress);
 ```
 
 ### Stream operations
 
+Each method returns an unsigned `Transaction`.
+
 ```ts
-// Cancel stream
-const txb = await stream.cancel();
-const res = await wallet.signAndExecuteTransactionBlock(txb);
-
-// Claim stream
-const txb = await stream.claim();
-const res = await wallet.signAndExecuteTransactionBlock(txb);
-
-// Set auto claim
-const txb = await stream.setAutoClaim(true);
-const res = await wallet.signAndExecuteTransactionBlock(txb);
-
-// Claim by proxy
-const txb = await stream.claimByProxy();
-const res = await wallet.signAndExecuteTransactionBlock(txb);
+const cancelTx = await stream.cancel();
+const claimTx = await stream.claim();
+const autoClaimTx = await stream.setAutoClaim(true);
+const proxyClaimTx = await stream.claimByProxy();
 ```
 
 ### Stream list
@@ -82,7 +81,7 @@ const res = await wallet.signAndExecuteTransactionBlock(txb);
 
 ```ts
 const it = await client.getIncomingStreams({
-    status: 'STREAMING' | 'STREAMED',
+    status: 'STREAMING', // STREAMING | COMPLETED | CANCELED | SETTLED
     sender: someSender,
 });
 
@@ -102,7 +101,7 @@ while (await it.hasNext()) {
 
 ```ts
 const it = await client.getOutgoingStreams({
-    status: 'STREAMING' | 'STREAMED',
+    status: 'STREAMING', // STREAMING | COMPLETED | CANCELED | SETTLED
     recipient: someAddress,
 });
 

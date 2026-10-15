@@ -168,7 +168,6 @@ export class BackendError extends Error {
 
   static fromError(e: unknown) {
     if (axios.isAxiosError(e) && e?.response?.data && 'message' in e.response.data) {
-      console.log(e.response.data);
       return new BackendError(e as AxiosError);
     }
     return undefined;
