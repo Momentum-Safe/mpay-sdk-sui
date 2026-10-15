@@ -14,6 +14,8 @@ import {
 } from '@/types';
 import { addPrefix } from '@/utils';
 
+const REQUEST_TIMEOUT_MS = 30_000;
+
 export class Backend implements IBackend {
   constructor(private readonly apiUrl: string) {}
 
@@ -99,11 +101,20 @@ export class Backend implements IBackend {
     } else {
       throw new Error('StreamId or GroupId need to be be provided');
     }
+    const body = res.data as
+      | {
+          data?: StreamEventDto[];
+          meta?: { page: number; limit: number; total: number };
+        }
+      | undefined;
+    if (!body || !Array.isArray(body.data) || !body.meta) {
+      throw new Error('Stream history response is missing data');
+    }
     return {
-      data: res.data.data.map((dto: StreamEventDto) => this.parseEvent(dto)),
-      pageNumber: res.data.meta.page,
-      pageSize: res.data.meta.limit,
-      totalSize: res.data.meta.total,
+      data: body.data.map((dto: StreamEventDto) => this.parseEvent(dto)),
+      pageNumber: body.meta.page,
+      pageSize: body.meta.limit,
+      totalSize: body.meta.total,
     };
   }
 
@@ -146,7 +157,7 @@ export class Backend implements IBackend {
   private async get<T = any, R = AxiosResponse<T>, D = any>(url: string, config?: AxiosRequestConfig<D>): Promise<R> {
     const fullUrl = this.getFullUrl(url);
     try {
-      return await axios.get<T, R, D>(fullUrl, config);
+      return await axios.get<T, R, D>(fullUrl, { timeout: REQUEST_TIMEOUT_MS, ...config });
     } catch (e: any) {
       throw BackendError.fromError(e) ?? e;
     }

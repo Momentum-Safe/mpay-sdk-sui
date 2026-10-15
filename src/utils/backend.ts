@@ -7,10 +7,14 @@ export function parseResponseData(response: AxiosError | AxiosResponse) {
     throw new BackendError(response.response?.statusText as string);
   }
   if (response.status === 200) {
-    if (response.data.success) {
-      return response.data.data;
+    const body = response.data;
+    if (!body || typeof body !== 'object') {
+      throw new BackendError('Missing response body');
     }
-    throw new BackendError(response.data.code);
+    if (body.success) {
+      return body.data;
+    }
+    throw new BackendError(body.code);
   }
   throw new BackendError(response.status.toString());
 }
