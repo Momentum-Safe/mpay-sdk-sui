@@ -5,15 +5,15 @@
     "": {
       "name": "@msafe/mpay-sdk-sui",
       "dependencies": {
-        "axios": "^1.5.0",
-        "child_process": "^1.0.2",
         "exponential-backoff": "^3.1.1",
-        "fs": "^0.0.1-security",
         "luxon": "^3.4.3",
         "nanoid": "3",
-        "tsconfig-paths": "^4.2.0",
       },
       "devDependencies": {
+        "axios": "^1.5.0",
+        "child_process": "^1.0.2",
+        "fs": "^0.0.1-security",
+        "tsconfig-paths": "^4.2.0",
         "@babel/core": "^7.26.0",
         "@babel/preset-env": "^7.26.0",
         "@mysten/sui": "^2.20.0",

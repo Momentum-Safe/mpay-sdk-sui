@@ -1,5 +1,3 @@
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
-
 import {
   BackendIncomingStreamFilterOptions,
   BackendOutgoingStreamFilterOptions,
@@ -14,6 +12,63 @@ import {
 } from '@/types';
 import { addPrefix } from '@/utils';
 
+const REQUEST_TIMEOUT_MS = 30_000;
+
+// Match axios's default query encoder so indexer filters stay on the same URLs.
+function encodeAxiosComponent(value: string): string {
+  return encodeURIComponent(value)
+    .replace(/%3A/gi, ':')
+    .replace(/%24/g, '$')
+    .replace(/%2C/gi, ',')
+    .replace(/%20/g, '+')
+    .replace(/%5B/gi, '[')
+    .replace(/%5D/gi, ']');
+}
+
+function appendQueryValue(parts: string[], key: string, value: unknown) {
+  if (value === undefined || value === null) {
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item) => appendQueryValue(parts, `${key}[]`, item));
+    return;
+  }
+  parts.push(`${encodeAxiosComponent(key)}=${encodeAxiosComponent(String(value))}`);
+}
+
+function buildIndexerUrl(url: string, params?: Record<string, unknown>): string {
+  if (!params) {
+    return url;
+  }
+  const parts: string[] = [];
+  Object.entries(params).forEach(([key, value]) => appendQueryValue(parts, key, value));
+  if (parts.length === 0) {
+    return url;
+  }
+  return `${url}?${parts.join('&')}`;
+}
+
+async function indexerHttpError(url: string, response: Response): Promise<Error> {
+  let message: string | undefined;
+  const text = await response.text();
+  if (text) {
+    try {
+      const body = JSON.parse(text) as { message?: unknown };
+      if (typeof body?.message === 'string') {
+        message = body.message;
+      }
+    } catch {
+      message = undefined;
+    }
+  }
+  if (message) {
+    const error = new Error(`Request to ${url} failed: ${response.status} ${message}`);
+    error.name = 'Backend';
+    return error;
+  }
+  return new Error(`Request failed with status code ${response.status}`);
+}
+
 export class Backend implements IBackend {
   constructor(private readonly apiUrl: string) {}
 
@@ -24,9 +79,7 @@ export class Backend implements IBackend {
       coinTypes: options?.coinType,
       senders: options?.sender,
     };
-    const res = await this.get('/stream/incoming', {
-      params: query,
-    });
+    const res = await this.get<StreamRef[]>('/stream/incoming', query);
     return res.data;
   }
 
@@ -37,30 +90,22 @@ export class Backend implements IBackend {
       coinTypes: options?.coinType,
       recipients: options?.recipient,
     };
-    const res = await this.get('/stream/outgoing', {
-      params: query,
-    });
+    const res = await this.get<StreamRef[]>('/stream/outgoing', query);
     return res.data;
   }
 
   async getAllCoinTypes(address: string): Promise<string[]> {
-    const res = await this.get('/stream/coin-types', {
-      params: { address },
-    });
+    const res = await this.get<string[]>('/stream/coin-types', { address });
     return res.data;
   }
 
   async getAllRecipients(sender: string, options?: StreamFilterStatus): Promise<string[]> {
-    const res = await this.get('/stream/outgoing/recipients', {
-      params: { sender, filter: options },
-    });
+    const res = await this.get<string[]>('/stream/outgoing/recipients', { sender, filter: options });
     return res.data;
   }
 
   async getAllSenders(recipient: string, options?: StreamFilterStatus): Promise<string[]> {
-    const res = await this.get('/stream/incoming/senders', {
-      params: { recipient, filter: options },
-    });
+    const res = await this.get<string[]>('/stream/incoming/senders', { recipient, filter: options });
     return res.data;
   }
 
@@ -68,9 +113,7 @@ export class Backend implements IBackend {
     groupId: string;
     streamIds: string[];
   }> {
-    const res = await this.get('/stream/ids', {
-      params: { groupId },
-    });
+    const res = await this.get<{ groupId: string; streamIds: string[] }>('/stream/ids', { groupId });
     return res.data;
   }
 
@@ -79,31 +122,36 @@ export class Backend implements IBackend {
     groupId?: string;
     pagination?: PaginationOptions;
   }): Promise<Paginated<StreamEvent>> {
-    let res: AxiosResponse<any, any>;
+    let res: { data: unknown };
     if (query.streamId) {
       res = await this.get('/stream/event/stream', {
-        params: {
-          streamAddress: query.streamId,
-          page: query.pagination?.pageNumber,
-          limit: query.pagination?.pageSize,
-        },
+        streamAddress: query.streamId,
+        page: query.pagination?.pageNumber,
+        limit: query.pagination?.pageSize,
       });
     } else if (query.groupId) {
       res = await this.get('/stream/event/group', {
-        params: {
-          groupId: query.groupId,
-          page: query.pagination?.pageNumber,
-          limit: query.pagination?.pageSize,
-        },
+        groupId: query.groupId,
+        page: query.pagination?.pageNumber,
+        limit: query.pagination?.pageSize,
       });
     } else {
       throw new Error('StreamId or GroupId need to be be provided');
     }
+    const body = res.data as
+      | {
+          data?: StreamEventDto[];
+          meta?: { page: number; limit: number; total: number };
+        }
+      | undefined;
+    if (!body || !Array.isArray(body.data) || !body.meta) {
+      throw new Error('Stream history response is missing data');
+    }
     return {
-      data: res.data.data.map((dto: StreamEventDto) => this.parseEvent(dto)),
-      pageNumber: res.data.meta.page,
-      pageSize: res.data.meta.limit,
-      totalSize: res.data.meta.total,
+      data: body.data.map((dto: StreamEventDto) => this.parseEvent(dto)),
+      pageNumber: body.meta.page,
+      pageSize: body.meta.limit,
+      totalSize: body.meta.total,
     };
   }
 
@@ -143,57 +191,27 @@ export class Backend implements IBackend {
     }
   }
 
-  private async get<T = any, R = AxiosResponse<T>, D = any>(url: string, config?: AxiosRequestConfig<D>): Promise<R> {
-    const fullUrl = this.getFullUrl(url);
+  private async get<T>(url: string, params?: Record<string, unknown>): Promise<{ data: T }> {
+    const fullUrl = buildIndexerUrl(this.getFullUrl(url), params);
+    let response: Response;
     try {
-      return await axios.get<T, R, D>(fullUrl, config);
-    } catch (e: any) {
-      throw BackendError.fromError(e) ?? e;
+      response = await fetch(fullUrl, {
+        method: 'GET',
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === 'TimeoutError') {
+        throw new Error(`timeout of ${REQUEST_TIMEOUT_MS}ms exceeded`);
+      }
+      throw error;
     }
+    if (!response.ok) {
+      throw await indexerHttpError(fullUrl, response);
+    }
+    return { data: (await response.json()) as T };
   }
 
   private getFullUrl(url: string) {
     return url.startsWith(this.apiUrl) ? url : `${this.apiUrl}${addPrefix(url, '/')}`;
-  }
-}
-
-export class BackendError extends Error {
-  constructor(public readonly e: AxiosError) {
-    super();
-    this.name = 'Backend';
-    Error.captureStackTrace(this, this.constructor);
-  }
-
-  public readonly name: string;
-
-  static fromError(e: unknown) {
-    if (axios.isAxiosError(e) && e?.response?.data && 'message' in e.response.data) {
-      console.log(e.response.data);
-      return new BackendError(e as AxiosError);
-    }
-    return undefined;
-  }
-
-  get status() {
-    return this.e.response?.status ?? undefined;
-  }
-
-  get message(): string {
-    return `Request to ${this.endpoint} failed: ${this.status} ${this.respMessage() ?? 'Unknown resp'}`;
-  }
-
-  private respMessage() {
-    if (!this.e.response?.data) {
-      return undefined;
-    }
-    return (this.e.response?.data as any).message ?? undefined;
-  }
-
-  get endpoint() {
-    return this.e.config?.url ?? '';
-  }
-
-  toString() {
-    return this.message;
   }
 }

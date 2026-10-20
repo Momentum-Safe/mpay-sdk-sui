@@ -68,16 +68,20 @@ export class OwnedCoinRequester implements Requester<MPayCoinStruct> {
   }
 
   async doNextRequest(): Promise<PagedData<MPayCoinStruct>> {
+    const previousCursor = this.nextCursor;
     const res = await this.suiClient.listCoins({
       owner: this.owner,
       coinType: this.coinType,
       cursor: this.nextCursor,
       limit: this.reqPageSize,
     });
-    this.nextCursor = res.cursor;
+    const nextCursor = res.cursor;
+    // A repeated or missing cursor with hasNextPage would request the same page forever.
+    const cursorAdvanced = nextCursor != null && nextCursor !== previousCursor;
+    this.nextCursor = nextCursor;
     return {
       data: res.objects.map(toMpayCoin),
-      hasNext: res.hasNextPage,
+      hasNext: Boolean(res.hasNextPage) && cursorAdvanced,
     };
   }
 }

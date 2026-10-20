@@ -30,6 +30,11 @@ class ChainFirstSequencer {
   allTestsCompleted() {
     return true;
   }
+
+  // Jest 29 calls this after the run. The custom sequencer has no parent implementation.
+  cacheResults() {
+    return undefined;
+  }
 }
 
 module.exports = ChainFirstSequencer;

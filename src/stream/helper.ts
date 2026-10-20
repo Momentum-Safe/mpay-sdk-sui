@@ -28,6 +28,9 @@ export class MPayHelper implements IMPayHelper {
 
   private readonly createStreamHelper: CreateStreamHelper;
 
+  // One in-flight balance read per address. A second caller shares it, then the slot clears.
+  private readonly pendingBalances = new Map<string, ReturnType<MPayHelper['loadAllBalances']>>();
+
   constructor(public readonly globals: Globals) {
     this.coinMetaHelper = new CoinMetaHelper(globals.suiClient);
     this.createStreamHelper = new MPayBuilder(globals).createStreamHelper();
@@ -104,11 +107,14 @@ export class MPayHelper implements IMPayHelper {
   }
 
   async getBalance(address: string, coinType?: string | null) {
-    const { balance } = await this.globals.suiClient.getBalance({
-      owner: address,
-      coinType: coinType ?? undefined,
-    });
-    const coinMeta = await this.getCoinMeta(coinType);
+    // Balance and metadata are independent reads. Start both before either one resolves.
+    const [{ balance }, coinMeta] = await Promise.all([
+      this.globals.suiClient.getBalance({
+        owner: address,
+        coinType: coinType ?? undefined,
+      }),
+      this.getCoinMeta(coinType),
+    ]);
     return {
       ...toMpayCoinBalance(balance),
       coinType: normalizeStructTag(balance.coinType),
@@ -117,6 +123,23 @@ export class MPayHelper implements IMPayHelper {
   }
 
   async getAllBalance(address: string) {
+    const pending = this.pendingBalances.get(address);
+    if (pending) {
+      return pending;
+    }
+    const request = this.loadAllBalances(address);
+    this.pendingBalances.set(address, request);
+    const clear = () => {
+      if (this.pendingBalances.get(address) === request) {
+        this.pendingBalances.delete(address);
+      }
+    };
+    // Clear the slot after settle so a later read hits the chain again. Failures retry.
+    request.then(clear, clear);
+    return request;
+  }
+
+  private async loadAllBalances(address: string) {
     const { balances } = await this.globals.suiClient.listBalances({
       owner: address,
     });
@@ -160,20 +183,38 @@ export class MPayHelper implements IMPayHelper {
 export class CoinMetaHelper {
   private coinMetaReg: Map<string, SuiClientTypes.CoinMetadata>;
 
+  // One in-flight metadata read per coin type. Cleared after it settles; successes stay in coinMetaReg.
+  private readonly pendingMeta = new Map<string, Promise<SuiClientTypes.CoinMetadata | undefined>>();
+
   constructor(private readonly suiClient: MPaySuiClient) {
     this.coinMetaReg = new Map();
   }
 
   async getCoinMeta(coinType: string | null | undefined): Promise<SuiClientTypes.CoinMetadata | undefined> {
     const normalized = normalizeStructTag(coinType || SUI_TYPE_ARG);
-    if (this.coinMetaReg.has(normalized)) {
-      return this.coinMetaReg.get(normalized);
+    const cached = this.coinMetaReg.get(normalized);
+    if (cached) {
+      return cached;
     }
-    const meta = await this.queryCoinMeta(normalized);
-    if (meta) {
-      this.coinMetaReg.set(normalized, meta);
+    const pending = this.pendingMeta.get(normalized);
+    if (pending) {
+      return pending;
     }
-    return meta;
+    const request = this.loadCoinMeta(normalized);
+    this.pendingMeta.set(normalized, request);
+    return request;
+  }
+
+  private async loadCoinMeta(coinType: string): Promise<SuiClientTypes.CoinMetadata | undefined> {
+    try {
+      const meta = await this.queryCoinMeta(coinType);
+      if (meta) {
+        this.coinMetaReg.set(coinType, meta);
+      }
+      return meta;
+    } finally {
+      this.pendingMeta.delete(coinType);
+    }
   }
 
   private async queryCoinMeta(coinType: string): Promise<SuiClientTypes.CoinMetadata | undefined> {

@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+import { BackendError } from '@/error/BackendError';
 import {
   BackendOutgoingStreamFilterOptions,
   BackendIncomingStreamFilterOptions,
@@ -11,19 +12,25 @@ import { StreamEvent } from '@/types/events';
 import { Paginated, PaginationOptions } from '@/types/pagination';
 import { parseResponseData } from '@/utils/backend';
 
+const REQUEST_TIMEOUT_MS = 30_000;
+
 export class LegacyBackend implements IBackend {
   constructor(private apiURL: string) {}
+
+  private post(path: string, data?: unknown) {
+    return axios.post(`${this.apiURL}${path}`, data, { timeout: REQUEST_TIMEOUT_MS });
+  }
 
   async getStreamGroupByGroupId(groupId: string): Promise<{
     groupId: string;
     streamIds: string[];
   }> {
-    const res = await axios.post(`${this.apiURL}/stream-group`, { groupId });
+    const res = await this.post('/stream-group', { groupId });
     return parseResponseData(res);
   }
 
   async getIncomingStreams(recipient: string, options?: BackendIncomingStreamFilterOptions): Promise<StreamRef[]> {
-    const res = await axios.post(`${this.apiURL}/stream`, {
+    const res = await this.post('/stream', {
       recipient,
       ...options,
     });
@@ -31,7 +38,7 @@ export class LegacyBackend implements IBackend {
   }
 
   async getOutgoingStreams(sender: string, options?: BackendOutgoingStreamFilterOptions): Promise<StreamRef[]> {
-    const res = await axios.post(`${this.apiURL}/stream`, {
+    const res = await this.post('/stream', {
       sender,
       ...options,
     });
@@ -43,10 +50,16 @@ export class LegacyBackend implements IBackend {
     groupId?: string;
     pagination?: PaginationOptions;
   }): Promise<Paginated<StreamEvent>> {
-    const res = await axios.post(`${this.apiURL}/stream-events`, query);
+    const res = await this.post('/stream-events', query);
     const paginatedData = parseResponseData(res);
+    if (!paginatedData || !Array.isArray(paginatedData.data)) {
+      throw new BackendError('Stream history response is missing data');
+    }
     paginatedData.data.forEach((event: StreamEvent) => {
       const formalizedEvent = event;
+      if (!formalizedEvent?.data) {
+        throw new BackendError('Stream event is missing data');
+      }
       if (formalizedEvent.data.type === 'create_stream') {
         formalizedEvent.data.balance = BigInt(formalizedEvent.data.balance);
       } else if (formalizedEvent.data.type === 'cancel_stream') {
@@ -64,17 +77,17 @@ export class LegacyBackend implements IBackend {
   }
 
   async getAllCoinTypes(address: string): Promise<string[]> {
-    const res = await axios.post(`${this.apiURL}/stream-info`, { address });
+    const res = await this.post('/stream-info', { address });
     return parseResponseData(res);
   }
 
   async getAllRecipients(sender: string, options?: StreamFilterStatus): Promise<string[]> {
-    const res = await axios.post(`${this.apiURL}/stream-info`, { sender, status: options });
+    const res = await this.post('/stream-info', { sender, status: options });
     return parseResponseData(res);
   }
 
   async getAllSenders(recipient: string, options?: StreamFilterStatus): Promise<string[]> {
-    const res = await axios.post(`${this.apiURL}/stream-info`, { recipient, status: options });
+    const res = await this.post('/stream-info', { recipient, status: options });
     return parseResponseData(res);
   }
 }
